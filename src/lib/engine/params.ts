@@ -1,27 +1,31 @@
 // Parâmetros do motor de risco do GroundTruth.
+// Alinhados ao documento "GroundTruth — Metodologia e validação" (time, 14/11/2026).
 //
-// ⚠️ VALORES DE EXEMPLO — A VALIDAR com agronomia / ZARC (MAPA).
+// ⚠️ HIPÓTESES DE PARTIDA — A VALIDAR com agronomia / ZARC (MAPA) e com o caso de 2026.
 // Ciclos variam com a cultivar, a região e o manejo. Não são recomendação técnica.
-// A interface deve exibir que estes números são "valores de exemplo".
 
 export interface EngineParams {
   /** Dias do plantio à colheita da soja. */
   cicloSoja: number;
   /** Dias entre a colheita da soja e o plantio do milho safrinha. */
   intervalo: number;
-  /** Dias do plantio do milho safrinha até o florescimento (pendoamento). */
+  /** Dias do plantio do milho até o florescimento (marcador na linha do tempo). */
   diasAteFlorescer: number;
-  /** T2M_MIN (ar a 2 m) igual ou abaixo deste valor conta como risco de geada. A validar: 2 °C ou 3 °C. */
+  /** Fase crítica do milho safrinha (pendoamento e enchimento de grãos): início, em dias após o plantio. */
+  faseCriticaInicio: number;
+  /** Fase crítica do milho safrinha: fim, em dias após o plantio. */
+  faseCriticaFim: number;
+  /** Geada provável: T2M_MIN (ar a 2 m) <= este valor. Base: diferença abrigo–relva de 3–6 °C (Embrapa, UEL). */
   limiteGeadaC: number;
-  /** Meia-janela, em dias, em torno da data de floração: [floração - janela, floração + janela]. */
-  janelaFloracaoDias: number;
-  /** Dias após o plantio do milho analisados para seca. */
-  diasSecaInicio: number;
+  /** Geada forte: T2M_MIN <= este valor. */
+  limiteGeadaForteC: number;
+  /** Em baixadas (acúmulo de ar frio), o limite de geada sobe este tanto. */
+  ajusteBaixadaC: number;
   /** Abaixo deste valor (mm/dia) o dia conta como seco. */
   chuvaDiaSecoMm: number;
-  /** Sequência de dias secos que caracteriza seca. */
+  /** Veranico: sequência mínima de dias secos. */
   sequenciaSecaDias: number;
-  /** Percentil histórico de GWETROOT médio abaixo do qual o início é considerado seco. */
+  /** Percentil de GWETROOT (mesmas datas do ano) abaixo do qual o solo está seco. */
   percentilUmidadeSolo: number;
 }
 
@@ -29,11 +33,11 @@ export const PARAMS_PADRAO: EngineParams = {
   cicloSoja: 120,
   intervalo: 5,
   diasAteFlorescer: 65,
-  // 3 °C no ar a 2 m: escolha do time (14/11/2026) como indicador de geada na superfície/relva.
-  // A validar com agronomia.
+  faseCriticaInicio: 55,
+  faseCriticaFim: 100,
   limiteGeadaC: 3,
-  janelaFloracaoDias: 10,
-  diasSecaInicio: 30,
+  limiteGeadaForteC: 1,
+  ajusteBaixadaC: 1,
   chuvaDiaSecoMm: 1,
   sequenciaSecaDias: 15,
   percentilUmidadeSolo: 20,

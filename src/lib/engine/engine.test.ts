@@ -8,6 +8,7 @@ import {
   riscoSeca,
   riscoPorData,
   confianca,
+  nivelRisco,
   percentil,
   deCada10,
   PARAMS_PADRAO,
@@ -34,79 +35,86 @@ function sintetico(): DadosDiarios {
 function idx(d: DadosDiarios, iso: string) {
   return Math.round((Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${d.meta.start}T00:00:00Z`)) / DIA);
 }
+function preenche(serie: (number | null)[], i: number, n: number, v: number) {
+  for (let k = 0; k < n; k++) serie[i + k] = v;
+}
 
-test("cronograma soma ciclo, intervalo e dias até florescer", () => {
+test("cronograma: colheita, plantio do milho, floração e fase crítica 55–100 dias", () => {
   const c = cronograma(new Date(Date.UTC(2024, 9, 1)), PARAMS_PADRAO); // 01/10/2024
-  assert.equal(c.colheitaSoja.toISOString().slice(0, 10), "2025-01-29"); // +120
-  assert.equal(c.plantioMilho.toISOString().slice(0, 10), "2025-02-03"); // +5
-  assert.equal(c.floracaoMilho.toISOString().slice(0, 10), "2025-04-09"); // +65
-  assert.equal(c.janelaInicio.toISOString().slice(0, 10), "2025-03-30");
-  assert.equal(c.janelaFim.toISOString().slice(0, 10), "2025-04-19");
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  assert.equal(iso(c.colheitaSoja), "2025-01-29"); // +120
+  assert.equal(iso(c.plantioMilho), "2025-02-03"); // +5
+  assert.equal(iso(c.floracaoMilho), "2025-04-09"); // +65
+  assert.equal(iso(c.faseInicio), "2025-03-30"); // +55
+  assert.equal(iso(c.faseFim), "2025-05-14"); // +100
 });
 
-test("riscoGeada detecta frio só dentro da janela de floração", () => {
+test("riscoGeada conta frio só dentro da fase crítica e separa geada forte", () => {
   const d = sintetico();
-  // Plantio 01/10/2001 → floração 09/04/2002. Frio dentro da janela:
-  d.data.T2M_MIN[idx(d, "2002-04-12")] = 1.5;
-  // Frio fora da janela em 2003 (não deve contar):
-  d.data.T2M_MIN[idx(d, "2003-07-01")] = -3;
+  // Soja 01/10/2001 → milho 03/02/2002 → fase 30/03 a 14/05/2002
+  d.data.T2M_MIN[idx(d, "2002-04-12")] = 2.5; // provável, não forte
+  d.data.T2M_MIN[idx(d, "2004-05-01")] = 0.5; // forte (fase 2004: 30/03 a 14/05)
+  d.data.T2M_MIN[idx(d, "2003-07-01")] = -3; // fora da fase: não conta
   const r = riscoGeada(d, "10-01");
-  // Anos com janela completa: safrinhas 2001..2005 (plantios 2000..2004)
-  assert.equal(r.totalAnos, 5);
-  assert.deepEqual(r.anosListados, [2002]);
-  assert.equal(r.anosComEvento, 1);
-  assert.equal(r.frequencia, 0.2);
+  assert.equal(r.totalAnos, 5); // safrinhas 2001..2005
+  assert.deepEqual(r.anosListados, [2002, 2004]);
+  assert.deepEqual(r.anosFortes, [2004]);
 });
 
-test("riscoGeada ignora anos com dado ausente na janela", () => {
+test("riscoGeada em baixada sobe o limite em 1 °C", () => {
+  const d = sintetico();
+  d.data.T2M_MIN[idx(d, "2002-04-12")] = 3.6;
+  assert.equal(riscoGeada(d, "10-01").anosComEvento, 0);
+  assert.deepEqual(riscoGeada(d, "10-01", PARAMS_PADRAO, true).anosListados, [2002]);
+});
+
+test("riscoGeada ignora anos com dado ausente na fase", () => {
   const d = sintetico();
   d.data.T2M_MIN[idx(d, "2002-04-09")] = null;
-  const r = riscoGeada(d, "10-01");
-  assert.equal(r.totalAnos, 4);
+  assert.equal(riscoGeada(d, "10-01").totalAnos, 4);
 });
 
-test("riscoSeca: sequência de 15 dias sem chuva marca ano seco", () => {
+test("riscoSeca exige veranico E solo seco ao mesmo tempo", () => {
   const d = sintetico();
-  // Plantio do milho em 03/02/2003 (soja 01/10/2002)
-  const i = idx(d, "2003-02-05");
-  for (let k = 0; k < 15; k++) d.data.PRECTOTCORR[i + k] = 0.2;
+  // 2003: veranico de 15 dias + solo seco → seco
+  preenche(d.data.PRECTOTCORR, idx(d, "2003-04-01"), 15, 0.2);
+  preenche(d.data.GWETROOT, idx(d, "2003-03-30"), 46, 0.3);
+  // 2004: só veranico → não conta
+  preenche(d.data.PRECTOTCORR, idx(d, "2004-04-01"), 20, 0);
+  // 2005: só solo seco → não conta
+  preenche(d.data.GWETROOT, idx(d, "2005-03-30"), 46, 0.4);
   const r = riscoSeca(d, "10-01");
-  assert.ok(r.anosListados.includes(2003));
-  assert.equal(r.porAno.find((a) => a.ano === 2003)?.valor, 15);
+  assert.deepEqual(r.anosListados, [2003]);
+  assert.equal(r.porAno.find((a) => a.ano === 2004)?.valor, 20);
 });
 
-test("riscoSeca: umidade do solo abaixo do percentil marca ano seco", () => {
-  const d = sintetico();
-  const i = idx(d, "2004-02-03"); // plantio do milho, soja 01/10/2003 (2004 é bissexto: 01/10/2003+125 = 03/02/2004)
-  for (let k = 0; k < 30; k++) d.data.GWETROOT[i + k] = 0.3;
-  const r = riscoSeca(d, "10-01");
-  assert.deepEqual(r.anosListados, [2004]);
-});
-
-test("riscoPorData retorna as 5 datas padrão", () => {
+test("riscoPorData retorna as 5 datas padrão com geada normal e de baixada", () => {
   const r = riscoPorData(sintetico(), PARAMS_PADRAO, undefined, 2003);
   assert.deepEqual(
     r.map((x) => x.dataSoja),
     ["10-01", "10-10", "10-20", "10-30", "11-10"],
   );
-  assert.ok(r.every((x) => x.geada.totalAnos > 0 && x.seca.totalAnos > 0));
+  assert.ok(r.every((x) => x.geada.totalAnos > 0 && x.geadaBaixada.totalAnos > 0 && x.seca.totalAnos > 0));
 });
 
-test("confianca e utilitários", () => {
-  assert.equal(confianca(35), "alta");
-  assert.equal(confianca(25), "alta");
-  assert.equal(confianca(24), "média");
-  assert.equal(confianca(12), "média");
-  assert.equal(confianca(11), "baixa");
+test("confiança, nível e utilitários", () => {
+  assert.equal(confianca(45), "alta");
+  assert.equal(confianca(12), "alta");
+  assert.equal(confianca(11), "média");
+  assert.equal(confianca(7), "média");
+  assert.equal(confianca(6), "baixa");
+  assert.equal(nivelRisco(0.1), "Baixo");
+  assert.equal(nivelRisco(0.25), "Médio");
+  assert.equal(nivelRisco(0.4), "Alto");
   assert.equal(percentil([1, 2, 3, 4, 5], 50), 3);
   assert.equal(deCada10(0.27), 3);
 });
 
-test("dados reais de Pato Branco carregam e cobrem ~35 safras", () => {
+test("dados reais de Pato Branco cobrem ~45 safras desde 1981", () => {
   const real = JSON.parse(
     fs.readFileSync(new URL("../../data/power_daily_pato-branco.json", import.meta.url), "utf8"),
   ) as DadosDiarios;
   const r = riscoGeada(real, "10-01");
-  assert.ok(r.totalAnos >= 34, `totalAnos=${r.totalAnos}`);
-  assert.equal(confianca(r.totalAnos), "alta");
+  assert.ok(r.totalAnos >= 44, `totalAnos=${r.totalAnos}`);
+  assert.equal(r.periodo?.[0], 1982);
 });

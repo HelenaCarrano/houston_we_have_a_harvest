@@ -8,6 +8,8 @@ import {
   PARAMS_PADRAO,
   riscoPorData,
   confianca,
+  nivelRisco,
+  type Nivel,
   type DadosDiarios,
   type EngineParams,
   type Confianca,
@@ -22,6 +24,9 @@ export interface RiscoView {
   anos: number[];
   periodo: [number, number] | null;
   confianca: Confianca;
+  nivel: Nivel;
+  /** Só geada: anos com geada forte. */
+  anosFortes?: number[];
 }
 
 export interface DataView {
@@ -30,9 +35,10 @@ export interface DataView {
   colheitaSoja: string;
   plantioMilho: string;
   floracao: string;
-  janelaInicio: string;
-  janelaFim: string;
+  faseInicio: string;
+  faseFim: string;
   geada: RiscoView;
+  geadaBaixada: RiscoView;
   seca: RiscoView;
 }
 
@@ -43,7 +49,7 @@ export interface Prova2026 {
   chuvaAbrilMedia: number;
   soloAbril2026: number | null;
   soloAbrilMedia: number;
-  /** Posição de abril/2026 entre os abris de 1991–2026 (1 = mais seco). */
+  /** Posição de abril/2026 entre os abris de 1981–2026 (1 = mais seco). */
   soloAbrilRank: number | null;
   soloAbrilAnos: number;
   minMaio2026: number | null;
@@ -63,7 +69,7 @@ export interface LocalView {
   downloadedAt: string;
   url: string;
   datas: DataView[];
-  /** Época típica de geada (mediana do 1º e do último dia <= limite, 1991–2025), "MM-DD". */
+  /** Época típica de geada (mediana do 1º e do último dia <= limite, 1981–2025), "MM-DD". */
   epocaGeada: { inicio: string; fim: string; anosComGeada: number; anosTotal: number } | null;
   prova2026: Prova2026;
 }
@@ -208,6 +214,8 @@ export function buildViewData(params: EngineParams = PARAMS_PADRAO): ViewData {
       totalAnos: r.totalAnos,
       frequencia: r.frequencia,
       anos: r.anosListados,
+      ...(r.anosFortes ? { anosFortes: r.anosFortes } : {}),
+      nivel: nivelRisco(r.frequencia),
       periodo: r.periodo,
       confianca: confianca(r.totalAnos),
     });
@@ -225,9 +233,10 @@ export function buildViewData(params: EngineParams = PARAMS_PADRAO): ViewData {
         colheitaSoja: mmdd(r.cronograma.colheitaSoja),
         plantioMilho: mmdd(r.cronograma.plantioMilho),
         floracao: mmdd(r.cronograma.floracaoMilho),
-        janelaInicio: mmdd(r.cronograma.janelaInicio),
-        janelaFim: mmdd(r.cronograma.janelaFim),
+        faseInicio: mmdd(r.cronograma.faseInicio),
+        faseFim: mmdd(r.cronograma.faseFim),
         geada: view(r.geada),
+        geadaBaixada: view(r.geadaBaixada),
         seca: view(r.seca),
       })),
       epocaGeada: epocaGeada(dados, params.limiteGeadaC),

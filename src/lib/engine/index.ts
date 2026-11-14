@@ -1,5 +1,6 @@
 // Motor de cálculo do GroundTruth: funções puras, sem React.
 // Entrada: série diária da NASA POWER (src/data/power_daily_<id>.json).
+// Regras: documento "GroundTruth — Metodologia e validação".
 
 import { DATAS_SOJA_PADRAO, PARAMS_PADRAO, type EngineParams } from "./params.ts";
 
@@ -25,17 +26,20 @@ export interface Cronograma {
   colheitaSoja: Date;
   plantioMilho: Date;
   floracaoMilho: Date;
-  janelaInicio: Date;
-  janelaFim: Date;
+  /** Fase crítica do milho (pendoamento e enchimento). */
+  faseInicio: Date;
+  faseFim: Date;
 }
 
 export interface AnoAvaliado {
-  /** Ano da safrinha (ano em que o milho floresce). */
+  /** Ano da safrinha (ano em que o milho está na fase crítica). */
   ano: number;
   evento: boolean;
-  /** Geada: menor T2M_MIN na janela. Seca: maior sequência de dias secos. */
+  /** Geada: menor T2M_MIN na fase. Seca: maior sequência de dias secos. */
   valor: number;
-  /** Seca: GWETROOT médio no período. */
+  /** Geada forte (só no risco de geada). */
+  forte?: boolean;
+  /** Seca: GWETROOT médio na fase. */
   umidadeSoloMedia?: number;
 }
 
@@ -46,9 +50,9 @@ export interface ResultadoRisco {
   frequencia: number;
   /** Anos (safrinha) em que o evento ocorreu. */
   anosListados: number[];
-  /** Detalhe de cada ano avaliado. */
+  /** Só geada: anos com geada forte. */
+  anosFortes?: number[];
   porAno: AnoAvaliado[];
-  /** Primeiro e último ano avaliados. */
   periodo: [number, number] | null;
 }
 
@@ -62,14 +66,12 @@ function somaDias(d: Date, dias: number): Date {
   return new Date(d.getTime() + dias * DIA_MS);
 }
 
-/** Converte "MM-DD" (ou Date) para a data de plantio da soja no ano informado. */
 function dataSojaNoAno(dataSoja: string | Date, ano: number): Date {
   if (dataSoja instanceof Date) return utc(ano, dataSoja.getUTCMonth() + 1, dataSoja.getUTCDate());
   const [mes, dia] = dataSoja.split("-").map(Number);
   return utc(ano, mes, dia);
 }
 
-/** Índice do dia `d` na série que começa em `inicio`. */
 function indice(inicio: Date, d: Date): number {
   return Math.round((d.getTime() - inicio.getTime()) / DIA_MS);
 }
@@ -81,9 +83,11 @@ function inicioSerie(dados: DadosDiarios): Date {
 function fatia(serie: Serie, inicio: Date, de: Date, ate: Date): Serie | null {
   const a = indice(inicio, de);
   const b = indice(inicio, ate);
-  if (a < 0 || b >= serie.length) return null; // fora do período com dados
+  if (a < 0 || b >= serie.length) return null;
   return serie.slice(a, b + 1);
 }
+
+const completa = (s: Serie | null): s is number[] => !!s && s.every((v) => v !== null);
 
 // ---------- funções públicas ----------
 
@@ -91,14 +95,13 @@ function fatia(serie: Serie, inicio: Date, de: Date, ate: Date): Serie | null {
 export function cronograma(dataSoja: Date, params: EngineParams = PARAMS_PADRAO): Cronograma {
   const colheitaSoja = somaDias(dataSoja, params.cicloSoja);
   const plantioMilho = somaDias(colheitaSoja, params.intervalo);
-  const floracaoMilho = somaDias(plantioMilho, params.diasAteFlorescer);
   return {
     plantioSoja: dataSoja,
     colheitaSoja,
     plantioMilho,
-    floracaoMilho,
-    janelaInicio: somaDias(floracaoMilho, -params.janelaFloracaoDias),
-    janelaFim: somaDias(floracaoMilho, params.janelaFloracaoDias),
+    floracaoMilho: somaDias(plantioMilho, params.diasAteFlorescer),
+    faseInicio: somaDias(plantioMilho, params.faseCriticaInicio),
+    faseFim: somaDias(plantioMilho, params.faseCriticaFim),
   };
 }
 
@@ -110,37 +113,43 @@ function anosDePlantio(dados: DadosDiarios): number[] {
   return anos;
 }
 
-function resumo(porAno: AnoAvaliado[]): ResultadoRisco {
+function resumo(porAno: AnoAvaliado[], comFortes = false): ResultadoRisco {
   const anosListados = porAno.filter((a) => a.evento).map((a) => a.ano);
   return {
     anosComEvento: anosListados.length,
     totalAnos: porAno.length,
     frequencia: porAno.length ? anosListados.length / porAno.length : 0,
     anosListados,
+    ...(comFortes ? { anosFortes: porAno.filter((a) => a.forte).map((a) => a.ano) } : {}),
     porAno,
     periodo: porAno.length ? [porAno[0].ano, porAno[porAno.length - 1].ano] : null,
   };
 }
 
 /**
- * Risco de geada na floração do milho safrinha: em cada ano, verifica se T2M_MIN <= limiteGeadaC
- * em algum dia de [floração - janela, floração + janela]. Só conta anos com a janela completa nos dados.
+ * Geada na fase crítica do milho safrinha: em cada ano, verifica se T2M_MIN <= limite em algum dia
+ * de [plantio do milho + faseCriticaInicio, plantio do milho + faseCriticaFim].
+ * `baixada` sobe o limite em `ajusteBaixadaC` (ar frio acumulado; hipótese a calibrar).
  */
 export function riscoGeada(
   dados: DadosDiarios,
   dataSoja: string | Date,
   params: EngineParams = PARAMS_PADRAO,
+  baixada = false,
 ): ResultadoRisco {
   const inicio = inicioSerie(dados);
+  const ajuste = baixada ? params.ajusteBaixadaC : 0;
+  const limite = params.limiteGeadaC + ajuste;
+  const limiteForte = params.limiteGeadaForteC + ajuste;
   const porAno: AnoAvaliado[] = [];
   for (const anoPlantio of anosDePlantio(dados)) {
     const c = cronograma(dataSojaNoAno(dataSoja, anoPlantio), params);
-    const t = fatia(dados.data.T2M_MIN, inicio, c.janelaInicio, c.janelaFim);
-    if (!t || t.some((v) => v === null)) continue;
-    const min = Math.min(...(t as number[]));
-    porAno.push({ ano: c.floracaoMilho.getUTCFullYear(), evento: min <= params.limiteGeadaC, valor: min });
+    const t = fatia(dados.data.T2M_MIN, inicio, c.faseInicio, c.faseFim);
+    if (!completa(t)) continue;
+    const min = Math.min(...t);
+    porAno.push({ ano: c.faseInicio.getUTCFullYear(), evento: min <= limite, forte: min <= limiteForte, valor: min });
   }
-  return resumo(porAno);
+  return resumo(porAno, true);
 }
 
 function maiorSequencia(chuva: number[], limite: number): number {
@@ -164,98 +173,87 @@ export function percentil(valores: number[], p: number): number {
 }
 
 /**
- * Risco de seca no início do milho safrinha: nos primeiros `diasSecaInicio` dias após o plantio do milho,
- * calcula a maior sequência de dias com PRECTOTCORR < chuvaDiaSecoMm e o GWETROOT médio.
- * Ano seco se sequência >= sequenciaSecaDias OU GWETROOT médio abaixo do percentil histórico
- * (calculado com todos os anos avaliados para esta mesma data).
+ * Seca na fase crítica do milho safrinha. Um ano é seco quando AS DUAS condições valem na fase:
+ *  - veranico: sequência >= sequenciaSecaDias com chuva < chuvaDiaSecoMm; E
+ *  - GWETROOT médio abaixo do percentil `percentilUmidadeSolo` da própria série
+ *    para as mesmas datas do ano (todos os anos avaliados nesta mesma janela).
  */
 export function riscoSeca(
   dados: DadosDiarios,
   dataSoja: string | Date,
   params: EngineParams = PARAMS_PADRAO,
-  /** Limite fixo de GWETROOT. Se omitido, usa o percentil dos anos desta mesma data. */
-  limiteUmidadeFixo?: number,
 ): ResultadoRisco {
-  const brutos = secaBrutos(dados, dataSoja, params);
-  const limiteUmidade =
-    limiteUmidadeFixo ??
-    percentil(
-      brutos.map((b) => b.umidade),
-      params.percentilUmidadeSolo,
-    );
+  const inicio = inicioSerie(dados);
+  const brutos: { ano: number; seq: number; umidade: number }[] = [];
+  for (const anoPlantio of anosDePlantio(dados)) {
+    const c = cronograma(dataSojaNoAno(dataSoja, anoPlantio), params);
+    const chuva = fatia(dados.data.PRECTOTCORR, inicio, c.faseInicio, c.faseFim);
+    const solo = fatia(dados.data.GWETROOT, inicio, c.faseInicio, c.faseFim);
+    if (!completa(chuva) || !completa(solo)) continue;
+    brutos.push({
+      ano: c.faseInicio.getUTCFullYear(),
+      seq: maiorSequencia(chuva, params.chuvaDiaSecoMm),
+      umidade: solo.reduce((a, b) => a + b, 0) / solo.length,
+    });
+  }
+  const limiteUmidade = percentil(
+    brutos.map((b) => b.umidade),
+    params.percentilUmidadeSolo,
+  );
   const porAno: AnoAvaliado[] = brutos.map((b) => ({
     ano: b.ano,
-    evento: b.seq >= params.sequenciaSecaDias || b.umidade < limiteUmidade,
+    evento: b.seq >= params.sequenciaSecaDias && b.umidade < limiteUmidade,
     valor: b.seq,
     umidadeSoloMedia: Math.round(b.umidade * 1000) / 1000,
   }));
   return resumo(porAno);
 }
 
-/**
- * Limite de GWETROOT comum a várias datas: percentil do GWETROOT médio de todos os anos
- * e de todas as datas juntas. Assim a frequência de seca pode variar entre datas
- * (com o percentil por data, ela seria ~20% em qualquer data, por construção).
- */
-export function limiteUmidadeComum(
-  dados: DadosDiarios,
-  datas: readonly string[],
-  params: EngineParams = PARAMS_PADRAO,
-): number {
-  const todos = datas.flatMap((d) => secaBrutos(dados, d, params).map((b) => b.umidade));
-  return percentil(todos, params.percentilUmidadeSolo);
-}
-
-function secaBrutos(dados: DadosDiarios, dataSoja: string | Date, params: EngineParams) {
-  const inicio = inicioSerie(dados);
-  const brutos: { ano: number; seq: number; umidade: number }[] = [];
-  for (const anoPlantio of anosDePlantio(dados)) {
-    const c = cronograma(dataSojaNoAno(dataSoja, anoPlantio), params);
-    const fim = somaDias(c.plantioMilho, params.diasSecaInicio - 1);
-    const chuva = fatia(dados.data.PRECTOTCORR, inicio, c.plantioMilho, fim);
-    const solo = fatia(dados.data.GWETROOT, inicio, c.plantioMilho, fim);
-    if (!chuva || !solo || chuva.some((v) => v === null) || solo.some((v) => v === null)) continue;
-    const s = solo as number[];
-    brutos.push({
-      ano: c.plantioMilho.getUTCFullYear(),
-      seq: maiorSequencia(chuva as number[], params.chuvaDiaSecoMm),
-      umidade: s.reduce((a, b) => a + b, 0) / s.length,
-    });
-  }
-  return brutos;
-}
-
 export interface RiscoData {
   dataSoja: string;
-  /** Cronograma de referência (ano de plantio informado). */
   cronograma: Cronograma;
   geada: ResultadoRisco;
+  /** Mesmo cálculo com o limite de baixada (+ajusteBaixadaC). */
+  geadaBaixada: ResultadoRisco;
   seca: ResultadoRisco;
 }
 
-/** Calcula geada e seca para várias datas de plantio da soja ("MM-DD"). */
+/** Calcula geada (normal e baixada) e seca para várias datas de plantio da soja ("MM-DD"). */
 export function riscoPorData(
   dados: DadosDiarios,
   params: EngineParams = PARAMS_PADRAO,
   datas: readonly string[] = DATAS_SOJA_PADRAO,
   anoReferencia: number = new Date().getUTCFullYear(),
 ): RiscoData[] {
-  const limite = limiteUmidadeComum(dados, datas, params);
   return datas.map((d) => ({
     dataSoja: d,
     cronograma: cronograma(dataSojaNoAno(d, anoReferencia), params),
     geada: riscoGeada(dados, d, params),
-    seca: riscoSeca(dados, d, params, limite),
+    geadaBaixada: riscoGeada(dados, d, params, true),
+    seca: riscoSeca(dados, d, params),
   }));
 }
 
 export type Confianca = "alta" | "média" | "baixa";
 
-/** Confiança pelo número de anos avaliados: alta (>= 25), média (12–24), baixa (< 12). */
+/**
+ * Confiança pelo número de anos usados (Metodologia): alta (>= 12), média (7–11), baixa (< 7).
+ * A Metodologia também exige concordância com Deral/IBGE para "alta"; essa validação ainda não está no app.
+ */
 export function confianca(totalAnos: number): Confianca {
-  if (totalAnos >= 25) return "alta";
-  if (totalAnos >= 12) return "média";
+  if (totalAnos >= 12) return "alta";
+  if (totalAnos >= 7) return "média";
   return "baixa";
+}
+
+export type Nivel = "Baixo" | "Médio" | "Alto";
+
+/** Nível de risco (Metodologia): Baixo até 1 em 10 anos; Médio 2 ou 3; Alto 4 ou mais. */
+export function nivelRisco(frequencia: number): Nivel {
+  const x = Math.round(frequencia * 10);
+  if (x <= 1) return "Baixo";
+  if (x <= 3) return "Médio";
+  return "Alto";
 }
 
 /** "X de cada 10 anos", arredondado. */
@@ -263,6 +261,5 @@ export function deCada10(frequencia: number): number {
   return Math.round(frequencia * 10);
 }
 
-/** Aviso qualitativo para lavouras em baixada (não multiplica números sem base). */
 export const AVISO_BAIXADA =
   "Baixadas acumulam ar frio; o risco local tende a ser maior que o calculado para a região.";
