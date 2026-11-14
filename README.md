@@ -40,6 +40,7 @@ npm run data:fetch # baixa de novo os dados diários da NASA POWER e regenera o 
 | **Deral / Revista Cultivar, 9 abr 2026** | Estiagem e calor afetam feijão e milho (card "Prova 2026") | https://revistacultivar.com.br/noticias/pr-safra-2025-26-estiagem-e-calor-afetam-feijao-e-milho |
 | **Deral / Revista Cultivar, 19 mai 2026** | Geadas: milho safrinha em baixadas com queima de folhas; feijão 2ª safra com perdas; trigo sem dano significativo | https://revistacultivar.com.br/noticias/pr-safra-2025-26-milho-e-feijao-sofrem-impacto-das-geadas |
 | **NASA SRTM 30 m** (SRTM v3, via OpenTopoData, dataset `srtm30m`) | Altitude do ponto de cada município e desnível do entorno (1,5 km) | https://www.opentopodata.org/datasets/srtm/ |
+| **Open-Meteo** (previsão, CC BY 4.0, uso não comercial) | Previsão de 16 dias (mínima, máxima e chuva) para a checagem "posso plantar agora?" | https://open-meteo.com/ |
 | **ZARC (MAPA)** | Referência para janelas de semeadura (ainda não integrado ao app) | https://dados.agricultura.gov.br/dataset/6d3d141c-885e-41a4-ab7f-dc8ff323b96f |
 
 Os dados ficam em `src/data/power_daily_<id>.json` (arrays por parâmetro + data inicial, com a URL usada e a data do download). O app não depende da API ao vivo.
@@ -60,6 +61,10 @@ Regras do documento do time **"GroundTruth — Metodologia e validação"**. Có
 
 - **Geada na fase crítica em 2026: sim** (também com o limite de baixada), coerente com o Deral de maio/2026.
 - **Seca na fase crítica em 2026:** o POWER mostra o 5º abril com solo mais seco desde 1981, mas sem veranico de 15 dias. Pela regra original "veranico **e** solo seco" o app dizia "não", contra o relato de estiagem do Deral; com "veranico **ou** solo seco" o ano é marcado. A tela mostra os sinais separados para que o técnico veja o que sustenta o número.
+
+### Checagem de 16 dias antes de plantar
+
+O app lê a previsão de 16 dias da Open-Meteo no navegador (só as coordenadas públicas do município são enviadas; se o serviço falhar, a página continua funcionando). Regras em `src/lib/engine/previsao.ts`, com testes: mínima do ar ≤ 3 °C (4 °C em baixada) ou chuva ≥ 50 mm nos próximos 7 dias = **"Não plante esta semana"**; menos de 10 mm de chuva em 7 dias, ou os mesmos eventos depois da primeira semana = **atenção**. São **hipóteses a validar com agronomia**; previsão não é garantia e a incerteza cresce depois de ~7 dias.
 
 ### Hipóteses e o que é estimado
 

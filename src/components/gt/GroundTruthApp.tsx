@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { DataView, LocalView, RiscoView, ViewData } from "@/lib/view-data";
 import { Rotacoes, SeloNivel } from "@/components/gt/Rotacoes";
+import { Previsao } from "@/components/gt/Previsao";
 
 // ---------- utilitários de formatação ----------
 
@@ -561,6 +562,16 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
         <Recomendacao datas={local.datas} idx={idx} baixada={baixada} />
         <GraficoDatas datas={local.datas} idx={idx} onSelect={setIdx} baixada={baixada} />
       </Card>
+
+      <Previsao
+        key={local.id}
+        nome={local.nome}
+        lat={local.lat}
+        lon={local.lon}
+        baixada={baixada}
+        limiteGeadaC={p.limiteGeadaC}
+        ajusteBaixadaC={p.ajusteBaixadaC}
+      />
 
       <Rotacoes d={d} nomeLocal={local.nome} baixada={baixada} />
 
