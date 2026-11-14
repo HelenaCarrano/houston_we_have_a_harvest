@@ -8,7 +8,6 @@ import {
   REGRA_PONTUACAO,
   notaRiscoPorFrequencia,
   type Prioridade,
-  type Rotacao,
 } from "@/lib/rotacoes";
 
 const PRIORIDADES: { id: Prioridade; label: string }[] = [
