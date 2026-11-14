@@ -1,98 +1,69 @@
-# NasaApp 🚀
+# GroundTruth 🛰️🌱
+> **NASA Space Apps Challenge 2026** · Desafio: *Field Shift: Adapting Farms with NASA Data*
 
-Projeto moderno desenvolvido com **Next.js** (App Router), **TypeScript**, **Tailwind CSS v4** e **shadcn/ui**.
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-- **[Next.js 16](https://nextjs.org/)** — Framework React com App Router e Turbopack
-- **[React 19](https://react.dev/)** — Biblioteca para interfaces de usuário
-- **[TypeScript](https://www.typescriptlang.org/)** — Tipagem estática
-- **[Tailwind CSS v4](https://tailwindcss.com/)** — Framework de estilização utility-first
-- **[shadcn/ui](https://ui.shadcn.com/)** — Biblioteca de componentes reutilizáveis e acessíveis
-- **[Lucide React](https://lucide.dev/)** — Ícones modernos
-- **[NVM](https://github.com/nvm-sh/nvm)** — Gerenciador de versões do Node.js (configurado com `.nvmrc`)
+O **GroundTruth** cruza 40 anos de satélites da NASA com o relevo (SRTM 30m) e o solo de cada fazenda para orientar técnicos e agricultores sobre **o que plantar, onde na propriedade e quando**, gerando um Plano de Safra objetivo para envio no WhatsApp.
 
 ---
 
-## 📋 Pré-requisitos
+## 🧭 Estrutura da Aplicação (Navegação Drill-Down)
 
-Recomendamos o uso do **[nvm](https://github.com/nvm-sh/nvm)** para garantir a versão correta do Node.js:
+1. **Nível 1 — Visão Brasil:** Mapa interativo nacional destacando os estados agrícolas e suas vulnerabilidades climáticas.
+2. **Nível 2 — Mesorregiões do Paraná:** Subdivisão regional (Sudoeste, Oeste, Centro-Sul, etc.) mostrando o impacto real de geadas e secas validadas com os boletins do DERAL (safra 2025/26).
+3. **Nível 3 — Fazenda & Talhões (NASA SRTM):** Modelo de elevação digital (30m) que separa as **baixadas frias (< 680m)** das **encostas e topos (> 720m)**.
+4. **Comparador das 3 Estratégias (Requisito NASA):**
+   - *Opção 1 (Atual):* Soja ➔ Milho Safrinha Solteiro.
+   - *Opção 2 (Adaptação Térmica):* Soja ➔ Trigo (imune a geadas nas baixadas).
+   - *Opção 3 (Solo e Resiliência Hídrica):* Soja ➔ Milho + Braquiária consorciada (para encostas e topos).
+5. **Plano de Safra em 1 Página:** Resumo em formato A4/modal pronto para impressão ou compartilhamento via WhatsApp com o agricultor.
+
+---
+
+## 📡 Fontes de Dados Oficiais da NASA
+
+- **NASA POWER (Agroclimatology API):**
+  - Temperaturas Mínimas (`T2M_MIN`) e Máximas (`T2M_MAX`) diárias e mensais (1981-2025).
+  - Precipitação diária corrigida (`PRECTOTCORR`).
+  - Umidade do solo na raiz (`GWETROOT`) e na superfície (`GWETTOP`).
+- **NASA SRTM (Shuttle Radar Topography Mission):** Elevação de 30 metros para detecção de drenagem catabática e lagos de ar frio em baixadas.
+- **NOAA CPC:** Classificação histórica do índice ONI (El Niño, La Niña e Neutro).
+- **MAPA / ZARC:** Zoneamento Agrícola de Risco Climático e janelas oficiais de semeadura.
+- **DERAL / IDR-Paraná:** Validação de perdas reais de campo da safra 2025/26.
+
+---
+
+## 🛠️ Tecnologias
+
+- **Next.js 16** (App Router & Turbopack)
+- **React 19 & TypeScript**
+- **Tailwind CSS v4**
+- **shadcn/ui & Lucide Icons**
+- **Recharts** (Gráficos climáticos interativos)
+- **NVM** (Node.js v24 via `.nvmrc`)
+
+---
+
+## 🚀 Como Executar
 
 ```bash
-# Carregar a versão do Node.js definida no .nvmrc
+# 1. Carregar o Node correto
 nvm use
 
-# Caso não tenha a versão instalada:
-nvm install
+# 2. Instalar dependências
+npm install
+
+# 3. Executar o servidor de desenvolvimento
+npm run dev
 ```
 
----
-
-## 🚀 Como Executar o Projeto
-
-1. **Instale as dependências (se ainda não o fez):**
-   ```bash
-   npm install
-   ```
-
-2. **Inicie o servidor de desenvolvimento:**
-   ```bash
-   npm run dev
-   ```
-
-3. **Abra no navegador:**
-   Acesse [http://localhost:3000](http://localhost:3000)
+Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
 
 ---
 
-## 📦 Scripts Disponíveis
+## 🔄 Como Atualizar os Dados da NASA Localmente
 
-| Comando | Descrição |
-| --- | --- |
-| `npm run dev` | Inicia o servidor local de desenvolvimento |
-| `npm run build` | Cria a versão otimizada para produção |
-| `npm run start` | Executa o build de produção localmente |
-| `npm run lint` | Executa o linter ESLint |
-
----
-
-## 🧩 Adicionando Componentes do shadcn/ui
-
-Para adicionar novos componentes da biblioteca `shadcn/ui`, execute:
+O projeto possui um script dedicado para extrair e recalibrar dados da NASA POWER:
 
 ```bash
-npx shadcn@latest add <nome-do-componente>
+node scripts/fetch_nasa_data.mjs
 ```
-
-**Exemplos:**
-```bash
-# Adicionar Card, Dialog ou Input
-npx shadcn@latest add card
-npx shadcn@latest add dialog
-npx shadcn@latest add input
-```
-
-Os componentes serão adicionados automaticamente na pasta `src/components/ui/`.
-
----
-
-## 📁 Estrutura de Pastas
-
-```text
-├── .nvmrc                   # Versão definida do Node.js
-├── components.json          # Configuração do shadcn/ui
-├── next.config.ts           # Configurações do Next.js
-├── package.json             # Dependências e scripts
-├── tsconfig.json            # Configuração do TypeScript
-└── src/
-    ├── app/                 # App Router (páginas, layouts, estilos globais)
-    │   ├── globals.css      # Estilos globais e Tailwind v4
-    │   ├── layout.tsx       # Layout raiz
-    │   └── page.tsx         # Página inicial
-    ├── components/
-    │   └── ui/              # Componentes do shadcn/ui (Button, etc.)
-    └── lib/
-        └── utils.ts         # Utilitários (ex: cn helper)
-```
+Os dados serão salvos em `src/data/nasa_locations_climatology.json` e `src/data/historical_events_40years.json`.
