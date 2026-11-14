@@ -5,21 +5,21 @@ import "./globals.css";
 const archivo = Archivo({
   variable: "--font-archivo",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "800", "900"],
   display: "swap",
 });
 
 const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "600"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "GroundTruth · Houston, We Have a Harvest",
   description:
-    "Se eu plantar a soja nesta data, em quantos dos últimos 35 anos o milho safrinha teria pegado geada ou seca na floração? Dados diários da NASA POWER.",
+    "Se eu plantar a soja nesta data, em quantos dos últimos 45 anos o milho safrinha teria pegado geada ou seca na fase crítica? Dados diários da NASA POWER desde 1981.",
 };
 
 export const viewport: Viewport = {
