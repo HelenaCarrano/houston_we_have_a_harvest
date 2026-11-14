@@ -27,6 +27,8 @@ export interface RiscoView {
   nivel: Nivel;
   /** Só geada: anos com geada forte. */
   anosFortes?: number[];
+  /** Só seca: anos por sinal. */
+  detalheSeca?: { anosSoloSeco: number[]; anosVeranico: number[]; anosAmbos: number[] };
 }
 
 export interface DataView {
@@ -215,6 +217,7 @@ export function buildViewData(params: EngineParams = PARAMS_PADRAO): ViewData {
       frequencia: r.frequencia,
       anos: r.anosListados,
       ...(r.anosFortes ? { anosFortes: r.anosFortes } : {}),
+      ...(r.detalheSeca ? { detalheSeca: r.detalheSeca } : {}),
       nivel: nivelRisco(r.frequencia),
       periodo: r.periodo,
       confianca: confianca(r.totalAnos),

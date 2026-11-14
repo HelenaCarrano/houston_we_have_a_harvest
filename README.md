@@ -49,7 +49,7 @@ Regras do documento do time **"GroundTruth — Metodologia e validação"**. Có
 
 1. **Cronograma:** colheita da soja = plantio + 120 dias; plantio do milho = colheita + 5 dias; **fase crítica do milho** (pendoamento e enchimento de grãos) = 55 a 100 dias após o plantio do milho.
 2. **Geada provável:** um ano conta se a mínima do ar a 2 m (T2M_MIN) ficou **≤ 3 °C** em algum dia da fase crítica. **Geada forte:** ≤ 1 °C. Por que 3 °C: a diferença entre abrigo e relva é de 3–6 °C; 3 °C no abrigo ≈ −1 °C na relva ([Embrapa Trigo](https://www.alice.cnptia.embrapa.br/alice/bitstream/doc/1084446/1/ID442832017CBAGRO20MM398.pdf), [Embrapa, boletim agroclimático](https://www.infoteca.cnptia.embrapa.br/infoteca/bitstream/doc/1139138/1/BolAgroClimatico-dez21.pdf), [Semina/UEL](https://ojs.uel.br/revistas/uel/index.php/semagrarias/article/download/30322/24555/166627)).
-3. **Seca:** um ano conta quando, na fase crítica, valem **as duas** condições: veranico de **15+ dias seguidos com chuva < 1 mm** **e** umidade média do solo na raiz (GWETROOT) **abaixo do percentil 20** da própria série para as mesmas datas do ano.
+3. **Seca:** um ano conta quando, na fase crítica, vale **um dos dois** sinais: veranico de **15+ dias seguidos com chuva < 1 mm** **ou** umidade média do solo na raiz (GWETROOT) **abaixo do percentil 20** da própria série para as mesmas datas do ano. A tela mostra os dois sinais separados e os anos com **os dois juntos** (casos mais graves). **Desvio da Metodologia:** o documento pedia "e"; trocamos por "ou" porque a regra "e" não marcou a estiagem de 2026 registrada pelo Deral. Como o sinal de solo é relativo, cerca de 1 em cada 5 anos sempre aparece como solo seco; a regra deve ser calibrada com o teste do IBGE PAM.
 4. **Baixada:** o limite de geada sobe **+1 °C** (de 3 para 4 °C), porque baixadas acumulam ar frio. Hipótese a calibrar; ainda sem relevo real (SRTM).
 5. **Frequência:** anos com evento ÷ anos avaliados, mostrada como "X/10 anos" e "N de 45 safras". **Nível:** Baixo (até 1 em 10), Médio (2 ou 3), Alto (4 ou mais).
 6. **Confiança:** alta (≥ 12 anos), média (7–11), baixa (< 7). A Metodologia também pede concordância com Deral/IBGE para "alta"; essa validação ainda não está no app.
@@ -58,7 +58,7 @@ Regras do documento do time **"GroundTruth — Metodologia e validação"**. Có
 ### Teste com 2026 (Pato Branco, soja em 20/10)
 
 - **Geada na fase crítica em 2026: sim** (também com o limite de baixada), coerente com o Deral de maio/2026.
-- **Seca na fase crítica em 2026: não** pela regra "veranico **e** solo seco". O POWER mostra o 5º abril com solo mais seco desde 1981, mas sem veranico de 15 dias; o Deral relatou estiagem em abril. Mostramos o resultado como ele sai.
+- **Seca na fase crítica em 2026:** o POWER mostra o 5º abril com solo mais seco desde 1981, mas sem veranico de 15 dias. Pela regra original "veranico **e** solo seco" o app dizia "não", contra o relato de estiagem do Deral; com "veranico **ou** solo seco" o ano é marcado. A tela mostra os sinais separados para que o técnico veja o que sustenta o número.
 
 ### Hipóteses e o que é estimado
 
@@ -108,7 +108,7 @@ npm run data:fetch                      # re-download NASA POWER daily data
 
 ### How risk is computed
 
-Rules follow the team's methodology document. Soybean harvest = sowing + 120 d; corn sowing = harvest + 5 d; **corn critical stage** (tasseling and grain fill) = 55–100 d after corn sowing. **Likely frost:** 2 m air minimum ≤ 3 °C on any day of the critical stage (**strong frost** ≤ 1 °C); 3 °C at screen height ≈ −1 °C at grass level (Embrapa; Semina/UEL). **Drought:** within the critical stage, a dry spell of 15+ days with rain < 1 mm **and** mean root-zone soil wetness (GWETROOT) below the 20th percentile for the same calendar dates. **Lowland:** frost threshold +1 °C (hypothesis to calibrate). Frequency = event years ÷ evaluated years; level Low (≤ 1 in 10), Medium (2–3), High (≥ 4). Confidence: high (≥ 12 years), medium (7–11), low (< 7). 2026 backtest (Pato Branco, soy sown Oct 20): frost flagged, matching field reports; drought not flagged by the strict rule.
+Rules follow the team's methodology document. Soybean harvest = sowing + 120 d; corn sowing = harvest + 5 d; **corn critical stage** (tasseling and grain fill) = 55–100 d after corn sowing. **Likely frost:** 2 m air minimum ≤ 3 °C on any day of the critical stage (**strong frost** ≤ 1 °C); 3 °C at screen height ≈ −1 °C at grass level (Embrapa; Semina/UEL). **Drought:** within the critical stage, a dry spell of 15+ days with rain < 1 mm **or** mean root-zone soil wetness (GWETROOT) below the 20th percentile for the same calendar dates (shown separately, plus years with both). We deviate from the original methodology ("and") because it missed the documented 2026 drought. **Lowland:** frost threshold +1 °C (hypothesis to calibrate). Frequency = event years ÷ evaluated years; level Low (≤ 1 in 10), Medium (2–3), High (≥ 4). Confidence: high (≥ 12 years), medium (7–11), low (< 7). 2026 backtest (Pato Branco, soy sown Oct 20): frost flagged, matching field reports; drought not flagged by the strict rule.
 
 ### Limitations
 

@@ -41,6 +41,9 @@ export interface AnoAvaliado {
   forte?: boolean;
   /** Seca: GWETROOT médio na fase. */
   umidadeSoloMedia?: number;
+  /** Seca: sinais separados. */
+  veranico?: boolean;
+  soloSeco?: boolean;
 }
 
 export interface ResultadoRisco {
@@ -52,6 +55,8 @@ export interface ResultadoRisco {
   anosListados: number[];
   /** Só geada: anos com geada forte. */
   anosFortes?: number[];
+  /** Só seca: anos por sinal (solo seco, veranico e os dois juntos). */
+  detalheSeca?: { anosSoloSeco: number[]; anosVeranico: number[]; anosAmbos: number[] };
   porAno: AnoAvaliado[];
   periodo: [number, number] | null;
 }
@@ -173,10 +178,14 @@ export function percentil(valores: number[], p: number): number {
 }
 
 /**
- * Seca na fase crítica do milho safrinha. Um ano é seco quando AS DUAS condições valem na fase:
- *  - veranico: sequência >= sequenciaSecaDias com chuva < chuvaDiaSecoMm; E
- *  - GWETROOT médio abaixo do percentil `percentilUmidadeSolo` da própria série
+ * Seca na fase crítica do milho safrinha. Dois sinais, mostrados separadamente:
+ *  - veranico: sequência >= sequenciaSecaDias com chuva < chuvaDiaSecoMm;
+ *  - solo seco: GWETROOT médio abaixo do percentil `percentilUmidadeSolo` da própria série
  *    para as mesmas datas do ano (todos os anos avaliados nesta mesma janela).
+ * Decisão do time (14/11/2026), contrariando a Metodologia (que exigia os dois ao mesmo tempo):
+ * o ano é seco quando QUALQUER um dos sinais vale, porque a regra "E" não marcou a estiagem de 2026
+ * registrada pelo Deral. Os anos com os dois sinais (casos mais graves) ficam em `detalheSeca.anosAmbos`.
+ * Atenção: o sinal de solo é relativo (percentil), então ao menos ~20% dos anos sempre são marcados.
  */
 export function riscoSeca(
   dados: DadosDiarios,
@@ -200,13 +209,27 @@ export function riscoSeca(
     brutos.map((b) => b.umidade),
     params.percentilUmidadeSolo,
   );
-  const porAno: AnoAvaliado[] = brutos.map((b) => ({
-    ano: b.ano,
-    evento: b.seq >= params.sequenciaSecaDias && b.umidade < limiteUmidade,
-    valor: b.seq,
-    umidadeSoloMedia: Math.round(b.umidade * 1000) / 1000,
-  }));
-  return resumo(porAno);
+  const porAno: AnoAvaliado[] = brutos.map((b) => {
+    const veranico = b.seq >= params.sequenciaSecaDias;
+    const soloSeco = b.umidade < limiteUmidade;
+    return {
+      ano: b.ano,
+      evento: veranico || soloSeco,
+      valor: b.seq,
+      umidadeSoloMedia: Math.round(b.umidade * 1000) / 1000,
+      veranico,
+      soloSeco,
+    };
+  });
+  const anos = (f: (a: AnoAvaliado) => boolean) => porAno.filter(f).map((a) => a.ano);
+  return {
+    ...resumo(porAno),
+    detalheSeca: {
+      anosSoloSeco: anos((a) => !!a.soloSeco),
+      anosVeranico: anos((a) => !!a.veranico),
+      anosAmbos: anos((a) => !!a.soloSeco && !!a.veranico),
+    },
+  };
 }
 
 export interface RiscoData {

@@ -74,18 +74,28 @@ test("riscoGeada ignora anos com dado ausente na fase", () => {
   assert.equal(riscoGeada(d, "10-01").totalAnos, 4);
 });
 
-test("riscoSeca exige veranico E solo seco ao mesmo tempo", () => {
+test("riscoSeca conta veranico OU solo seco e separa os sinais", () => {
   const d = sintetico();
-  // 2003: veranico de 15 dias + solo seco → seco
+  // 2003: só veranico de 15 dias
   preenche(d.data.PRECTOTCORR, idx(d, "2003-04-01"), 15, 0.2);
-  preenche(d.data.GWETROOT, idx(d, "2003-03-30"), 46, 0.3);
-  // 2004: só veranico → não conta
+  // 2004: veranico de 20 dias + solo mais seco da série → os dois
   preenche(d.data.PRECTOTCORR, idx(d, "2004-04-01"), 20, 0);
-  // 2005: só solo seco → não conta
-  preenche(d.data.GWETROOT, idx(d, "2005-03-30"), 46, 0.4);
+  preenche(d.data.GWETROOT, idx(d, "2004-03-30"), 46, 0.3);
   const r = riscoSeca(d, "10-01");
-  assert.deepEqual(r.anosListados, [2003]);
+  assert.deepEqual(r.anosListados, [2003, 2004]);
+  assert.deepEqual(r.detalheSeca?.anosVeranico, [2003, 2004]);
+  assert.deepEqual(r.detalheSeca?.anosSoloSeco, [2004]);
+  assert.deepEqual(r.detalheSeca?.anosAmbos, [2004]);
   assert.equal(r.porAno.find((a) => a.ano === 2004)?.valor, 20);
+});
+
+test("riscoSeca conta ano só com solo seco, sem veranico", () => {
+  const d = sintetico();
+  preenche(d.data.GWETROOT, idx(d, "2005-03-30"), 46, 0.3);
+  const r = riscoSeca(d, "10-01");
+  assert.deepEqual(r.anosListados, [2005]);
+  assert.deepEqual(r.detalheSeca?.anosVeranico, []);
+  assert.deepEqual(r.detalheSeca?.anosAmbos, []);
 });
 
 test("riscoPorData retorna as 5 datas padrão com geada normal e de baixada", () => {

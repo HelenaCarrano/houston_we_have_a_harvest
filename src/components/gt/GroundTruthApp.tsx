@@ -164,6 +164,20 @@ function CardRisco({
           </>
         )}
       </p>
+      {r.detalheSeca && (
+        <ul className="grid gap-1 rounded-xl border border-gt-line bg-gt-card2 p-3 text-sm">
+          <li>
+            Solo muito seco: <b>{r.detalheSeca.anosSoloSeco.length}</b> de {r.totalAnos} anos
+          </li>
+          <li>
+            Veranico de 15+ dias: <b>{r.detalheSeca.anosVeranico.length}</b> de {r.totalAnos} anos
+          </li>
+          <li>
+            Os dois juntos (mais graves): <b>{r.detalheSeca.anosAmbos.length}</b>
+            {r.detalheSeca.anosAmbos.length ? ` (${r.detalheSeca.anosAmbos.join(", ")})` : ""}
+          </li>
+        </ul>
+      )}
       <p className="text-sm text-gt-muted">{regra}</p>
       {extra}
       <p className="mt-auto font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint">
@@ -485,7 +499,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           titulo="Seca na fase crítica"
           tipo="seca"
           r={d.seca}
-          regra={`Ano seco = ${p.sequenciaSecaDias}+ dias seguidos com chuva < ${p.chuvaDiaSecoMm} mm E umidade do solo na raiz entre as ${p.percentilUmidadeSolo}% mais baixas para as mesmas datas, entre ${ddmm(d.faseInicio)} e ${ddmm(d.faseFim)}.`}
+          regra={`Ano seco = ${p.sequenciaSecaDias}+ dias seguidos com chuva < ${p.chuvaDiaSecoMm} mm OU umidade do solo na raiz entre as ${p.percentilUmidadeSolo}% mais baixas para as mesmas datas, entre ${ddmm(d.faseInicio)} e ${ddmm(d.faseFim)}. Como o solo é comparado com a própria história, cerca de 1 em cada 5 anos sempre aparece como solo seco.`}
         />
       </div>
 
