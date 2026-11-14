@@ -152,12 +152,11 @@ export function BrazilDrilldownMap({ onSelectState, selectedStateId }: BrazilDri
                           : "#27272a"
                       }
                       strokeWidth={isSelected ? "2.5" : isShowcase ? "2" : "1"}
+                      aria-label={`${state.nome} (${state.sigla})`}
                       className={`transition-all duration-200 ${
                         isMatchFilter ? "opacity-100 hover:fill-blue-900/60 hover:stroke-blue-400" : "opacity-40"
                       }`}
-                    >
-                      <title>{state.nome} ({state.sigla}) - Clique para ver dados climáticos</title>
-                    </path>
+                    />
 
                     {/* State Sigla Centroid Label */}
                     {isMatchFilter && state.centroid && (
