@@ -157,7 +157,7 @@ export function Rotacoes({
                 ) : (
                   <SeloNivel nivel="Não calculado" rotulo={t("Clima", "Climate")} />
                 )}
-                <SeloNivel nivel={r.erosao} rotulo={t("Erosão", "Erosion")} />
+                <SeloNivel nivel={d.campo[r.id].nivelErosao} rotulo={t("Erosão", "Erosion")} />
               </div>
 
               <p className="rounded-xl bg-gt-bg/60 p-2.5 text-sm">
@@ -203,7 +203,11 @@ export function Rotacoes({
                 cor="text-gt-faint"
               />
               <p className="text-xs text-gt-faint">
-                {t("Solo descoberto:", "Bare soil:")} {x.soloDescoberto}
+                {t("Solo descoberto:", "Bare soil:")} {x.soloDescoberto}{" "}
+                {t(
+                  `(${d.campo[r.id].diasDescoberto} dias do ano sem cultura)`,
+                  `(${d.campo[r.id].diasDescoberto} days a year without a crop)`,
+                )}
               </p>
             </li>
           );
@@ -212,8 +216,8 @@ export function Rotacoes({
 
       <p className="mt-4 rounded-xl border border-gt-risk-line bg-gt-risk-bg p-3 text-sm text-gt-risk-text">
         {t(
-          "Textos agronômicos, níveis de erosão e quanto cada rotação atende às prioridades são qualitativos e estão ",
-          "Agronomic texts, erosion levels and how well each rotation meets the priorities are qualitative and ",
+          "Textos agronômicos e quanto cada rotação atende às prioridades são qualitativos; o nível de erosão vem dos dias sem cultura (ciclos de exemplo) e ignora o declive. Tudo está ",
+          "Agronomic texts and how well each rotation meets the priorities are qualitative; the erosion level comes from the days without a crop (example cycles) and ignores slope. Everything is ",
         )}
         <b>{t("a validar com técnico", "to be validated with an agronomist")}</b>
         {t(

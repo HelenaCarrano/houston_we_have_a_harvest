@@ -26,6 +26,16 @@ import {
   type FiltroEnso,
   type IndiceEnso,
 } from "@/lib/engine/enso.ts";
+import {
+  ROTACOES_IDS,
+  calendarioRotacao,
+  chuvaNaJanelaDescoberta,
+  nivelErosaoPorDias,
+  type ChuvaDescoberta,
+  type NivelErosao,
+  type RotacaoId,
+  type Segmento,
+} from "@/lib/engine/calendario.ts";
 
 const DIA = 86_400_000;
 
@@ -49,6 +59,21 @@ export interface ResultadosView {
   seca: RiscoView;
 }
 
+/** Linha do ano de uma rotação: da soja até a próxima soja. */
+export interface CampoView {
+  segmentos: Segmento[];
+  /** Dias do ano sem cultura e sem cobertura viva. */
+  diasDescoberto: number;
+  /** Dias sem cultura em cada mês civil (índice 0 = janeiro). */
+  diasPorMes: number[];
+  /** Erosão pelos dias sem cultura (regra da Metodologia; sem declive). */
+  nivelErosao: NivelErosao;
+  /** Trigo: dias que a colheita passa do plantio da soja seguinte. */
+  atrasoSojaDias: number;
+  /** Chuva do POWER nos dias sem cultura (média de todos os anos). */
+  chuva: ChuvaDescoberta | null;
+}
+
 export interface DataView extends ResultadosView {
   /** "MM-DD" */
   dataSoja: string;
@@ -61,6 +86,8 @@ export interface DataView extends ResultadosView {
   enso: Record<FiltroEnso, ResultadosView>;
   /** Anos (safrinha) de cada fase do ENSO para esta data de plantio. */
   anosPorFase: Record<FaseEnso, number[]>;
+  /** Quando o campo fica sem cultura, por rotação. */
+  campo: Record<RotacaoId, CampoView>;
 }
 
 export interface Prova2026 {
@@ -307,6 +334,20 @@ export function buildViewData(params: EngineParams = PARAMS_PADRAO): ViewData {
               }
             : { geada: view(r.geada), geadaBaixada: view(r.geadaBaixada), seca: view(r.seca) };
         const todos = resultados();
+        const campo = Object.fromEntries(
+          ROTACOES_IDS.map((rid) => {
+            const cal = calendarioRotacao(rid, r.dataSoja, params);
+            const v: CampoView = {
+              segmentos: cal.segmentos,
+              diasDescoberto: cal.diasDescoberto,
+              diasPorMes: cal.diasPorMes,
+              nivelErosao: nivelErosaoPorDias(cal.diasDescoberto, params),
+              atrasoSojaDias: cal.atrasoSojaDias,
+              chuva: chuvaNaJanelaDescoberta(dados, r.dataSoja, cal, params),
+            };
+            return [rid, v];
+          }),
+        ) as Record<RotacaoId, CampoView>;
         return {
           dataSoja: r.dataSoja,
           colheitaSoja: mmdd(r.cronograma.colheitaSoja),
@@ -316,6 +357,7 @@ export function buildViewData(params: EngineParams = PARAMS_PADRAO): ViewData {
           faseFim: mmdd(r.cronograma.faseFim),
           ...todos,
           anosPorFase,
+          campo,
           enso: {
             todos,
             "el-nino": resultados(new Set(anosPorFase["el-nino"])),

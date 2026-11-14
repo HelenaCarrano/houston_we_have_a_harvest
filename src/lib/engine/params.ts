@@ -27,6 +27,18 @@ export interface EngineParams {
   sequenciaSecaDias: number;
   /** Percentil de GWETROOT (mesmas datas do ano) abaixo do qual o solo está seco. */
   percentilUmidadeSolo: number;
+  /** Dias do plantio à colheita do milho safrinha (hipótese a validar). */
+  cicloMilho: number;
+  /** Semeadura do trigo depois da soja, "MM-DD" (hipótese: valor de exemplo; o ZARC define a janela real). */
+  semeaduraTrigo: string;
+  /** Dias do plantio à colheita do trigo (hipótese a validar). */
+  cicloTrigo: number;
+  /** Até este número de dias sem cultura o campo conta como coberto (tolerância do intervalo de semeadura). */
+  toleranciaCobertoDias: number;
+  /** Mais dias sem cultura que isto = erosão Alta (Metodologia: "descoberto mais de 60 dias"). */
+  limiteErosaoAltaDias: number;
+  /** Chuva diária (mm) que conta como chuva forte, relevante para erosão (Metodologia: 50 mm). */
+  chuvaForteMm: number;
 }
 
 export const PARAMS_PADRAO: EngineParams = {
@@ -41,6 +53,12 @@ export const PARAMS_PADRAO: EngineParams = {
   chuvaDiaSecoMm: 1,
   sequenciaSecaDias: 15,
   percentilUmidadeSolo: 20,
+  cicloMilho: 135,
+  semeaduraTrigo: "05-15",
+  cicloTrigo: 130,
+  toleranciaCobertoDias: 15,
+  limiteErosaoAltaDias: 60,
+  chuvaForteMm: 50,
 };
 
 /** Datas de plantio da soja comparadas (dia/mês), no formato "MM-DD". */

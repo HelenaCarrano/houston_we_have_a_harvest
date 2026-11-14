@@ -76,14 +76,24 @@ O usuário escolhe **Todos / El Niño / La Niña / Neutro** e a tela recalcula g
 - **Amostra:** cada fase tem de 8 a 25 anos conforme a data. Abaixo de 12 anos a tela avisa para ler com cautela, e a confiança cai (alta ≥ 12, média 7–11, baixa < 7).
 - **O que os dados mostram (Pato Branco, soja em 20/10):** geada em 3 de 8 anos de El Niño, 6 de 12 de La Niña e 10 de 25 neutros (19 de 45 no total). A diferença entre as fases é pequena frente à incerteza de amostras tão curtas; **não há um sinal forte de El Niño/La Niña aqui**, e o app não finge que há.
 
+### Campo descoberto ao longo do ano
+
+Para cada rotação e data de plantio o app monta a linha de 365 dias da soja até a próxima soja (`src/lib/engine/calendario.ts`, com testes) e mostra quando o campo fica **sem cultura** (só palha), com cobertura viva (braquiária) ou com cultura.
+
+- **Hipóteses de ciclo (a validar com agronomia/ZARC):** soja 120 dias, intervalo de 5 dias, milho 135 dias, trigo semeado em 15/05 com 130 dias de ciclo. Os ciclos são fixos, então os **dias sem cultura são os mesmos para qualquer data da soja** (110 no milho, 115 no trigo, 5 na braquiária); o que muda é **em quais meses** eles caem.
+- **Chuva nesses dias:** média de chuva e de dias com 50 mm ou mais, calculadas dos dados diários do NASA POWER (1981–2025) só nos dias sem cultura. É a média de uma grade de ~50 km e subestima temporais locais.
+- **Nível de erosão** (regra da Metodologia do time), agora calculado pelos dias sem cultura: mais de 60 = **Alto**; até 15 = **Baixo** (tolerância nossa, equivale ao intervalo de semeadura); entre os dois = **Médio**. Não considera o declive do terreno (o SRTM ainda não classifica talhões) nem o mês da chuva. Isso substituiu os rótulos de erosão escritos à mão.
+- **Trigo e a soja seguinte:** com a semeadura de exemplo em 15/05, a colheita do trigo passa da data de plantio da soja seguinte quando a soja é plantada até ~29/09 (em 20/09, 2 dias); a tela avisa.
+- **O que os dados mostram (Pato Branco, soja em 20/10):** soja → milho fica 110 dias sem cultura, de julho a outubro, com ~524 mm de chuva média e ~0,9 dia por ano com 50 mm ou mais; a braquiária mantém o solo coberto o ano todo, exceto 5 dias.
+
 ### Checagem de 16 dias antes de plantar
 
 O app lê a previsão de 16 dias da Open-Meteo no navegador (só as coordenadas públicas do município são enviadas; se o serviço falhar, a página continua funcionando). Regras em `src/lib/engine/previsao.ts`, com testes: mínima do ar ≤ 3 °C (4 °C em baixada) ou chuva ≥ 50 mm nos próximos 7 dias = **"Não plante esta semana"**; menos de 10 mm de chuva em 7 dias, ou os mesmos eventos depois da primeira semana = **atenção**. São **hipóteses a validar com agronomia**; previsão não é garantia e a incerteza cresce depois de ~7 dias.
 
 ### Hipóteses e o que é estimado
 
-- Ciclos (120 / 5 dias), fase crítica (55–100 dias), limites de geada (3 °C e 1 °C), ajuste de baixada (+1 °C) e critérios de seca são **hipóteses de partida a validar com agronomia/ZARC**.
-- Quanto cada rotação atende às prioridades, os níveis de erosão e o risco do trigo são **qualitativos** (marcados "a validar com técnico").
+- Ciclos (soja 120, intervalo 5, milho 135 e trigo 130 dias, semeadura do trigo em 15/05), fase crítica (55–100 dias), limites de geada (3 °C e 1 °C), ajuste de baixada (+1 °C) e critérios de seca são **hipóteses de partida a validar com agronomia/ZARC**.
+- Quanto cada rotação atende às prioridades e o risco do trigo são **qualitativos** (marcados "a validar com técnico"). O nível de erosão é **calculado** pelos dias sem cultura (ciclos de exemplo) e ignora o declive.
 - O histórico anual em `src/data/historical_events_40years.json` é **calculado** dos dados diários (`scripts/build_historical_events.mjs`). Não há listas de "anos conhecidos" nem valores inventados. Perdas do Deral só aparecem para 2026.
 - `scripts/fetch_nasa_data.mjs` (climatologia mensal) tem altitudes fixas no código que **estavam erradas** frente ao SRTM (por exemplo, Francisco Beltrão: 650 m no código, 560 m no SRTM); elas não são usadas na tela principal, que usa `src/data/srtm_relief.json`.
 - O relevo vem de `scripts/fetch_srtm_relief.mjs` (altitude do ponto e 49 pontos a cada 500 m ao redor). Se o serviço falhar, o script usa a altitude média da célula do POWER e a tela marca o valor como **estimado**. A temperatura do POWER não recebe correção de altitude.

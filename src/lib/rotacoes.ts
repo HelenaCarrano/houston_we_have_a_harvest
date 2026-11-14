@@ -37,8 +37,6 @@ export interface Rotacao {
   id: "milho" | "trigo" | "milho-braquiaria";
   /** Usa o risco calculado do milho safrinha (geada e seca na fase crítica)? */
   riscoCalculado: boolean;
-  /** Nível de erosão (qualitativo, sem classificação por talhão). */
-  erosao: "Baixo" | "Médio" | "Alto";
   atende: Record<Prioridade, Atende>;
   pt: TextosRotacao;
   en: TextosRotacao;
@@ -48,7 +46,6 @@ export const ROTACOES: Rotacao[] = [
   {
     id: "milho",
     riscoCalculado: true,
-    erosao: "Médio",
     atende: { agua: 1, forragem: 1, nitrogenio: 1, erosao: 1, materiaOrganica: 2, mercado: 3 },
     pt: {
       nome: "Soja → milho safrinha",
@@ -88,7 +85,6 @@ export const ROTACOES: Rotacao[] = [
   {
     id: "trigo",
     riscoCalculado: false,
-    erosao: "Baixo",
     atende: { agua: 2, forragem: 2, nitrogenio: 1, erosao: 2, materiaOrganica: 2, mercado: 2 },
     pt: {
       nome: "Soja → trigo",
@@ -140,7 +136,6 @@ export const ROTACOES: Rotacao[] = [
   {
     id: "milho-braquiaria",
     riscoCalculado: true,
-    erosao: "Baixo",
     atende: { agua: 3, forragem: 3, nitrogenio: 1, erosao: 3, materiaOrganica: 3, mercado: 2 },
     pt: {
       nome: "Soja → milho + braquiária",

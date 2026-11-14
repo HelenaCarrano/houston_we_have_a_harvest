@@ -34,6 +34,12 @@ export function fmtNum(x: number, casas: number, lang: Lang): string {
   return x.toLocaleString(lang === "en" ? "en-US" : "pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
 }
 
+/** Meses civis (janeiro primeiro). */
+export const MESES_CURTOS: Record<Lang, string[]> = {
+  pt: ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"],
+  en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+};
+
 export const NIVEL_EN: Record<string, string> = {
   Baixo: "Low",
   Médio: "Medium",

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { DataView, LocalView, RiscoView, ViewData } from "@/lib/view-data";
 import { Rotacoes, SeloNivel } from "@/components/gt/Rotacoes";
 import { Previsao } from "@/components/gt/Previsao";
+import { CampoDescoberto } from "@/components/gt/CampoDescoberto";
 import {
   CONFIANCA_EN,
   LangContext,
@@ -884,6 +885,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           limiteGeadaC={p.limiteGeadaC}
           ajusteBaixadaC={p.ajusteBaixadaC}
         />
+
+        <CampoDescoberto d={d} nomeLocal={local.nome} params={p} />
 
         <Rotacoes d={dEf} nomeLocal={local.nome} baixada={baixada} filtroRotulo={filtroTexto} />
 
