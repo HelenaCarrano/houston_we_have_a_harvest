@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { DataView, LocalView, RiscoView, ViewData } from "@/lib/view-data";
+import { Rotacoes } from "@/components/gt/Rotacoes";
 
 // ---------- utilitários de formatação ----------
 
@@ -449,7 +450,10 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
         <GraficoDatas local={local} idx={idx} onSelect={setIdx} />
       </Card>
 
-      {/* 5. Prova 2026 */}
+      {/* 5. Comparação das 3 rotações */}
+      <Rotacoes d={d} nomeLocal={local.nome} />
+
+      {/* 6. Prova 2026 */}
       <Prova2026 local={local} limite={p.limiteGeadaC} />
 
       <footer className="flex flex-col gap-2 border-t border-gt-line pt-5">
