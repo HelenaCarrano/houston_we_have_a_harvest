@@ -221,14 +221,28 @@ export function riscoSeca(
       soloSeco,
     };
   });
+  return { ...resumo(porAno), detalheSeca: detalheSecaDe(porAno) };
+}
+
+function detalheSecaDe(porAno: AnoAvaliado[]) {
   const anos = (f: (a: AnoAvaliado) => boolean) => porAno.filter(f).map((a) => a.ano);
   return {
-    ...resumo(porAno),
-    detalheSeca: {
-      anosSoloSeco: anos((a) => !!a.soloSeco),
-      anosVeranico: anos((a) => !!a.veranico),
-      anosAmbos: anos((a) => !!a.soloSeco && !!a.veranico),
-    },
+    anosSoloSeco: anos((a) => !!a.soloSeco),
+    anosVeranico: anos((a) => !!a.veranico),
+    anosAmbos: anos((a) => !!a.soloSeco && !!a.veranico),
+  };
+}
+
+/**
+ * Refaz o resultado de risco usando só os anos permitidos (por exemplo, anos de El Niño).
+ * Os limites já foram definidos com a série completa (ex.: o percentil 20 do solo): aqui só se conta
+ * quantos dos anos escolhidos tiveram o evento. Não altera o resultado original.
+ */
+export function restringirAnos(r: ResultadoRisco, permitidos: ReadonlySet<number>): ResultadoRisco {
+  const porAno = r.porAno.filter((a) => permitidos.has(a.ano));
+  return {
+    ...resumo(porAno, r.anosFortes !== undefined),
+    ...(r.detalheSeca ? { detalheSeca: detalheSecaDe(porAno) } : {}),
   };
 }
 

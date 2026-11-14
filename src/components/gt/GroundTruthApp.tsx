@@ -4,7 +4,29 @@ import { useEffect, useMemo, useState } from "react";
 import type { DataView, LocalView, RiscoView, ViewData } from "@/lib/view-data";
 import { Rotacoes, SeloNivel } from "@/components/gt/Rotacoes";
 import { Previsao } from "@/components/gt/Previsao";
-import { CONFIANCA_EN, LangContext, MESES_EIXO, fmtData, fmtDia, fmtNum, useLang, useT, type Lang } from "@/lib/i18n";
+import {
+  CONFIANCA_EN,
+  LangContext,
+  MESES_EIXO,
+  TRIMESTRE_MESES,
+  fmtData,
+  fmtDia,
+  fmtNum,
+  useLang,
+  useT,
+  type Lang,
+} from "@/lib/i18n";
+import type { FaseEnso, FiltroEnso } from "@/lib/engine/enso.ts";
+
+const FILTROS_ENSO: { id: FiltroEnso; pt: string; en: string; fpt: string; fen: string }[] = [
+  { id: "todos", pt: "Todos os anos", en: "All years", fpt: "todos os anos", fen: "all years" },
+  { id: "el-nino", pt: "Anos de El Niño", en: "El Niño years", fpt: "anos de El Niño", fen: "El Niño years" },
+  { id: "la-nina", pt: "Anos de La Niña", en: "La Niña years", fpt: "anos de La Niña", fen: "La Niña years" },
+  { id: "neutro", pt: "Anos neutros", en: "Neutral years", fpt: "anos neutros", fen: "neutral years" },
+];
+
+/** Amostra pequena: abaixo disso a leitura pede cautela (regra de confiança da Metodologia: 12 anos). */
+const AMOSTRA_MINIMA = 12;
 
 // ---------- utilitários ----------
 
@@ -203,12 +225,15 @@ function CardRisco({
   r,
   regra,
   extra,
+  filtro,
 }: {
   titulo: string;
   tipo: "geada" | "seca";
   r: RiscoView;
   regra: string;
   extra?: React.ReactNode;
+  /** Texto do filtro de ENSO ativo (vazio = todos os anos). */
+  filtro?: string;
 }) {
   const t = useT();
   const lang = useLang();
@@ -276,7 +301,8 @@ function CardRisco({
       <p className="text-sm text-gt-muted">{regra}</p>
       {extra}
       <p className="mt-auto font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint">
-        NASA POWER {r.periodo ? `${r.periodo[0]}–${r.periodo[1]}` : ""} · {t("confiança", "confidence")}{" "}
+        NASA POWER {r.periodo ? `${r.periodo[0]}–${r.periodo[1]}` : ""}
+        {filtro ? ` · ${filtro}` : ""} · {t("confiança", "confidence")}{" "}
         {t(r.confianca, CONFIANCA_EN[r.confianca] ?? r.confianca)}
       </p>
     </Card>
@@ -561,10 +587,32 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
   const local = useMemo(() => data.locais.find((l) => l.id === localId) ?? data.locais[0], [data, localId]);
   const [idx, setIdx] = useState(Math.max(local.datas.findIndex((d) => d.dataSoja === "10-20"), 0));
   const [baixada, setBaixada] = useState(false);
-  const d = local.datas[idx];
+  const [fase, setFase] = useState<FiltroEnso>("todos");
+  const d = local.datas[idx]; // todos os anos (usado no card "Prova 2026" e no texto de abertura)
   const p = data.params;
-  const geada = baixada ? d.geadaBaixada : d.geada;
+  // Resultados considerando só os anos da fase escolhida do ENSO ("todos" = sem filtro).
+  const dEf: DataView = { ...d, ...d.enso[fase] };
+  const datasEf: DataView[] = local.datas.map((x) => ({ ...x, ...x.enso[fase] }));
+  const geada = baixada ? dEf.geadaBaixada : dEf.geada;
   const limiteAtual = p.limiteGeadaC + (baixada ? p.ajusteBaixadaC : 0);
+  const nomeFase = (f: FiltroEnso) => {
+    const x = FILTROS_ENSO.find((q) => q.id === f)!;
+    return t(x.pt, x.en);
+  };
+  /** Nome da fase para o meio de uma frase. */
+  const fraseFase = (f: FiltroEnso) => {
+    const x = FILTROS_ENSO.find((q) => q.id === f)!;
+    return t(x.fpt, x.fen);
+  };
+  const anosDaFase = fase === "todos" ? [] : d.anosPorFase[fase as FaseEnso];
+  const filtroTexto = fase === "todos" ? "" : `${nomeFase(fase)} (${anosDaFase.length})`;
+  const ult = data.enso.ultimo;
+  const ultFaseNome =
+    ult?.fase === "el-nino"
+      ? t("El Niño", "El Niño")
+      : ult?.fase === "la-nina"
+        ? t("La Niña", "La Niña")
+        : t("neutras", "neutral");
 
   return (
     <LangContext.Provider value={lang}>
@@ -662,6 +710,85 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
             </div>
           </div>
 
+          <div>
+            <Rotulo>3 · {t("Anos a considerar (fase do El Niño)", "Years to consider (El Niño phase)")}</Rotulo>
+            <div
+              className="mt-2 flex flex-wrap gap-2"
+              role="radiogroup"
+              aria-label={t("Anos a considerar", "Years to consider")}
+            >
+              {FILTROS_ENSO.map((f) => {
+                const n = f.id === "todos" ? d.geada.totalAnos : d.anosPorFase[f.id].length;
+                return (
+                  <button
+                    key={f.id}
+                    role="radio"
+                    aria-checked={fase === f.id}
+                    onClick={() => setFase(f.id)}
+                    className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${
+                      fase === f.id
+                        ? "border-gt-green bg-gt-green text-gt-bg"
+                        : "border-gt-line bg-gt-card2 text-gt-text hover:border-gt-btn-line"
+                    }`}
+                  >
+                    {t(f.pt, f.en)} <span className="font-mono text-xs font-normal">({n})</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-sm text-gt-muted">
+              {fase === "todos"
+                ? t(
+                    "Dica: escolha a fase prevista para a próxima safra para ver só os anos parecidos. O app não adivinha a fase por você.",
+                    "Tip: pick the phase forecast for the coming season to see only similar years. The app does not guess the phase for you.",
+                  )
+                : t(
+                    `Mostrando só os ${anosDaFase.length} ${fraseFase(fase)} para esta data de plantio: ${anosDaFase.join(", ")}.`,
+                    `Showing only the ${anosDaFase.length} ${fraseFase(fase)} for this planting date: ${anosDaFase.join(", ")}.`,
+                  )}
+            </p>
+            {fase !== "todos" && anosDaFase.length < AMOSTRA_MINIMA && (
+              <p className="mt-2 rounded-xl border border-gt-risk-line bg-gt-risk-bg p-3 text-sm text-gt-risk-text">
+                {t(
+                  `Poucos anos (${anosDaFase.length}): um ano a mais ou a menos muda bastante o resultado. Leia com cautela.`,
+                  `Few seasons (${anosDaFase.length}): one more or one fewer year changes the result a lot. Read with caution.`,
+                )}
+              </p>
+            )}
+            {ult && (
+              <p className="mt-2 rounded-xl border border-gt-frost-line bg-gt-frost-bg p-3 text-sm text-gt-frost-text">
+                {t(
+                  `Último valor publicado pela NOAA (RONI, ${TRIMESTRE_MESES[ult.trimestre]?.pt ?? ult.trimestre}/${ult.ano}): ${ult.valor > 0 ? "+" : ""}${fmtNum(ult.valor, 2, lang)} → condições ${ultFaseNome === "El Niño" ? "de El Niño" : ultFaseNome === "La Niña" ? "de La Niña" : "neutras"}. `,
+                  `Latest value published by NOAA (RONI, ${TRIMESTRE_MESES[ult.trimestre]?.en ?? ult.trimestre} ${ult.ano}): ${ult.valor > 0 ? "+" : ""}${fmtNum(ult.valor, 2, lang)} → ${ultFaseNome} conditions. `,
+                )}
+                {t(
+                  "É a leitura mais recente, não uma previsão: a fase da próxima safra é decidida pela previsão sazonal da NOAA.",
+                  "This is the most recent reading, not a forecast: the phase of the coming season depends on NOAA's seasonal outlook.",
+                )}{" "}
+                <a
+                  className="underline underline-offset-2"
+                  href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t("Previsão da NOAA", "NOAA ENSO outlook")}
+                </a>
+                .
+              </p>
+            )}
+            <Fonte>
+              {t(
+                "Fase de cada safra = RONI da NOAA (índice oficial do ENSO) no trimestre do meio da fase crítica do milho; ≥ +0,5 = El Niño, ≤ −0,5 = La Niña. Regra simplificada (a NOAA exige 5 trimestres seguidos para declarar um episódio). O ONI antigo classificaria cerca de 15% dos trimestres de outra forma. Limites de seca continuam calculados com todos os anos.",
+                "Phase of each season = NOAA's RONI (official ENSO index) in the 3-month season at the middle of the corn critical stage; ≥ +0.5 = El Niño, ≤ −0.5 = La Niña. Simplified rule (NOAA requires 5 consecutive seasons to declare an episode). The older ONI would classify about 15% of seasons differently. Drought limits are still computed with all years.",
+              )}{" "}
+              {t("Dados baixados em", "Data downloaded on")} {fmtData(data.enso.baixadoEm.slice(0, 10), lang)}.{" "}
+              <a className="underline underline-offset-2" href={data.enso.url} target="_blank" rel="noreferrer">
+                {t("Fonte", "Source")}
+              </a>
+              .
+            </Fonte>
+          </div>
+
           <label className="flex min-h-11 cursor-pointer items-center gap-3">
             <input
               type="checkbox"
@@ -706,6 +833,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
             }
             tipo="geada"
             r={geada}
+            filtro={filtroTexto}
             regra={t(
               `Ano com geada = mínima do ar a 2 m ≤ ${limiteAtual} °C em algum dia entre ${dia(d.faseInicio)} e ${dia(d.faseFim)}. ${p.limiteGeadaC} °C no abrigo ≈ geada na relva (Embrapa).`,
               `Frost year = 2 m air minimum ≤ ${limiteAtual} °C on any day between ${dia(d.faseInicio)} and ${dia(d.faseFim)}. ${p.limiteGeadaC} °C at screen height ≈ frost at grass level (Embrapa).`,
@@ -714,8 +842,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               baixada ? (
                 <p className="rounded-xl border border-gt-frost-line bg-gt-frost-bg p-3 text-sm text-gt-frost-text">
                   {t(
-                    `❄ Baixadas acumulam ar frio em noites calmas. Usamos +${p.ajusteBaixadaC} °C no limite (hipótese a calibrar); o risco local pode ser ainda maior. Sem baixada: ${d.geada.anosComEvento} de ${d.geada.totalAnos}.`,
-                    `❄ Lowlands trap cold air on calm nights. We add +${p.ajusteBaixadaC} °C to the limit (hypothesis to calibrate); local risk may be even higher. Without lowland: ${d.geada.anosComEvento} of ${d.geada.totalAnos}.`,
+                    `❄ Baixadas acumulam ar frio em noites calmas. Usamos +${p.ajusteBaixadaC} °C no limite (hipótese a calibrar); o risco local pode ser ainda maior. Sem baixada: ${dEf.geada.anosComEvento} de ${dEf.geada.totalAnos}.`,
+                    `❄ Lowlands trap cold air on calm nights. We add +${p.ajusteBaixadaC} °C to the limit (hypothesis to calibrate); local risk may be even higher. Without lowland: ${dEf.geada.anosComEvento} of ${dEf.geada.totalAnos}.`,
                   )}
                 </p>
               ) : null
@@ -724,7 +852,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           <CardRisco
             titulo={t("Seca na fase crítica", "Drought in the critical stage")}
             tipo="seca"
-            r={d.seca}
+            r={dEf.seca}
+            filtro={filtroTexto}
             regra={t(
               `Ano seco = ${p.sequenciaSecaDias}+ dias seguidos com chuva < ${p.chuvaDiaSecoMm} mm OU umidade do solo na raiz entre as ${p.percentilUmidadeSolo}% mais baixas para as mesmas datas, entre ${dia(d.faseInicio)} e ${dia(d.faseFim)}. Como o solo é comparado com a própria história, cerca de 1 em cada 5 anos sempre aparece como solo seco.`,
               `Drought year = ${p.sequenciaSecaDias}+ consecutive days with rain < ${p.chuvaDiaSecoMm} mm OR root-zone soil moisture among the ${p.percentilUmidadeSolo}% lowest for the same dates, between ${dia(d.faseInicio)} and ${dia(d.faseFim)}. Because soil is compared with its own history, about 1 in 5 years always shows up as dry soil.`,
@@ -734,8 +863,16 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
 
         <Card className="flex flex-col gap-5">
           <Rotulo>{t(`Recomendação para ${local.nome}`, `Recommendation for ${local.nome}`)}</Rotulo>
-          <Recomendacao datas={local.datas} idx={idx} baixada={baixada} />
-          <GraficoDatas datas={local.datas} idx={idx} onSelect={setIdx} baixada={baixada} />
+          <Recomendacao datas={datasEf} idx={idx} baixada={baixada} />
+          <GraficoDatas datas={datasEf} idx={idx} onSelect={setIdx} baixada={baixada} />
+          {fase !== "todos" && (
+            <Fonte>
+              {t(
+                `Gráfico e recomendação calculados só com os ${fraseFase(fase)}; o número de anos muda de uma data para outra.`,
+                `Chart and recommendation use only the ${fraseFase(fase)}; the number of years differs from one date to another.`,
+              )}
+            </Fonte>
+          )}
         </Card>
 
         <Previsao
@@ -748,7 +885,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           ajusteBaixadaC={p.ajusteBaixadaC}
         />
 
-        <Rotacoes d={d} nomeLocal={local.nome} baixada={baixada} />
+        <Rotacoes d={dEf} nomeLocal={local.nome} baixada={baixada} filtroRotulo={filtroTexto} />
 
         <Prova2026 local={local} d={d} limite={p.limiteGeadaC} />
 

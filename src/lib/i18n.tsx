@@ -41,6 +41,22 @@ export const NIVEL_EN: Record<string, string> = {
   "Não calculado": "Not calculated",
 };
 
+/** Trimestres do ENSO → meses por extenso. */
+export const TRIMESTRE_MESES: Record<string, { pt: string; en: string }> = {
+  DJF: { pt: "dez–fev", en: "Dec–Feb" },
+  JFM: { pt: "jan–mar", en: "Jan–Mar" },
+  FMA: { pt: "fev–abr", en: "Feb–Apr" },
+  MAM: { pt: "mar–mai", en: "Mar–May" },
+  AMJ: { pt: "abr–jun", en: "Apr–Jun" },
+  MJJ: { pt: "mai–jul", en: "May–Jul" },
+  JJA: { pt: "jun–ago", en: "Jun–Aug" },
+  JAS: { pt: "jul–set", en: "Jul–Sep" },
+  ASO: { pt: "ago–out", en: "Aug–Oct" },
+  SON: { pt: "set–nov", en: "Sep–Nov" },
+  OND: { pt: "out–dez", en: "Oct–Dec" },
+  NDJ: { pt: "nov–jan", en: "Nov–Jan" },
+};
+
 export const CONFIANCA_EN: Record<string, string> = { alta: "high", média: "medium", baixa: "low" };
 
 export const MESES_EIXO: Record<Lang, string[]> = {

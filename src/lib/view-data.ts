@@ -5,16 +5,27 @@ import pb from "@/data/power_daily_pato-branco.json";
 import cv from "@/data/power_daily_cascavel.json";
 import fb from "@/data/power_daily_francisco-beltrao.json";
 import srtm from "@/data/srtm_relief.json";
+import ensoData from "@/data/enso.json";
 import {
   PARAMS_PADRAO,
   riscoPorData,
+  restringirAnos,
   confianca,
   nivelRisco,
   type Nivel,
   type DadosDiarios,
   type EngineParams,
   type Confianca,
+  type ResultadoRisco,
 } from "@/lib/engine/index.ts";
+import {
+  FASES_ENSO,
+  fasePorAno,
+  ultimoTrimestre,
+  type FaseEnso,
+  type FiltroEnso,
+  type IndiceEnso,
+} from "@/lib/engine/enso.ts";
 
 const DIA = 86_400_000;
 
@@ -32,7 +43,13 @@ export interface RiscoView {
   detalheSeca?: { anosSoloSeco: number[]; anosVeranico: number[]; anosAmbos: number[] };
 }
 
-export interface DataView {
+export interface ResultadosView {
+  geada: RiscoView;
+  geadaBaixada: RiscoView;
+  seca: RiscoView;
+}
+
+export interface DataView extends ResultadosView {
   /** "MM-DD" */
   dataSoja: string;
   colheitaSoja: string;
@@ -40,9 +57,10 @@ export interface DataView {
   floracao: string;
   faseInicio: string;
   faseFim: string;
-  geada: RiscoView;
-  geadaBaixada: RiscoView;
-  seca: RiscoView;
+  /** Os mesmos resultados usando só os anos de cada fase do ENSO ("todos" = igual aos campos acima). */
+  enso: Record<FiltroEnso, ResultadosView>;
+  /** Anos (safrinha) de cada fase do ENSO para esta data de plantio. */
+  anosPorFase: Record<FaseEnso, number[]>;
 }
 
 export interface Prova2026 {
@@ -88,9 +106,20 @@ export interface Relevo {
   amostra: { pontos: number; espacamentoM: number; raioM: number; minM: number; maxM: number; mediaM: number } | null;
 }
 
+export interface EnsoInfo {
+  /** Índice usado na classificação. */
+  indice: "RONI";
+  url: string;
+  baixadoEm: string;
+  atualizadoPelaNoaaEm: string | null;
+  /** Valor mais recente publicado pela NOAA (informativo; não é previsão). */
+  ultimo: { trimestre: string; ano: number; valor: number; fase: FaseEnso } | null;
+}
+
 export interface ViewData {
   params: EngineParams;
   locais: LocalView[];
+  enso: EnsoInfo;
 }
 
 /** Datas de plantio da soja oferecidas na tela (inclui as 5 datas padrão do motor). */
@@ -233,10 +262,12 @@ function relevoDe(id: string): Relevo | null {
 
 export function buildViewData(params: EngineParams = PARAMS_PADRAO): ViewData {
   const datas = datasSoja();
+  const indiceEnso = (ensoData as unknown as { roni: IndiceEnso }).roni;
+  const metaEnso = (ensoData as unknown as { meta: { baixadoEm: string; fontes: { roni: { url: string; atualizadoPelaNoaaEm: string | null } } } }).meta;
   const locais = FONTES.map(({ id, dados }) => {
     const m = dados.meta as Record<string, unknown>;
     const riscos = riscoPorData(dados, params, datas, 2025);
-    const view = (r: (typeof riscos)[number]["geada"]): RiscoView => ({
+    const view = (r: ResultadoRisco): RiscoView => ({
       anosComEvento: r.anosComEvento,
       totalAnos: r.totalAnos,
       frequencia: r.frequencia,
@@ -256,21 +287,57 @@ export function buildViewData(params: EngineParams = PARAMS_PADRAO): ViewData {
       periodoDados: { inicio: dados.meta.start, fim: dados.meta.end },
       downloadedAt: String(m.downloadedAt),
       url: String(m.url),
-      datas: riscos.map((r) => ({
-        dataSoja: r.dataSoja,
-        colheitaSoja: mmdd(r.cronograma.colheitaSoja),
-        plantioMilho: mmdd(r.cronograma.plantioMilho),
-        floracao: mmdd(r.cronograma.floracaoMilho),
-        faseInicio: mmdd(r.cronograma.faseInicio),
-        faseFim: mmdd(r.cronograma.faseFim),
-        geada: view(r.geada),
-        geadaBaixada: view(r.geadaBaixada),
-        seca: view(r.seca),
-      })),
+      datas: riscos.map((r): DataView => {
+        // Fase do ENSO de cada safrinha avaliada para esta data de plantio (RONI, trimestre do meio da fase crítica).
+        const mapa = fasePorAno(
+          indiceEnso,
+          r.dataSoja,
+          r.geada.porAno.map((a) => a.ano),
+          params,
+        );
+        const anosPorFase = Object.fromEntries(
+          FASES_ENSO.map((f) => [f, [...mapa].filter(([, fase]) => fase === f).map(([ano]) => ano)]),
+        ) as Record<FaseEnso, number[]>;
+        const resultados = (anos?: ReadonlySet<number>): ResultadosView =>
+          anos
+            ? {
+                geada: view(restringirAnos(r.geada, anos)),
+                geadaBaixada: view(restringirAnos(r.geadaBaixada, anos)),
+                seca: view(restringirAnos(r.seca, anos)),
+              }
+            : { geada: view(r.geada), geadaBaixada: view(r.geadaBaixada), seca: view(r.seca) };
+        const todos = resultados();
+        return {
+          dataSoja: r.dataSoja,
+          colheitaSoja: mmdd(r.cronograma.colheitaSoja),
+          plantioMilho: mmdd(r.cronograma.plantioMilho),
+          floracao: mmdd(r.cronograma.floracaoMilho),
+          faseInicio: mmdd(r.cronograma.faseInicio),
+          faseFim: mmdd(r.cronograma.faseFim),
+          ...todos,
+          anosPorFase,
+          enso: {
+            todos,
+            "el-nino": resultados(new Set(anosPorFase["el-nino"])),
+            "la-nina": resultados(new Set(anosPorFase["la-nina"])),
+            neutro: resultados(new Set(anosPorFase.neutro)),
+          },
+        };
+      }),
       epocaGeada: epocaGeada(dados, params.limiteGeadaC),
       prova2026: prova2026(dados, params.limiteGeadaC),
       relevo: relevoDe(id),
     } satisfies LocalView;
   });
-  return { params, locais };
+  return {
+    params,
+    locais,
+    enso: {
+      indice: "RONI",
+      url: metaEnso.fontes.roni.url,
+      baixadoEm: metaEnso.baixadoEm,
+      atualizadoPelaNoaaEm: metaEnso.fontes.roni.atualizadoPelaNoaaEm,
+      ultimo: ultimoTrimestre(indiceEnso),
+    },
+  };
 }

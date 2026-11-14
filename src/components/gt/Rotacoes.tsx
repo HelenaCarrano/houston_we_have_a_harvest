@@ -54,7 +54,18 @@ function Lista({ titulo, itens, cor }: { titulo: string; itens: string[]; cor: s
   );
 }
 
-export function Rotacoes({ d, nomeLocal, baixada }: { d: DataView; nomeLocal: string; baixada: boolean }) {
+export function Rotacoes({
+  d,
+  nomeLocal,
+  baixada,
+  filtroRotulo = "",
+}: {
+  d: DataView;
+  nomeLocal: string;
+  baixada: boolean;
+  /** Filtro de El Niño/La Niña ativo (vazio = todos os anos). */
+  filtroRotulo?: string;
+}) {
   const t = useT();
   const lang = useLang();
   const dia = (x: string) => fmtDia(x, lang);
@@ -78,6 +89,7 @@ export function Rotacoes({ d, nomeLocal, baixada }: { d: DataView; nomeLocal: st
       <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint">
         {t("Comparar rotações", "Compare rotations")} · {nomeLocal} · {t("soja em", "soybean on")} {dia(d.dataSoja)}
         {baixada ? ` · ${t("baixada", "lowland")}` : ""}
+        {filtroRotulo ? ` · ${filtroRotulo}` : ""}
       </p>
       <h2 className="mt-1 text-2xl font-black">{t("O que plantar depois da soja?", "What to plant after soybean?")}</h2>
 

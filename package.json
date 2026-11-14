@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --test \"src/**/*.test.ts\"",
-    "data:fetch": "node scripts/fetch_power_daily.mjs && node scripts/build_historical_events.mjs"
+    "data:fetch": "node scripts/fetch_power_daily.mjs && node scripts/build_historical_events.mjs && node scripts/fetch_enso.mjs && node scripts/fetch_srtm_relief.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

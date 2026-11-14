@@ -41,6 +41,7 @@ npm run data:fetch # baixa de novo os dados diários da NASA POWER e regenera o 
 | **NASA POWER Daily API** (community=AG) | T2M_MIN, T2M_MAX, PRECTOTCORR, GWETROOT, GWETTOP diários, 01/01/1981 até o último dia disponível, para Pato Branco (-26.2295, -52.6716), Cascavel (-24.9578, -53.4595) e Francisco Beltrão (-26.0811, -53.0558) | https://power.larc.nasa.gov/docs/services/api/temporal/daily/ |
 | **Deral / Revista Cultivar, 9 abr 2026** | Estiagem e calor afetam feijão e milho (card "Prova 2026") | https://revistacultivar.com.br/noticias/pr-safra-2025-26-estiagem-e-calor-afetam-feijao-e-milho |
 | **Deral / Revista Cultivar, 19 mai 2026** | Geadas: milho safrinha em baixadas com queima de folhas; feijão 2ª safra com perdas; trigo sem dano significativo | https://revistacultivar.com.br/noticias/pr-safra-2025-26-milho-e-feijao-sofrem-impacto-das-geadas |
+| **NOAA CPC · RONI** (Relative Oceanic Niño Index) e ONI antigo (ERSST v5) | Fase do El Niño / La Niña de cada safra (filtro "anos parecidos"); o ONI antigo fica no arquivo só para comparação | https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/ · https://www.cpc.ncep.noaa.gov/data/indices/RONI.ascii.txt |
 | **NASA SRTM 30 m** (SRTM v3, via OpenTopoData, dataset `srtm30m`) | Altitude do ponto de cada município e desnível do entorno (1,5 km) | https://www.opentopodata.org/datasets/srtm/ |
 | **Open-Meteo** (previsão, CC BY 4.0, uso não comercial) | Previsão de 16 dias (mínima, máxima e chuva) para a checagem "posso plantar agora?" | https://open-meteo.com/ |
 | **ZARC (MAPA)** | Referência para janelas de semeadura (ainda não integrado ao app) | https://dados.agricultura.gov.br/dataset/6d3d141c-885e-41a4-ab7f-dc8ff323b96f |
@@ -64,6 +65,17 @@ Regras do documento do time **"GroundTruth — Metodologia e validação"**. Có
 - **Geada na fase crítica em 2026: sim** (também com o limite de baixada), coerente com o Deral de maio/2026.
 - **Seca na fase crítica em 2026:** o POWER mostra o 5º abril com solo mais seco desde 1981, mas sem veranico de 15 dias. Pela regra original "veranico **e** solo seco" o app dizia "não", contra o relato de estiagem do Deral; com "veranico **ou** solo seco" o ano é marcado. A tela mostra os sinais separados para que o técnico veja o que sustenta o número.
 
+### Anos de El Niño / La Niña ("anos parecidos")
+
+O usuário escolhe **Todos / El Niño / La Niña / Neutro** e a tela recalcula geada, seca, recomendação, gráfico e rotações usando só os anos daquela fase. O app **não adivinha** a fase da próxima safra: mostra apenas o último valor publicado pela NOAA (informativo) e o link da previsão sazonal.
+
+- **Índice:** **RONI** da NOAA. A página do ONI citada na Metodologia (ERSST v5) avisa que mudou e que o RONI é o índice usado hoje no monitoramento oficial do ENSO (NWS Public Information Statement 26-05). O ONI antigo é baixado junto (`scripts/fetch_enso.mjs`, `src/data/enso.json`) só para comparação: ele classificaria **cerca de 15%** dos trimestres de abril a agosto (1982–2026) de outra forma, inclusive 2026 (ONI: El Niño; RONI: neutro por 0,01).
+- **Fase de cada safra:** trimestre de 3 meses centrado no **meio da fase crítica do milho** para aquela data de plantio (ex.: soja em 20/10 → fase de 18/04 a 02/06 → trimestre AMJ). **El Niño** se o índice ≥ +0,5; **La Niña** se ≤ −0,5; **Neutro** entre os dois.
+- **Simplificação:** a NOAA só declara um episódio com 5 trimestres seguidos acima do limite; aqui classificamos o trimestre que cobre a fase crítica. É a regra da Metodologia do time.
+- **Limites de seca:** o percentil 20 de umidade do solo continua calculado com **todos** os anos; o filtro só conta quantos anos da fase tiveram o evento.
+- **Amostra:** cada fase tem de 8 a 25 anos conforme a data. Abaixo de 12 anos a tela avisa para ler com cautela, e a confiança cai (alta ≥ 12, média 7–11, baixa < 7).
+- **O que os dados mostram (Pato Branco, soja em 20/10):** geada em 3 de 8 anos de El Niño, 6 de 12 de La Niña e 10 de 25 neutros (19 de 45 no total). A diferença entre as fases é pequena frente à incerteza de amostras tão curtas; **não há um sinal forte de El Niño/La Niña aqui**, e o app não finge que há.
+
 ### Checagem de 16 dias antes de plantar
 
 O app lê a previsão de 16 dias da Open-Meteo no navegador (só as coordenadas públicas do município são enviadas; se o serviço falhar, a página continua funcionando). Regras em `src/lib/engine/previsao.ts`, com testes: mínima do ar ≤ 3 °C (4 °C em baixada) ou chuva ≥ 50 mm nos próximos 7 dias = **"Não plante esta semana"**; menos de 10 mm de chuva em 7 dias, ou os mesmos eventos depois da primeira semana = **atenção**. São **hipóteses a validar com agronomia**; previsão não é garantia e a incerteza cresce depois de ~7 dias.
@@ -82,7 +94,7 @@ O app lê a previsão de 16 dias da Open-Meteo no navegador (só as coordenadas 
 - A temperatura é a **do ar a 2 m**, não da superfície. Geadas na relva/folha acontecem com o ar a 2 m acima de 0 °C; por isso o limite de 3 °C.
 - Os ciclos das culturas são **exemplos**; cultivar, manejo e região mudam tudo.
 - **Não é previsão do tempo.** É frequência histórica.
-- El Niño/La Niña ainda não é usado (a tabela antiga digitada à mão foi removida).
+- A classificação de El Niño/La Niña usa a tabela oficial da NOAA (a tabela antiga digitada à mão foi removida), mas é uma regra simplificada e as amostras por fase são curtas.
 
 ### Tecnologia
 
@@ -119,7 +131,7 @@ npm run data:fetch                      # re-download NASA POWER daily data
 
 ### How risk is computed
 
-Rules follow the team's methodology document. Soybean harvest = sowing + 120 d; corn sowing = harvest + 5 d; **corn critical stage** (tasseling and grain fill) = 55–100 d after corn sowing. **Likely frost:** 2 m air minimum ≤ 3 °C on any day of the critical stage (**strong frost** ≤ 1 °C); 3 °C at screen height ≈ −1 °C at grass level (Embrapa; Semina/UEL). **Drought:** within the critical stage, a dry spell of 15+ days with rain < 1 mm **or** mean root-zone soil wetness (GWETROOT) below the 20th percentile for the same calendar dates (shown separately, plus years with both). We deviate from the original methodology ("and") because it missed the documented 2026 drought. **Lowland:** frost threshold +1 °C (hypothesis to calibrate). Frequency = event years ÷ evaluated years; level Low (≤ 1 in 10), Medium (2–3), High (≥ 4). Confidence: high (≥ 12 years), medium (7–11), low (< 7). 2026 backtest (Pato Branco, soy sown Oct 20): frost flagged, matching field reports; drought not flagged by the strict rule.
+Rules follow the team's methodology document. Soybean harvest = sowing + 120 d; corn sowing = harvest + 5 d; **corn critical stage** (tasseling and grain fill) = 55–100 d after corn sowing. **Likely frost:** 2 m air minimum ≤ 3 °C on any day of the critical stage (**strong frost** ≤ 1 °C); 3 °C at screen height ≈ −1 °C at grass level (Embrapa; Semina/UEL). **Drought:** within the critical stage, a dry spell of 15+ days with rain < 1 mm **or** mean root-zone soil wetness (GWETROOT) below the 20th percentile for the same calendar dates (shown separately, plus years with both). We deviate from the original methodology ("and") because it missed the documented 2026 drought. **Lowland:** frost threshold +1 °C (hypothesis to calibrate). Frequency = event years ÷ evaluated years; level Low (≤ 1 in 10), Medium (2–3), High (≥ 4). Confidence: high (≥ 12 years), medium (7–11), low (< 7). **El Niño / La Niña filter:** the user can restrict the count to seasons of one ENSO phase (NOAA's RONI, the official ENSO index: ≥ +0.5 El Niño, ≤ −0.5 La Niña, taken in the 3-month season at the middle of the critical stage); the app never guesses the coming phase. Samples are short (8–25 seasons) and the signal at this location is weak. 2026 backtest (Pato Branco, soy sown Oct 20): frost flagged, matching field reports; drought not flagged by the strict rule.
 
 ### Limitations
 
