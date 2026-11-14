@@ -19,7 +19,7 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "weharvest · Houston, We Have a Harvest",
   description:
-    "Se eu plantar a soja nesta data, em quantos dos últimos 45 anos o milho safrinha teria pegado geada ou seca na fase crítica? Dados diários da NASA POWER desde 1981.",
+    "If I plant soybeans on this date, in how many of the last 45 years would the second-crop corn have met frost or drought in its critical stage? Decision support built on NASA POWER daily data since 1981.",
 };
 
 export const viewport: Viewport = {
@@ -29,7 +29,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${archivo.variable} ${plexMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${archivo.variable} ${plexMono.variable} h-full antialiased`}>
       <body className="min-h-full bg-gt-bg text-gt-text font-sans">{children}</body>
     </html>
   );

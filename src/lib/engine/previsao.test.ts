@@ -57,6 +57,17 @@ test("semana seca → atenção", () => {
   assert.equal(r.titulo, "Atenção: semana seca");
 });
 
+test("mensagens em inglês", () => {
+  const p = base();
+  p.temperature_2m_min[3] = 2.5;
+  const r = avaliarPrevisao(p, PARAMS_PREVISAO, 0, "en");
+  assert.equal(r.titulo, "Do not plant this week");
+  assert.match(r.mensagens[0], /frost forecast on Nov 17/);
+  const seco = base();
+  for (let i = 0; i < 7; i++) seco.precipitation_sum[i] = 0.5;
+  assert.equal(avaliarPrevisao(seco, PARAMS_PREVISAO, 0, "en").titulo, "Caution: dry week");
+});
+
 test("valores nulos não quebram e previsão curta funciona", () => {
   const p = base(3);
   p.temperature_2m_min[1] = null;

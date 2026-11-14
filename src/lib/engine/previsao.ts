@@ -48,7 +48,13 @@ export interface AvaliacaoPrevisao {
   diasAvaliados: number;
 }
 
-const ddmm = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+export type Idioma = "pt" | "en";
+
+const MESES_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const fmtData = (iso: string, l: Idioma) =>
+  l === "en" ? `${MESES_EN[Number(iso.slice(5, 7)) - 1]} ${Number(iso.slice(8, 10))}` : `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+const fmtN = (x: number, l: Idioma, max = 1) =>
+  x.toLocaleString(l === "en" ? "en-US" : "pt-BR", { maximumFractionDigits: max });
 
 /**
  * Regras (hipóteses a validar):
@@ -61,7 +67,9 @@ export function avaliarPrevisao(
   p: PrevisaoDiaria,
   params: ParamsPrevisao = PARAMS_PREVISAO,
   ajusteBaixadaC = 0,
+  idioma: Idioma = "pt",
 ): AvaliacaoPrevisao {
+  const t = (pt: string, en: string) => (idioma === "en" ? en : pt);
   const n = Math.min(p.time.length, p.temperature_2m_min.length, p.precipitation_sum.length);
   const limite = params.limiteGeadaC + ajusteBaixadaC;
   const eventos: EventoPrevisao[] = [];
@@ -85,27 +93,41 @@ export function avaliarPrevisao(
   const semanaSeca = diasComChuva >= params.diasSemana && chuvaSemana < params.chuvaMinSemanaMm;
   const txt = (e: EventoPrevisao) =>
     e.tipo === "geada"
-      ? `geada prevista em ${ddmm(e.data)} (mínima ${e.valor.toLocaleString("pt-BR")} °C, limite ${limite} °C)`
-      : `chuva forte em ${ddmm(e.data)} (${e.valor.toLocaleString("pt-BR")} mm)`;
+      ? t(
+          `geada prevista em ${fmtData(e.data, idioma)} (mínima ${fmtN(e.valor, idioma)} °C, limite ${limite} °C)`,
+          `frost forecast on ${fmtData(e.data, idioma)} (minimum ${fmtN(e.valor, idioma)} °C, limit ${limite} °C)`,
+        )
+      : t(
+          `chuva forte em ${fmtData(e.data, idioma)} (${fmtN(e.valor, idioma)} mm)`,
+          `heavy rain on ${fmtData(e.data, idioma)} (${fmtN(e.valor, idioma)} mm)`,
+        );
 
   const mensagens: string[] = [];
-  naSemana.forEach((e) => mensagens.push(`Nesta semana: ${txt(e)}.`));
+  naSemana.forEach((e) => mensagens.push(t(`Nesta semana: ${txt(e)}.`, `This week: ${txt(e)}.`)));
   if (semanaSeca)
     mensagens.push(
-      `Semana seca: ${chuvaSemana.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} mm previstos em ${params.diasSemana} dias (abaixo de ${params.chuvaMinSemanaMm} mm). Pouca umidade para a soja germinar.`,
+      t(
+        `Semana seca: ${fmtN(chuvaSemana, idioma)} mm previstos em ${params.diasSemana} dias (abaixo de ${params.chuvaMinSemanaMm} mm). Pouca umidade para a soja germinar.`,
+        `Dry week: ${fmtN(chuvaSemana, idioma)} mm forecast in ${params.diasSemana} days (below ${params.chuvaMinSemanaMm} mm). Little moisture for soybean to germinate.`,
+      ),
     );
-  depois.forEach((e) => mensagens.push(`Mais adiante: ${txt(e)}. A previsão ainda pode mudar.`));
+  depois.forEach((e) =>
+    mensagens.push(t(`Mais adiante: ${txt(e)}. A previsão ainda pode mudar.`, `Later on: ${txt(e)}. The forecast may still change.`)),
+  );
 
   let nivel: NivelAlerta = "sem-alerta";
-  let titulo = `Sem alerta nos próximos ${params.diasSemana} dias`;
+  let titulo = t(`Sem alerta nos próximos ${params.diasSemana} dias`, `No alert in the next ${params.diasSemana} days`);
   if (naSemana.length > 0) {
     nivel = "nao-plantar";
-    titulo = "Não plante esta semana";
+    titulo = t("Não plante esta semana", "Do not plant this week");
   } else if (semanaSeca || depois.length > 0) {
     nivel = "atencao";
-    titulo = semanaSeca ? "Atenção: semana seca" : "Atenção nas próximas semanas";
+    titulo = semanaSeca
+      ? t("Atenção: semana seca", "Caution: dry week")
+      : t("Atenção nas próximas semanas", "Caution in the coming weeks");
   }
-  if (mensagens.length === 0) mensagens.push("Nenhum dos eventos monitorados aparece na previsão.");
+  if (mensagens.length === 0)
+    mensagens.push(t("Nenhum dos eventos monitorados aparece na previsão.", "None of the monitored events appear in the forecast."));
 
   return {
     nivel,

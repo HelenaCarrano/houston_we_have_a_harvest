@@ -2,14 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { avaliarPrevisao, PARAMS_PREVISAO, type PrevisaoDiaria } from "@/lib/engine/previsao.ts";
+import { fmtDia, fmtNum, useLang, useT } from "@/lib/i18n";
 
-const ddmm = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
-const n1 = (x: number) => x.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-
-type Estado =
-  | { tipo: "carregando" }
-  | { tipo: "erro" }
-  | { tipo: "ok"; dados: PrevisaoDiaria; atualizadoEm: string };
+type Estado = { tipo: "carregando" } | { tipo: "erro" } | { tipo: "ok"; dados: PrevisaoDiaria };
 
 interface Props {
   nome: string;
@@ -22,6 +17,8 @@ interface Props {
 
 /** Previsão de 16 dias (Open-Meteo) lida no navegador; se falhar, a página continua funcionando. */
 export function Previsao({ nome, lat, lon, baixada, limiteGeadaC, ajusteBaixadaC }: Props) {
+  const t = useT();
+  const lang = useLang();
   const [estado, setEstado] = useState<Estado>({ tipo: "carregando" });
 
   useEffect(() => {
@@ -35,8 +32,8 @@ export function Previsao({ nome, lat, lon, baixada, limiteGeadaC, ajusteBaixadaC
         return r.json();
       })
       .then((j) => {
-        if (!j?.daily?.time) throw new Error("resposta inesperada");
-        setEstado({ tipo: "ok", dados: j.daily as PrevisaoDiaria, atualizadoEm: new Date().toISOString() });
+        if (!j?.daily?.time) throw new Error("unexpected response");
+        setEstado({ tipo: "ok", dados: j.daily as PrevisaoDiaria });
       })
       .catch((e: unknown) => {
         if ((e as Error)?.name !== "AbortError") setEstado({ tipo: "erro" });
@@ -48,9 +45,9 @@ export function Previsao({ nome, lat, lon, baixada, limiteGeadaC, ajusteBaixadaC
   const av = useMemo(
     () =>
       estado.tipo === "ok"
-        ? avaliarPrevisao(estado.dados, { ...PARAMS_PREVISAO, limiteGeadaC }, baixada ? ajusteBaixadaC : 0)
+        ? avaliarPrevisao(estado.dados, { ...PARAMS_PREVISAO, limiteGeadaC }, baixada ? ajusteBaixadaC : 0, lang)
         : null,
-    [estado, limiteGeadaC, baixada, ajusteBaixadaC],
+    [estado, limiteGeadaC, baixada, ajusteBaixadaC, lang],
   );
 
   const cor =
@@ -63,15 +60,17 @@ export function Previsao({ nome, lat, lon, baixada, limiteGeadaC, ajusteBaixadaC
   return (
     <section className="gt-rise rounded-[22px] border border-gt-line bg-gt-card p-4 sm:p-6">
       <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint">
-        Checagem antes de plantar · próximos 16 dias · {nome}
+        {t("Checagem antes de plantar · próximos 16 dias", "Check before planting · next 16 days")} · {nome}
       </p>
-      <h2 className="mt-1 text-2xl font-black">Posso plantar a soja agora?</h2>
+      <h2 className="mt-1 text-2xl font-black">{t("Posso plantar a soja agora?", "Can I plant soybeans now?")}</h2>
 
-      {estado.tipo === "carregando" && <p className="mt-3 text-gt-muted">Buscando a previsão…</p>}
+      {estado.tipo === "carregando" && <p className="mt-3 text-gt-muted">{t("Buscando a previsão…", "Loading the forecast…")}</p>}
       {estado.tipo === "erro" && (
         <p className="mt-3 rounded-xl border border-gt-line bg-gt-card2 p-3 text-sm text-gt-muted">
-          Não foi possível carregar a previsão agora (serviço indisponível ou sem internet). O restante da página usa
-          dados históricos e continua valendo. Tente de novo mais tarde.
+          {t(
+            "Não foi possível carregar a previsão agora (serviço indisponível ou sem internet). O restante da página usa dados históricos e continua valendo. Tente de novo mais tarde.",
+            "The forecast could not be loaded right now (service unavailable or offline). The rest of the page uses historical data and still applies. Please try again later.",
+          )}
         </p>
       )}
 
@@ -89,51 +88,60 @@ export function Previsao({ nome, lat, lon, baixada, limiteGeadaC, ajusteBaixadaC
             </ul>
           </div>
 
-          <div className="mt-4 flex gap-1.5 overflow-x-auto pb-2" role="list" aria-label="Previsão dia a dia">
-            {estado.dados.time.map((t, i) => {
+          <div
+            className="mt-4 flex gap-1.5 overflow-x-auto pb-2"
+            role="list"
+            aria-label={t("Previsão dia a dia", "Day-by-day forecast")}
+          >
+            {estado.dados.time.map((d, i) => {
               const tmin = estado.dados.temperature_2m_min[i];
               const chuva = estado.dados.precipitation_sum[i];
               const frio = tmin !== null && tmin <= limite;
               const forte = chuva !== null && chuva >= PARAMS_PREVISAO.chuvaForteMm;
               return (
                 <div
-                  key={t}
+                  key={d}
                   role="listitem"
                   className={`min-w-[3.9rem] rounded-xl border p-2 text-center ${
                     i < PARAMS_PREVISAO.diasSemana ? "border-gt-btn-line" : "border-gt-line"
                   } ${frio ? "bg-gt-frost-bg" : "bg-gt-card2"}`}
                 >
-                  <p className="font-mono text-[10px] text-gt-faint">{ddmm(t)}</p>
+                  <p className="font-mono text-[10px] text-gt-faint">{fmtDia(d.slice(5, 10), lang)}</p>
                   <p className={`text-sm font-extrabold ${frio ? "text-gt-frost" : ""}`}>
-                    {tmin === null ? "–" : `${n1(tmin)}°`}
+                    {tmin === null ? "–" : `${fmtNum(tmin, 1, lang)}°`}
                   </p>
                   <p className={`font-mono text-[11px] ${forte ? "font-semibold text-gt-orange" : "text-gt-muted"}`}>
-                    {chuva === null ? "–" : `${n1(chuva)} mm`}
+                    {chuva === null ? "–" : `${fmtNum(chuva, 1, lang)} mm`}
                   </p>
                 </div>
               );
             })}
           </div>
           <p className="font-mono text-[11px] text-gt-faint">
-            Cada dia: temperatura mínima do ar a 2 m e chuva prevista. Azul = mínima ≤ {limite} °C. Os 7 primeiros dias
-            têm borda mais clara.
+            {t(
+              `Cada dia: temperatura mínima do ar a 2 m e chuva prevista. Azul = mínima ≤ ${limite} °C. Os 7 primeiros dias têm borda mais clara.`,
+              `Each day: 2 m air minimum temperature and forecast rain. Blue = minimum ≤ ${limite} °C. The first 7 days have a lighter border.`,
+            )}
           </p>
         </>
       )}
 
       <div className="mt-3 flex flex-col gap-1">
         <p className="font-mono text-[11px] leading-relaxed text-gt-faint">
-          Regras de exemplo, a validar com agronomia: geada (mínima ≤ {limite} °C) ou chuva ≥ {PARAMS_PREVISAO.chuvaForteMm} mm
-          nos próximos {PARAMS_PREVISAO.diasSemana} dias = “não plante esta semana”; menos de {PARAMS_PREVISAO.chuvaMinSemanaMm} mm na
-          semana = atenção. Previsão não é garantia e a incerteza cresce depois de ~7 dias. Confira também o ZARC e o
-          vazio sanitário.
+          {t(
+            `Regras de exemplo, a validar com agronomia: geada (mínima ≤ ${limite} °C) ou chuva ≥ ${PARAMS_PREVISAO.chuvaForteMm} mm nos próximos ${PARAMS_PREVISAO.diasSemana} dias = “não plante esta semana”; menos de ${PARAMS_PREVISAO.chuvaMinSemanaMm} mm na semana = atenção. Previsão não é garantia e a incerteza cresce depois de ~7 dias. Confira também o ZARC e o vazio sanitário.`,
+            `Example rules, to be validated with agronomy: frost (minimum ≤ ${limite} °C) or rain ≥ ${PARAMS_PREVISAO.chuvaForteMm} mm in the next ${PARAMS_PREVISAO.diasSemana} days = “do not plant this week”; less than ${PARAMS_PREVISAO.chuvaMinSemanaMm} mm in the week = caution. A forecast is not a guarantee and uncertainty grows after ~7 days. Also check the ZARC window and the soybean-free period (“vazio sanitário”).`,
+          )}
         </p>
         <p className="font-mono text-[11px] text-gt-faint">
-          Previsão:{" "}
+          {t("Previsão:", "Forecast:")}{" "}
           <a className="underline underline-offset-2" href="https://open-meteo.com/" target="_blank" rel="noreferrer">
             Open-Meteo.com
           </a>{" "}
-          (CC BY 4.0, uso não comercial). Só as coordenadas públicas do município são enviadas ao serviço.
+          {t(
+            "(CC BY 4.0, uso não comercial). Só as coordenadas públicas do município são enviadas ao serviço.",
+            "(CC BY 4.0, non-commercial use). Only the municipality’s public coordinates are sent to the service.",
+          )}
         </p>
       </div>
     </section>

@@ -10,6 +10,8 @@
 
 ## Português
 
+> **Idioma do app:** inglês por padrão (exigência do NASA Space Apps) e português com um clique no botão **EN | PT** do topo. Todas as telas, regras e mensagens existem nos dois idiomas.
+
 ### O que é
 
 No Sul do Brasil a mesma terra tem duas safras por ano: soja no verão e milho safrinha logo depois. **A data de plantio da soja define quando o milho safrinha floresce** e, portanto, o risco de geada e de seca nessa fase.
@@ -89,6 +91,8 @@ Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 
 ---
 
 ## English
+
+> **App language:** English by default (required by NASA Space Apps) and Portuguese with one click on the **EN | PT** switch at the top. Every screen, rule and message exists in both languages.
 
 ### What it is
 
