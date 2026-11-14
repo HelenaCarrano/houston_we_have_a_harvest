@@ -1,5 +1,6 @@
 // scripts/fetch_nasa_data.mjs
-// Fetches real climatological and historical data from NASA POWER for GroundTruth MVP
+// Baixa a CLIMATOLOGIA MENSAL real da NASA POWER (médias de longo prazo).
+// Atenção: elevationSRTM abaixo está fixo no código e ainda não foi conferido com o SRTM.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -36,20 +37,6 @@ const LOCATIONS = [
     description: 'Bacia do Rio Marrecas, baixadas suscetíveis a geadas severas por inversão térmica.'
   }
 ];
-
-// Historical ENSO classification (NOAA ONI) for Safrinha period (April-July)
-// Source: NOAA Climate Prediction Center Oceanic Niño Index
-const ENSO_CLASSIFICATION = {
-  1985: 'La Niña', 1986: 'Neutro', 1987: 'El Niño', 1988: 'La Niña', 1989: 'La Niña',
-  1990: 'Neutro', 1991: 'El Niño', 1992: 'El Niño', 1993: 'Neutro', 1994: 'El Niño',
-  1995: 'La Niña', 1996: 'Neutro', 1997: 'El Niño', 1998: 'La Niña', 1999: 'La Niña',
-  2000: 'La Niña', 2001: 'Neutro', 2002: 'El Niño', 2003: 'Neutro', 2004: 'El Niño',
-  2005: 'Neutro', 2006: 'El Niño', 2007: 'La Niña', 2008: 'La Niña', 2009: 'El Niño',
-  2010: 'La Niña', 2011: 'La Niña', 2012: 'Neutro', 2013: 'Neutro', 2014: 'Neutro',
-  2015: 'El Niño', 2016: 'La Niña', 2017: 'La Niña', 2018: 'Neutro', 2019: 'El Niño',
-  2020: 'La Niña', 2021: 'La Niña', 2022: 'La Niña', 2023: 'El Niño', 2024: 'Neutro',
-  2025: 'La Niña', 2026: 'La Niña'
-};
 
 async function fetchClimatology(lat, lon) {
   const url = `https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M_MIN,T2M_MAX,PRECTOTCORR,GWETTOP,GWETROOT&community=AG&longitude=${lon}&latitude=${lat}&format=JSON`;
@@ -100,39 +87,8 @@ async function run() {
   fs.writeFileSync(path.join(outDir, 'nasa_locations_climatology.json'), JSON.stringify(results, null, 2));
   console.log('Saved src/data/nasa_locations_climatology.json');
 
-  // Generate historical event summary (1985-2025) for Pato Branco calibrated with DERAL/Simepar records
-  const historicalEvents = [];
-  const years = Object.keys(ENSO_CLASSIFICATION).map(Number).filter(y => y <= 2026);
-
-  for (const year of years) {
-    const enso = ENSO_CLASSIFICATION[year];
-    // Known severe frost/drought years in Paraná (DERAL ground check: 1994, 2000, 2009, 2013, 2021, 2026)
-    const isKnownCriticalLoss = [1994, 2000, 2009, 2013, 2021, 2026].includes(year);
-    const isKnownFrost = [1988, 1994, 2000, 2009, 2013, 2020, 2021, 2026].includes(year);
-    const isKnownDrought = [1986, 1995, 2005, 2012, 2018, 2022, 2026].includes(year);
-
-    // Realistic calibrated days based on NASA POWER parameters:
-    const frostDaysInMayJuly = isKnownFrost ? (year === 2021 || year === 2000 ? 5 : 3) : (enso === 'La Niña' ? 1 : 0);
-    const minRecordedTemp = isKnownFrost ? (year === 2021 ? -4.2 : -2.8) : (enso === 'La Niña' ? 1.5 : 4.0);
-    const aprilRainMm = isKnownDrought ? (year === 2026 ? 35 : 42) : (enso === 'El Niño' ? 165 : 120);
-
-    historicalEvents.push({
-      year,
-      enso,
-      frostDaysCritical: frostDaysInMayJuly,
-      lowestTempCelsius: minRecordedTemp,
-      aprilRainMm,
-      hasSevereFrost: isKnownFrost,
-      hasSevereDrought: isKnownDrought,
-      cropLossReportedDeral: isKnownCriticalLoss ? 'Quebra severa milho/feijão' : 'Safra dentro da média',
-      safrinhaCornStatus: isKnownFrost && isKnownDrought ? 'Perda Alta (Seca + Geada)' : isKnownFrost ? 'Quebra por Geada' : isKnownDrought ? 'Quebra por Estiagem' : 'Bom Rendimento',
-      wheatStatus: isKnownFrost ? 'Resistente (Sem dano crítico)' : 'Normal',
-      intercroppedStatus: isKnownDrought ? 'Maior tolerância hídrica (Palhada)' : 'Excelente'
-    });
-  }
-
-  fs.writeFileSync(path.join(outDir, 'historical_events_40years.json'), JSON.stringify(historicalEvents, null, 2));
-  console.log('Saved src/data/historical_events_40years.json');
+  // Eventos históricos agora são calculados dos dados diários reais:
+  // node scripts/fetch_power_daily.mjs && node scripts/build_historical_events.mjs
 }
 
 run();
