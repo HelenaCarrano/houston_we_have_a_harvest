@@ -4,6 +4,7 @@
 import pb from "@/data/power_daily_pato-branco.json";
 import cv from "@/data/power_daily_cascavel.json";
 import fb from "@/data/power_daily_francisco-beltrao.json";
+import srtm from "@/data/srtm_relief.json";
 import {
   PARAMS_PADRAO,
   riscoPorData,
@@ -74,6 +75,17 @@ export interface LocalView {
   /** Época típica de geada (mediana do 1º e do último dia <= limite, 1981–2025), "MM-DD". */
   epocaGeada: { inicio: string; fim: string; anosComGeada: number; anosTotal: number } | null;
   prova2026: Prova2026;
+  relevo: Relevo | null;
+}
+
+export interface Relevo {
+  /** true = valor estimado (SRTM indisponível no download); false = medido pelo SRTM. */
+  estimado: boolean;
+  fonte: string;
+  fonteUrl: string | null;
+  baixadoEm: string;
+  pontoM: number | null;
+  amostra: { pontos: number; espacamentoM: number; raioM: number; minM: number; maxM: number; mediaM: number } | null;
 }
 
 export interface ViewData {
@@ -206,6 +218,19 @@ const FONTES: { id: string; dados: DadosDiarios }[] = [
   { id: "francisco-beltrao", dados: fb as unknown as DadosDiarios },
 ];
 
+function relevoDe(id: string): Relevo | null {
+  const r = (srtm as unknown as Record<string, Record<string, unknown>>)[id];
+  if (!r) return null;
+  return {
+    estimado: Boolean(r.estimado),
+    fonte: String(r.fonte),
+    fonteUrl: typeof r.fonteUrl === "string" ? r.fonteUrl : null,
+    baixadoEm: String(r.baixadoEm),
+    pontoM: typeof r.pontoM === "number" ? r.pontoM : null,
+    amostra: (r.amostra as Relevo["amostra"]) ?? null,
+  };
+}
+
 export function buildViewData(params: EngineParams = PARAMS_PADRAO): ViewData {
   const datas = datasSoja();
   const locais = FONTES.map(({ id, dados }) => {
@@ -244,6 +269,7 @@ export function buildViewData(params: EngineParams = PARAMS_PADRAO): ViewData {
       })),
       epocaGeada: epocaGeada(dados, params.limiteGeadaC),
       prova2026: prova2026(dados, params.limiteGeadaC),
+      relevo: relevoDe(id),
     } satisfies LocalView;
   });
   return { params, locais };

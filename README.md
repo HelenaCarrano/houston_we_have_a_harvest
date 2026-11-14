@@ -39,6 +39,7 @@ npm run data:fetch # baixa de novo os dados diários da NASA POWER e regenera o 
 | **NASA POWER Daily API** (community=AG) | T2M_MIN, T2M_MAX, PRECTOTCORR, GWETROOT, GWETTOP diários, 01/01/1981 até o último dia disponível, para Pato Branco (-26.2295, -52.6716), Cascavel (-24.9578, -53.4595) e Francisco Beltrão (-26.0811, -53.0558) | https://power.larc.nasa.gov/docs/services/api/temporal/daily/ |
 | **Deral / Revista Cultivar, 9 abr 2026** | Estiagem e calor afetam feijão e milho (card "Prova 2026") | https://revistacultivar.com.br/noticias/pr-safra-2025-26-estiagem-e-calor-afetam-feijao-e-milho |
 | **Deral / Revista Cultivar, 19 mai 2026** | Geadas: milho safrinha em baixadas com queima de folhas; feijão 2ª safra com perdas; trigo sem dano significativo | https://revistacultivar.com.br/noticias/pr-safra-2025-26-milho-e-feijao-sofrem-impacto-das-geadas |
+| **NASA SRTM 30 m** (SRTM v3, via OpenTopoData, dataset `srtm30m`) | Altitude do ponto de cada município e desnível do entorno (1,5 km) | https://www.opentopodata.org/datasets/srtm/ |
 | **ZARC (MAPA)** | Referência para janelas de semeadura (ainda não integrado ao app) | https://dados.agricultura.gov.br/dataset/6d3d141c-885e-41a4-ab7f-dc8ff323b96f |
 
 Os dados ficam em `src/data/power_daily_<id>.json` (arrays por parâmetro + data inicial, com a URL usada e a data do download). O app não depende da API ao vivo.
@@ -50,7 +51,7 @@ Regras do documento do time **"GroundTruth — Metodologia e validação"**. Có
 1. **Cronograma:** colheita da soja = plantio + 120 dias; plantio do milho = colheita + 5 dias; **fase crítica do milho** (pendoamento e enchimento de grãos) = 55 a 100 dias após o plantio do milho.
 2. **Geada provável:** um ano conta se a mínima do ar a 2 m (T2M_MIN) ficou **≤ 3 °C** em algum dia da fase crítica. **Geada forte:** ≤ 1 °C. Por que 3 °C: a diferença entre abrigo e relva é de 3–6 °C; 3 °C no abrigo ≈ −1 °C na relva ([Embrapa Trigo](https://www.alice.cnptia.embrapa.br/alice/bitstream/doc/1084446/1/ID442832017CBAGRO20MM398.pdf), [Embrapa, boletim agroclimático](https://www.infoteca.cnptia.embrapa.br/infoteca/bitstream/doc/1139138/1/BolAgroClimatico-dez21.pdf), [Semina/UEL](https://ojs.uel.br/revistas/uel/index.php/semagrarias/article/download/30322/24555/166627)).
 3. **Seca:** um ano conta quando, na fase crítica, vale **um dos dois** sinais: veranico de **15+ dias seguidos com chuva < 1 mm** **ou** umidade média do solo na raiz (GWETROOT) **abaixo do percentil 20** da própria série para as mesmas datas do ano. A tela mostra os dois sinais separados e os anos com **os dois juntos** (casos mais graves). **Desvio da Metodologia:** o documento pedia "e"; trocamos por "ou" porque a regra "e" não marcou a estiagem de 2026 registrada pelo Deral. Como o sinal de solo é relativo, cerca de 1 em cada 5 anos sempre aparece como solo seco; a regra deve ser calibrada com o teste do IBGE PAM.
-4. **Baixada:** o limite de geada sobe **+1 °C** (de 3 para 4 °C), porque baixadas acumulam ar frio. Hipótese a calibrar; ainda sem relevo real (SRTM).
+4. **Baixada:** o limite de geada sobe **+1 °C** (de 3 para 4 °C), porque baixadas acumulam ar frio. Hipótese a calibrar. O relevo SRTM (altitude do ponto e desnível num raio de 1,5 km) é mostrado na tela, mas ainda não classifica cada talhão como baixada.
 5. **Frequência:** anos com evento ÷ anos avaliados, mostrada como "X/10 anos" e "N de 45 safras". **Nível:** Baixo (até 1 em 10), Médio (2 ou 3), Alto (4 ou mais).
 6. **Confiança:** alta (≥ 12 anos), média (7–11), baixa (< 7). A Metodologia também pede concordância com Deral/IBGE para "alta"; essa validação ainda não está no app.
 7. **Rotações:** cada rotação mostra níveis por critério (geada, seca, erosão), sem nota única escondida. As prioridades do agricultor (água, forragem, nitrogênio, erosão, matéria orgânica, mercado) mudam só a **ordem**, por uma soma qualitativa de 1 a 3. O risco do trigo não é calculado.
@@ -65,7 +66,8 @@ Regras do documento do time **"GroundTruth — Metodologia e validação"**. Có
 - Ciclos (120 / 5 dias), fase crítica (55–100 dias), limites de geada (3 °C e 1 °C), ajuste de baixada (+1 °C) e critérios de seca são **hipóteses de partida a validar com agronomia/ZARC**.
 - Quanto cada rotação atende às prioridades, os níveis de erosão e o risco do trigo são **qualitativos** (marcados "a validar com técnico").
 - O histórico anual em `src/data/historical_events_40years.json` é **calculado** dos dados diários (`scripts/build_historical_events.mjs`). Não há listas de "anos conhecidos" nem valores inventados. Perdas do Deral só aparecem para 2026.
-- `scripts/fetch_nasa_data.mjs` (climatologia mensal) tem altitudes fixas no código que **não foram conferidas** com o SRTM; elas não são usadas na tela principal.
+- `scripts/fetch_nasa_data.mjs` (climatologia mensal) tem altitudes fixas no código que **estavam erradas** frente ao SRTM (por exemplo, Francisco Beltrão: 650 m no código, 560 m no SRTM); elas não são usadas na tela principal, que usa `src/data/srtm_relief.json`.
+- O relevo vem de `scripts/fetch_srtm_relief.mjs` (altitude do ponto e 49 pontos a cada 500 m ao redor). Se o serviço falhar, o script usa a altitude média da célula do POWER e a tela marca o valor como **estimado**. A temperatura do POWER não recebe correção de altitude.
 
 ### Limitações
 

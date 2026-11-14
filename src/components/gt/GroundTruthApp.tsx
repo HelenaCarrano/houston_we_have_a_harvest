@@ -116,6 +116,57 @@ function LinhaDoTempo({ d, local }: { d: DataView; local: LocalView }) {
   );
 }
 
+function BlocoRelevo({ local, baixada }: { local: LocalView; baixada: boolean }) {
+  const r = local.relevo;
+  if (!r || r.pontoM === null) return null;
+  const dif = local.elevacaoGradeM === null ? null : r.pontoM - local.elevacaoGradeM;
+  const a = r.amostra;
+  return (
+    <div className="rounded-[18px] border border-gt-line bg-gt-card2 p-4">
+      <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-green">
+        Relevo · {r.estimado ? "valor ESTIMADO" : "NASA SRTM 30 m"}
+      </p>
+      <ul className="mt-2 space-y-1 text-sm">
+        <li>
+          Altitude no ponto de {local.nome}: <b>{r.pontoM} m</b>
+          {r.estimado ? " (estimativa: média da célula do POWER)" : ""}.
+        </li>
+        {local.elevacaoGradeM !== null && (
+          <li>
+            Altitude média da célula do NASA POWER: <b>{local.elevacaoGradeM} m</b>
+            {dif !== null && !r.estimado ? ` (o ponto está ${Math.abs(dif)} m ${dif >= 0 ? "acima" : "abaixo"})` : ""}.
+          </li>
+        )}
+        {a && (
+          <li>
+            Em {num(a.raioM / 1000, 1)} km ao redor ({a.pontos} pontos a cada {a.espacamentoM} m) a altitude varia de{" "}
+            <b>{a.minM} a {a.maxM} m</b> ({a.maxM - a.minM} m de desnível). O ponto fica {Math.abs(r.pontoM - a.mediaM)} m{" "}
+            {r.pontoM >= a.mediaM ? "acima" : "abaixo"} da média desse entorno.
+          </li>
+        )}
+      </ul>
+      <p className="mt-2 text-sm text-gt-muted">
+        {baixada
+          ? "Você marcou baixada: o limite de geada sobe +1 °C (hipótese). O relevo mostra o desnível do entorno, mas ainda não classifica cada talhão."
+          : "Se a sua lavoura fica num fundo de vale, marque “baixada”: o ar frio escorre e se acumula ali."}{" "}
+        A temperatura do POWER é a da célula, sem correção de altitude.
+      </p>
+      <Fonte>
+        {r.fonte}. Baixado em {isoBr(r.baixadoEm.slice(0, 10))}.
+        {r.fonteUrl && (
+          <>
+            {" "}
+            <a className="underline underline-offset-2" href={r.fonteUrl} target="_blank" rel="noreferrer">
+              Fonte
+            </a>
+            .
+          </>
+        )}
+      </Fonte>
+    </div>
+  );
+}
+
 function CardRisco({
   titulo,
   tipo,
@@ -468,6 +519,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
         </label>
       </Card>
 
+      <BlocoRelevo local={local} baixada={baixada} />
+
       <Card>
         <Rotulo>Linha do tempo soja → milho safrinha</Rotulo>
         <div className="mt-3">
@@ -538,7 +591,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
         <Fonte>
           Limitações: o NASA POWER é uma grade de ~50 km (elevação média da célula: {local.elevacaoGradeM ?? "?"} m); a
           temperatura é do ar a 2 m, não da planta; fases das culturas e limiares são hipóteses a calibrar; o ajuste de
-          baixada não usa relevo real (SRTM) ainda; isto não é previsão do tempo. Ferramenta de apoio: a decisão é do
+          baixada é uma hipótese (+1 °C) e o relevo SRTM ainda não classifica cada talhão; isto não é previsão do tempo. Ferramenta de apoio: a decisão é do
           agricultor com o técnico.
         </Fonte>
       </footer>
