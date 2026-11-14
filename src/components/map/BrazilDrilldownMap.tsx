@@ -19,9 +19,10 @@ import {
 interface BrazilDrilldownMapProps {
   onSelectState: (stateId: string) => void;
   selectedStateId?: string;
+  onOpenPinModal?: () => void;
 }
 
-export function BrazilDrilldownMap({ onSelectState, selectedStateId }: BrazilDrilldownMapProps) {
+export function BrazilDrilldownMap({ onSelectState, selectedStateId, onOpenPinModal }: BrazilDrilldownMapProps) {
   // Default to Paraná (PR)
   const defaultState = brazilStatesData.find((s) => s.sigla === "PR") || brazilStatesData[0];
   const [activeState, setActiveState] = useState(
@@ -49,6 +50,15 @@ export function BrazilDrilldownMap({ onSelectState, selectedStateId }: BrazilDri
             
             {/* MANDATORY SOURCE LABEL */}
             <div className="flex items-center gap-1.5 flex-wrap">
+              {onOpenPinModal && (
+                <Button
+                  size="sm"
+                  onClick={onOpenPinModal}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold gap-1.5 text-xs h-7 rounded-lg shadow-sm"
+                >
+                  <MapPin className="size-3.5" /> Colocar PIN na Minha Terra
+                </Button>
+              )}
               <Badge variant="outline" className="border-blue-500/40 text-blue-400 bg-blue-500/10 text-[10px] gap-1">
                 <Database className="size-3" /> Fonte: IBGE (Malha 2026)
               </Badge>

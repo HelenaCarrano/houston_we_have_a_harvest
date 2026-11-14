@@ -9,6 +9,8 @@ import { ClimateHistoryChart } from "@/components/farm/ClimateHistoryChart";
 import { RotationComparison } from "@/components/farm/RotationComparison";
 import { CurrentDateCropPlanner } from "@/components/farm/CurrentDateCropPlanner";
 import { CropPlanOnePagerModal } from "@/components/farm/CropPlanOnePagerModal";
+import { PinLocationModal, type PinData } from "@/components/map/PinLocationModal";
+import { PinDashboard } from "@/components/farm/PinDashboard";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +34,8 @@ export default function Home() {
   const [selectedMesoregion, setSelectedMesoregion] = useState<ParanaMesoregion>(PARANA_MESOREGIONS[0]);
   const [selectedZone, setSelectedZone] = useState<"all" | "lowland" | "slope" | "plateau">("all");
   const [isOnePagerOpen, setIsOnePagerOpen] = useState(false);
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [activePin, setActivePin] = useState<PinData | null>(null);
 
   // Default Farm for Level 3
   const currentFarm = SAMPLE_FARMS["fazenda-santa-maria"];
@@ -97,7 +101,17 @@ export default function Home() {
         </div>
 
         {/* Right Action Bar: Theme Toggle + One-Pager WhatsApp */}
+        {/* Actions */}
         <div className="flex items-center gap-2.5">
+          <Button
+            size="sm"
+            onClick={() => setIsPinModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-500 text-white text-xs gap-1.5 h-9 font-semibold px-3.5 rounded-full shadow-md shadow-blue-500/20"
+          >
+            <MapPin className="size-3.5" />
+            <span className="hidden sm:inline">Colocar PIN no Mapa</span>
+          </Button>
+
           <ThemeToggle />
           
           <Button
@@ -113,14 +127,34 @@ export default function Home() {
 
       {/* Main Interactive Workspace */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+        {/* PIN Specific Analysis View */}
+        {activePin && (
+          <PinDashboard
+            pin={activePin}
+            historicalEvents={historicalEvents}
+            onClose={() => setActivePin(null)}
+          />
+        )}
+
         {/* LEVEL 1: National View (Brazil Map) */}
-        {currentLevel === 1 && (
+        {currentLevel === 1 && !activePin && (
           <div className="space-y-6">
             <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-600/10 via-emerald-600/5 to-transparent border border-blue-200 dark:border-blue-900/40 backdrop-blur shadow-sm space-y-3">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 text-xs font-semibold">
-                <Sparkles className="size-3.5 text-blue-600 dark:text-blue-400" />
-                <span>Ciência da NASA explicada de forma simples para quem produz</span>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 text-xs font-semibold">
+                  <Sparkles className="size-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>Ciência da NASA explicada de forma simples para quem produz</span>
+                </div>
+
+                <Button
+                  onClick={() => setIsPinModalOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold gap-2 text-xs rounded-xl shadow-md shadow-blue-500/20"
+                >
+                  <MapPin className="size-4" />
+                  Buscar por Coordenada ou GPS
+                </Button>
               </div>
+
               <h1 className="text-2xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight font-heading">
                 O que plantar, onde na terra e quando, sem complicar
               </h1>
@@ -131,6 +165,7 @@ export default function Home() {
 
             <BrazilDrilldownMap
               selectedStateId={selectedStateId}
+              onOpenPinModal={() => setIsPinModalOpen(true)}
               onSelectState={(stateId) => {
                 setSelectedStateId(stateId);
                 if (stateId === "PR") {
@@ -142,7 +177,7 @@ export default function Home() {
         )}
 
         {/* LEVEL 2: State Subdivisions (Paraná Mesoregions) */}
-        {currentLevel === 2 && (
+        {currentLevel === 2 && !activePin && (
           <div className="space-y-6">
             <ParanaRegionalMap
               selectedRegionId={selectedMesoregion.id}
@@ -156,7 +191,7 @@ export default function Home() {
         )}
 
         {/* LEVEL 3: Farm Plot, SRTM Topography & Rotation Decision Engine */}
-        {currentLevel === 3 && (
+        {currentLevel === 3 && !activePin && (
           <div className="space-y-8">
             {/* Top Navigation & Breadcrumb for Level 3 */}
             <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm">
@@ -237,6 +272,15 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {/* Pin Location Modal */}
+      <PinLocationModal
+        isOpen={isPinModalOpen}
+        onClose={() => setIsPinModalOpen(false)}
+        onConfirmPin={(pin) => {
+          setActivePin(pin);
+        }}
+      />
 
       {/* Printable / Shareable One-Pager Modal */}
       <CropPlanOnePagerModal
