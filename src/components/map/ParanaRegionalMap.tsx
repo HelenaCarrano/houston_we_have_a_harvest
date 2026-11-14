@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { PARANA_MESOREGIONS, ParanaMesoregion } from "@/data/regions_data";
+import paranaStateData from "@/data/parana_projected_state.json";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,9 @@ import {
   Mountain,
   Snowflake,
   SunMedium,
-  CheckCircle
+  CheckCircle,
+  Satellite,
+  Database
 } from "lucide-react";
 
 interface ParanaRegionalMapProps {
@@ -31,8 +34,8 @@ export function ParanaRegionalMap({
 
   return (
     <div className="space-y-6">
-      {/* Navigation Breadcrumb Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-zinc-900/70 border border-zinc-800">
+      {/* Navigation Breadcrumb Bar with MANDATORY Source Label */}
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-zinc-900/80 border border-zinc-800">
         <div className="flex items-center gap-2 text-sm">
           <Button
             variant="ghost"
@@ -40,191 +43,193 @@ export function ParanaRegionalMap({
             onClick={onBackToBrazil}
             className="text-zinc-400 hover:text-white gap-1 text-xs px-2 h-8"
           >
-            <ArrowLeft className="size-3.5" /> Brasil
+            <ArrowLeft className="size-3.5" /> Brasil (Mapa Geral)
           </Button>
           <span className="text-zinc-600">/</span>
           <span className="font-semibold text-blue-400 text-xs">Paraná (PR)</span>
           <span className="text-zinc-600">/</span>
-          <span className="text-zinc-200 text-xs font-medium">Mesorregiões Agrícolas (Nível 2)</span>
+          <span className="text-zinc-200 text-xs font-medium">Mesorregiões e Polos Agrícolas (Nível 2)</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400 bg-blue-500/10">
-            Validação Safra 2025/26 (DERAL)
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-400 bg-emerald-500/10">
+            <Satellite className="size-3 mr-1" /> Fonte: NASA POWER (MERRA-2)
+          </Badge>
+          <Badge variant="outline" className="text-[10px] border-blue-500/40 text-blue-400 bg-blue-500/10">
+            <Database className="size-3 mr-1" /> Fonte: DERAL / IDR-PR 2026
           </Badge>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Visual Map of Paraná with 5 Mesoregions */}
-        <Card className="lg:col-span-7 bg-zinc-900/60 border-zinc-800 backdrop-blur shadow-2xl">
+        {/* Visual Map of Paraná with Official IBGE Contours */}
+        <Card className="lg:col-span-7 bg-zinc-900/70 border-zinc-800 backdrop-blur shadow-2xl overflow-hidden">
           <CardHeader className="pb-3 border-b border-zinc-800/80">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <CardTitle className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
-                Mapa Regional do Paraná
+                Mapa Oficial do Paraná e Polos Agrícolas
               </CardTitle>
-              <span className="text-xs text-zinc-400">Clique na região para detalhar</span>
+              <span className="text-[10px] text-zinc-400 font-mono">Fonte: IBGE / Malha Estadual</span>
             </div>
             <CardDescription className="text-zinc-400 text-xs">
-              Diferenças drásticas de altitude e relevo moldam os microclimas de geada e seca.
+              Polos agrícolas monitorados pela NASA POWER. A altitude (NASA SRTM) varia de 580m no norte até mais de 1.000m no Centro-Sul.
             </CardDescription>
           </CardHeader>
 
           <CardContent className="p-6 flex flex-col items-center">
-            {/* Paraná Regional SVG Map */}
-            <div className="relative w-full max-w-[540px] aspect-[1.3/1] flex items-center justify-center">
+            {/* Paraná High-Res SVG Map */}
+            <div className="relative w-full max-w-[620px] aspect-[700/480] flex items-center justify-center">
               <svg
-                viewBox="0 0 700 500"
+                viewBox="0 0 700 480"
                 className="w-full h-full drop-shadow-xl select-none"
               >
                 <defs>
-                  {/* Gradients for regions */}
-                  <linearGradient id="gradSudoeste" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#3b82f6" />
-                    <stop offset="100%" stopColor="#1e40af" />
+                  <linearGradient id="prStateGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#1e293b" />
+                    <stop offset="100%" stopColor="#0f172a" />
                   </linearGradient>
-                  <linearGradient id="gradOeste" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#047857" />
-                  </linearGradient>
-                  <linearGradient id="gradCentroSul" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#8b5cf6" />
-                    <stop offset="100%" stopColor="#5b21b6" />
-                  </linearGradient>
-                  <linearGradient id="gradNorte" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#f59e0b" />
-                    <stop offset="100%" stopColor="#b45309" />
-                  </linearGradient>
-                  <linearGradient id="gradCamposGerais" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#06b6d4" />
-                    <stop offset="100%" stopColor="#0e7490" />
-                  </linearGradient>
+                  
+                  {/* Glowing filter for selected cities */}
+                  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
                 </defs>
 
-                {/* Region 1: Norte Central / Noroeste */}
-                <g
-                  className="cursor-pointer transition-all duration-200"
-                  onClick={() => {
-                    const r = PARANA_MESOREGIONS.find((x) => x.id === "norte-central");
-                    if (r) setActiveRegion(r);
-                  }}
-                >
-                  <path
-                    d="M190,140 L340,70 L480,90 L520,160 L410,210 L300,220 L210,230 Z"
-                    fill={activeRegion.id === "norte-central" ? "url(#gradNorte)" : "#27272a"}
-                    stroke={activeRegion.id === "norte-central" ? "#fde047" : "#3f3f46"}
-                    strokeWidth={activeRegion.id === "norte-central" ? "2.5" : "1.5"}
-                    className="hover:opacity-90"
-                  />
-                  <text x="350" y="150" fill="#ffffff" fontSize="13" fontWeight="bold" textAnchor="middle">
-                    Norte / Maringá-Londrina
-                  </text>
-                  <text x="350" y="168" fill="#e4e4e7" fontSize="10" textAnchor="middle">
-                    (580m alt - Estiagem)
-                  </text>
-                </g>
+                {/* Official High-Resolution State Polygon from IBGE */}
+                <path
+                  d={paranaStateData.path}
+                  fill="url(#prStateGrad)"
+                  stroke="#3b82f6"
+                  strokeWidth="2"
+                  className="transition-all duration-300"
+                />
 
-                {/* Region 2: Oeste Paranaense (Cascavel / Toledo) */}
-                <g
-                  className="cursor-pointer transition-all duration-200"
-                  onClick={() => {
-                    const r = PARANA_MESOREGIONS.find((x) => x.id === "oeste");
-                    if (r) setActiveRegion(r);
-                  }}
-                >
-                  <path
-                    d="M70,240 L190,210 L220,280 L190,360 L100,370 L50,290 Z"
-                    fill={activeRegion.id === "oeste" ? "url(#gradOeste)" : "#27272a"}
-                    stroke={activeRegion.id === "oeste" ? "#34d399" : "#3f3f46"}
-                    strokeWidth={activeRegion.id === "oeste" ? "2.5" : "1.5"}
-                    className="hover:opacity-90"
-                  />
-                  <text x="130" y="295" fill="#ffffff" fontSize="13" fontWeight="bold" textAnchor="middle">
-                    Oeste
-                  </text>
-                  <text x="130" y="313" fill="#e4e4e7" fontSize="10" textAnchor="middle">
-                    Cascavel / Toledo (740m)
-                  </text>
-                </g>
-
-                {/* Region 3: Sudoeste Paranaense (Pato Branco / Fco Beltrão) - CORE SHOWCASE */}
-                <g
-                  className="cursor-pointer transition-all duration-200"
+                {/* Sub-region approximate influence zones */}
+                {/* Sudoeste zone highlight */}
+                <path
+                  d="M100,340 C140,320 230,340 270,410 L250,440 L180,410 Z"
+                  fill="#0284c7"
+                  opacity={activeRegion.id === "sudoeste" ? "0.35" : "0.15"}
+                  className="transition-opacity cursor-pointer"
                   onClick={() => {
                     const r = PARANA_MESOREGIONS.find((x) => x.id === "sudoeste");
                     if (r) setActiveRegion(r);
                   }}
-                >
-                  <path
-                    d="M100,370 L190,360 L240,350 L270,410 L240,460 L140,450 Z"
-                    fill={activeRegion.id === "sudoeste" ? "url(#gradSudoeste)" : "#1e3a8a"}
-                    stroke={activeRegion.id === "sudoeste" ? "#60a5fa" : "#3b82f6"}
-                    strokeWidth={activeRegion.id === "sudoeste" ? "3" : "1.5"}
-                    className="hover:opacity-90"
-                  />
-                  {/* Highlight pulse marker on Pato Branco */}
-                  <circle cx="200" cy="415" r="5" fill="#60a5fa" className="animate-ping opacity-75" />
-                  <circle cx="200" cy="415" r="4" fill="#ffffff" />
-                  <text x="195" y="405" fill="#ffffff" fontSize="13" fontWeight="bold" textAnchor="middle">
-                    ★ Sudoeste
-                  </text>
-                  <text x="195" y="435" fill="#e0f2fe" fontSize="10" fontWeight="600" textAnchor="middle">
-                    Pato Branco (720m)
-                  </text>
-                  <text x="195" y="448" fill="#bae6fd" fontSize="9" textAnchor="middle">
-                    Alerta Geada em Baixadas
-                  </text>
-                </g>
+                />
 
-                {/* Region 4: Centro-Sul (Guarapuava) */}
-                <g
-                  className="cursor-pointer transition-all duration-200"
+                {/* Oeste zone highlight */}
+                <path
+                  d="M75,240 C110,210 180,220 190,320 L110,335 Z"
+                  fill="#10b981"
+                  opacity={activeRegion.id === "oeste" ? "0.35" : "0.15"}
+                  className="transition-opacity cursor-pointer"
+                  onClick={() => {
+                    const r = PARANA_MESOREGIONS.find((x) => x.id === "oeste");
+                    if (r) setActiveRegion(r);
+                  }}
+                />
+
+                {/* North Central highlight */}
+                <path
+                  d="M230,60 C320,40 450,60 460,150 L300,160 Z"
+                  fill="#f59e0b"
+                  opacity={activeRegion.id === "norte-central" ? "0.35" : "0.15"}
+                  className="transition-opacity cursor-pointer"
+                  onClick={() => {
+                    const r = PARANA_MESOREGIONS.find((x) => x.id === "norte-central");
+                    if (r) setActiveRegion(r);
+                  }}
+                />
+
+                {/* Centro-Sul highlight */}
+                <path
+                  d="M240,250 C320,230 400,260 390,370 L260,370 Z"
+                  fill="#8b5cf6"
+                  opacity={activeRegion.id === "centro-sul" ? "0.35" : "0.15"}
+                  className="transition-opacity cursor-pointer"
                   onClick={() => {
                     const r = PARANA_MESOREGIONS.find((x) => x.id === "centro-sul");
                     if (r) setActiveRegion(r);
                   }}
-                >
-                  <path
-                    d="M220,280 L300,220 L400,250 L390,370 L270,410 L240,350 Z"
-                    fill={activeRegion.id === "centro-sul" ? "url(#gradCentroSul)" : "#27272a"}
-                    stroke={activeRegion.id === "centro-sul" ? "#c084fc" : "#3f3f46"}
-                    strokeWidth={activeRegion.id === "centro-sul" ? "2.5" : "1.5"}
-                    className="hover:opacity-90"
-                  />
-                  <text x="315" y="325" fill="#ffffff" fontSize="13" fontWeight="bold" textAnchor="middle">
-                    Centro-Sul
-                  </text>
-                  <text x="315" y="343" fill="#e4e4e7" fontSize="10" textAnchor="middle">
-                    Guarapuava (1.050m)
-                  </text>
-                </g>
+                />
 
-                {/* Region 5: Campos Gerais & Leste */}
-                <g
-                  className="cursor-pointer transition-all duration-200"
-                  onClick={() => {
-                    const r = PARANA_MESOREGIONS.find((x) => x.id === "campos-gerais");
-                    if (r) setActiveRegion(r);
-                  }}
-                >
-                  <path
-                    d="M400,250 L520,160 L620,220 L580,350 L460,370 L390,370 Z"
-                    fill={activeRegion.id === "campos-gerais" ? "url(#gradCamposGerais)" : "#27272a"}
-                    stroke={activeRegion.id === "campos-gerais" ? "#22d3ee" : "#3f3f46"}
-                    strokeWidth={activeRegion.id === "campos-gerais" ? "2.5" : "1.5"}
-                    className="hover:opacity-90"
-                  />
-                  <text x="490" y="275" fill="#ffffff" fontSize="13" fontWeight="bold" textAnchor="middle">
-                    Campos Gerais / Leste
-                  </text>
-                  <text x="490" y="293" fill="#e4e4e7" fontSize="10" textAnchor="middle">
-                    Ponta Grossa / Curitiba (900m)
-                  </text>
-                </g>
+                {/* Region Text Watermarks */}
+                <text x="190" y="440" fill="#38bdf8" fontSize="13" fontWeight="bold" textAnchor="middle" opacity="0.8">
+                  Sudoeste (Pato Branco)
+                </text>
+                <text x="145" y="220" fill="#34d399" fontSize="13" fontWeight="bold" textAnchor="middle" opacity="0.8">
+                  Oeste (Cascavel)
+                </text>
+                <text x="360" y="75" fill="#fbbf24" fontSize="13" fontWeight="bold" textAnchor="middle" opacity="0.8">
+                  Norte (Londrina/Maringá)
+                </text>
+                <text x="320" y="310" fill="#c084fc" fontSize="13" fontWeight="bold" textAnchor="middle" opacity="0.8">
+                  Centro-Sul (Guarapuava)
+                </text>
+                <text x="540" y="290" fill="#94a3b8" fontSize="12" fontWeight="600" textAnchor="middle" opacity="0.8">
+                  Curitiba / Leste
+                </text>
+
+                {/* Render Official Projected Cities */}
+                {paranaStateData.cities.map((city) => {
+                  const isShowcase = city.isShowcase;
+
+                  return (
+                    <g
+                      key={city.name}
+                      className="cursor-pointer group"
+                      onClick={() => {
+                        if (city.name.includes("Pato") || city.name.includes("Beltrão")) {
+                          const r = PARANA_MESOREGIONS.find((x) => x.id === "sudoeste");
+                          if (r) setActiveRegion(r);
+                        } else if (city.name.includes("Cascavel") || city.name.includes("Toledo")) {
+                          const r = PARANA_MESOREGIONS.find((x) => x.id === "oeste");
+                          if (r) setActiveRegion(r);
+                        }
+                      }}
+                    >
+                      {/* Pulse circle on Showcase city (Pato Branco) */}
+                      {isShowcase && (
+                        <circle
+                          cx={city.x}
+                          cy={city.y}
+                          r="14"
+                          fill="#38bdf8"
+                          className="animate-ping opacity-40 pointer-events-none"
+                        />
+                      )}
+
+                      {/* City point */}
+                      <circle
+                        cx={city.x}
+                        cy={city.y}
+                        r={isShowcase ? 6 : 4}
+                        fill={isShowcase ? "#38bdf8" : "#94a3b8"}
+                        stroke="#ffffff"
+                        strokeWidth={isShowcase ? 2 : 1}
+                        className="transition-transform group-hover:scale-125"
+                      />
+
+                      {/* City Label */}
+                      <text
+                        x={city.x + (city.x > 500 ? -8 : 8)}
+                        y={city.y + 4}
+                        textAnchor={city.x > 500 ? "end" : "start"}
+                        fontSize={isShowcase ? "11" : "9"}
+                        fontWeight={isShowcase ? "bold" : "500"}
+                        fill={isShowcase ? "#ffffff" : "#cbd5e1"}
+                        className="pointer-events-none drop-shadow"
+                      >
+                        {city.name} {isShowcase && "★"}
+                      </text>
+                    </g>
+                  );
+                })}
               </svg>
             </div>
 
-            {/* Region selector tabs below */}
+            {/* Region selector pills */}
             <div className="w-full flex flex-wrap gap-1.5 justify-center mt-4">
               {PARANA_MESOREGIONS.map((region) => (
                 <button
@@ -244,84 +249,94 @@ export function ParanaRegionalMap({
         </Card>
 
         {/* Selected Region Detailed Panel */}
-        <Card className="lg:col-span-5 bg-zinc-900/60 border-zinc-800 backdrop-blur shadow-2xl">
+        <Card className="lg:col-span-5 bg-zinc-900/70 border-zinc-800 backdrop-blur shadow-2xl">
           <CardHeader className="pb-3 border-b border-zinc-800/80">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold tracking-wider text-blue-400 uppercase">
-                Diagnóstico Regional (NASA POWER + SRTM)
+                Diagnóstico Regional
               </span>
-              <Badge
-                variant="outline"
-                className={
-                  activeRegion.frostRisk === "Alto"
-                    ? "border-red-500/40 text-red-400 bg-red-500/10 text-xs"
-                    : "border-amber-500/40 text-amber-400 bg-amber-500/10 text-xs"
-                }
-              >
-                Risco Geada: {activeRegion.frostRisk}
+              
+              {/* Source Tag */}
+              <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-500/10 text-[10px]">
+                Fonte: NASA POWER & SRTM
               </Badge>
             </div>
+
             <CardTitle className="text-2xl font-bold text-white pt-1">
               {activeRegion.name}
             </CardTitle>
-            <CardDescription className="text-zinc-400 text-xs flex items-center gap-1">
-              <Mountain className="size-3.5 text-zinc-400" />
-              Polo: {activeRegion.centerCity} • Altitude Média: {activeRegion.avgElevation} m
+
+            <CardDescription className="text-zinc-400 text-xs flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <Mountain className="size-3.5 text-zinc-400" />
+                Polo: {activeRegion.centerCity} • Cota: {activeRegion.avgElevation} m
+              </span>
+              <span className="text-[10px] text-zinc-400">Fonte: NASA SRTM 30m</span>
             </CardDescription>
           </CardHeader>
 
           <CardContent className="p-6 space-y-5">
-            {/* Real NASA Climate Probability Stats */}
+            {/* NASA Satellite Historical Stats with Visible Sources */}
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 rounded-lg border border-blue-500/20 bg-blue-500/5">
-                <div className="flex items-center gap-1.5 text-xs text-blue-400 font-semibold mb-1">
-                  <Snowflake className="size-4" />
-                  Risco de Geada
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] text-blue-400 font-semibold flex items-center gap-1">
+                    <Snowflake className="size-3.5" /> Geada
+                  </span>
+                  <span className="text-[9px] text-blue-400/80 font-mono">NASA POWER</span>
                 </div>
-                <div className="text-sm font-bold text-white">
+                <div className="text-xs font-bold text-white">
                   {activeRegion.frostHistoryStat}
                 </div>
-                <p className="text-[11px] text-zinc-400 mt-1">
-                  Base 40 anos NASA POWER (T2M_MIN &lt; 3°C)
+                <p className="text-[10px] text-zinc-400 mt-1">
+                  Dias com T2M_MIN &lt; 3°C na safra
                 </p>
               </div>
 
               <div className="p-3 rounded-lg border border-amber-500/20 bg-amber-500/5">
-                <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold mb-1">
-                  <SunMedium className="size-4" />
-                  Risco de Seca
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] text-amber-400 font-semibold flex items-center gap-1">
+                    <SunMedium className="size-3.5" /> Seca
+                  </span>
+                  <span className="text-[9px] text-amber-400/80 font-mono">NASA SMAP</span>
                 </div>
-                <div className="text-sm font-bold text-white">
+                <div className="text-xs font-bold text-white">
                   {activeRegion.droughtHistoryStat}
                 </div>
-                <p className="text-[11px] text-zinc-400 mt-1">
+                <p className="text-[10px] text-zinc-400 mt-1">
                   Estiagem em abril na emergência
                 </p>
               </div>
             </div>
 
-            {/* Regional Relief & Summary */}
-            <div className="space-y-2">
-              <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider block">
-                Comportamento do Relevo e Solo
-              </span>
-              <p className="text-xs text-zinc-300 leading-relaxed bg-zinc-950/50 p-3 rounded-lg border border-zinc-800">
+            {/* Regional Relief Behaviour */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider block">
+                  Relevo & Microclima
+                </span>
+                <span className="text-[10px] text-zinc-400">Fonte: NASA SRTM 30m</span>
+              </div>
+              <p className="text-xs text-zinc-300 leading-relaxed bg-zinc-950/60 p-3 rounded-lg border border-zinc-800">
                 {activeRegion.summary}
               </p>
             </div>
 
-            {/* Impact Case Check (Safra 2026 DERAL) */}
-            <div className="p-3.5 rounded-lg border border-zinc-800 bg-zinc-900/80 space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
-                <CheckCircle className="size-4" />
-                Validação em Campo (Boletim DERAL 2026)
+            {/* Ground Truth Validation with SEAB / DERAL Source */}
+            <div className="p-3.5 rounded-lg border border-zinc-800 bg-zinc-950/60 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+                  <CheckCircle className="size-3.5" />
+                  Validação no Boletim DERAL 2026
+                </div>
+                <span className="text-[9px] text-emerald-400/80 font-mono">Fonte: DERAL / SEAB</span>
               </div>
               <p className="text-xs text-zinc-300 leading-relaxed">
-                Nesta região, as baixadas acumularam ar denso e frio em maio de 2026, queimando o milho safrinha e feijão. Em contrapartida, lavouras de trigo e áreas com braquiária nas cotas altas sofreram dano mínimo.
+                Nesta mesorregião, as baixadas acumularam ar frio denso em maio de 2026, queimando o milho safrinha e feijão. Lavouras de trigo e áreas com braquiária sofreram dano mínimo.
               </p>
             </div>
 
-            {/* Action button to Drill-Down to Level 3 (Farm & Relief) */}
+            {/* Action button to Drill-Down to Level 3 */}
             <div className="pt-2">
               <Button
                 className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium gap-2 shadow-lg shadow-blue-500/20"
@@ -331,7 +346,7 @@ export function ParanaRegionalMap({
                 <ArrowRight className="size-4" />
               </Button>
               <p className="text-[11px] text-zinc-400 text-center mt-2">
-                Ver modelo de relevo SRTM 30m, comparação de rotações e plano de safra
+                Ver modelo de relevo SRTM 30m, comparação de 3 rotações e plano de safra
               </p>
             </div>
           </CardContent>

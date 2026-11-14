@@ -10,7 +10,9 @@ import {
   HelpCircle,
   Sprout,
   Calendar,
-  Share2
+  Share2,
+  Satellite,
+  Database
 } from "lucide-react";
 
 interface RotationComparisonProps {
@@ -28,7 +30,7 @@ export function RotationComparison({ farm, onOpenOnePager }: RotationComparisonP
           <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
             <h3 className="text-xl font-bold text-white">
-              Comparador de Rotações de Safra (Obrigatório Desafio NASA)
+              Comparador de 3 Estratégias de Rotação (Obrigatório Desafio NASA)
             </h3>
           </div>
           <p className="text-xs text-zinc-400 mt-1">
@@ -36,13 +38,22 @@ export function RotationComparison({ farm, onOpenOnePager }: RotationComparisonP
           </p>
         </div>
 
-        <Button
-          onClick={onOpenOnePager}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium gap-2 text-xs h-9 shadow-lg shadow-emerald-600/20"
-        >
-          <Share2 className="size-3.5" />
-          Gerar Plano de Safra (1 Página para WhatsApp)
-        </Button>
+        {/* Source attribution and CTA */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge variant="outline" className="border-blue-500/40 text-blue-400 bg-blue-500/10 text-[10px] gap-1">
+            <Satellite className="size-3" /> Fonte: NASA POWER & SRTM
+          </Badge>
+          <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 bg-emerald-500/10 text-[10px] gap-1">
+            <Database className="size-3" /> Fonte: MAPA / ZARC 2026
+          </Badge>
+          <Button
+            onClick={onOpenOnePager}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium gap-2 text-xs h-9 shadow-lg shadow-emerald-600/20"
+          >
+            <Share2 className="size-3.5" />
+            Gerar Plano de Safra (WhatsApp)
+          </Button>
+        </div>
       </div>
 
       {/* 3 Strategy Cards Grid */}
@@ -57,11 +68,11 @@ export function RotationComparison({ farm, onOpenOnePager }: RotationComparisonP
               className={`transition-all duration-200 cursor-pointer flex flex-col justify-between ${
                 isSelected
                   ? "bg-zinc-900 border-blue-500 ring-2 ring-blue-500/50 shadow-2xl"
-                  : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700"
+                  : "bg-zinc-900/70 border-zinc-800 hover:border-zinc-700"
               }`}
             >
               <CardHeader className="pb-3 border-b border-zinc-800/80">
-                <div className="flex items-center justify-between gap-2 mb-1">
+                <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
                   {rotation.isCurrent ? (
                     <Badge variant="outline" className="text-[10px] border-zinc-600 text-zinc-400">
                       Rotação Atual
@@ -93,10 +104,13 @@ export function RotationComparison({ farm, onOpenOnePager }: RotationComparisonP
               </CardHeader>
 
               <CardContent className="p-5 space-y-4 text-xs flex-1">
-                {/* Frost Vulnerability */}
+                {/* Frost Vulnerability with Source */}
                 <div className="space-y-1">
-                  <span className="font-semibold text-zinc-300 flex items-center justify-between">
-                    <span>Risco de Geada:</span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-zinc-300">Risco Térmico / Geada:</span>
+                    <span className="text-[9px] text-blue-400 font-mono">NASA POWER</span>
+                  </div>
+                  <div className="flex items-center justify-between">
                     <span
                       className={
                         rotation.frostRiskLevel === "Alto"
@@ -106,18 +120,21 @@ export function RotationComparison({ farm, onOpenOnePager }: RotationComparisonP
                           : "text-emerald-400 font-semibold"
                       }
                     >
-                      {rotation.frostRiskLevel}
+                      Nível: {rotation.frostRiskLevel}
                     </span>
-                  </span>
+                  </div>
                   <p className="text-zinc-400 text-[11px] leading-relaxed">
                     {rotation.frostProbabilityText}
                   </p>
                 </div>
 
-                {/* Drought Vulnerability */}
+                {/* Drought Vulnerability with Source */}
                 <div className="space-y-1">
-                  <span className="font-semibold text-zinc-300 flex items-center justify-between">
-                    <span>Risco de Seca (Veranico):</span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-zinc-300">Risco Hídrico / Seca:</span>
+                    <span className="text-[9px] text-amber-400 font-mono">NASA SMAP</span>
+                  </div>
+                  <div className="flex items-center justify-between">
                     <span
                       className={
                         rotation.droughtRiskLevel === "Alto"
@@ -127,9 +144,9 @@ export function RotationComparison({ farm, onOpenOnePager }: RotationComparisonP
                           : "text-emerald-400 font-semibold"
                       }
                     >
-                      {rotation.droughtRiskLevel}
+                      Nível: {rotation.droughtRiskLevel}
                     </span>
-                  </span>
+                  </div>
                   <p className="text-zinc-400 text-[11px] leading-relaxed">
                     {rotation.droughtProbabilityText}
                   </p>
@@ -137,10 +154,13 @@ export function RotationComparison({ farm, onOpenOnePager }: RotationComparisonP
 
                 {/* Soil Protection Score */}
                 <div className="space-y-1 pt-2 border-t border-zinc-800/80">
-                  <span className="font-semibold text-zinc-300 flex items-center gap-1">
-                    <Sprout className="size-3.5 text-emerald-400" />
-                    Proteção do Solo:
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-zinc-300 flex items-center gap-1">
+                      <Sprout className="size-3.5 text-emerald-400" />
+                      Proteção do Solo:
+                    </span>
+                    <span className="text-[9px] text-emerald-400 font-mono">SoilGrids</span>
+                  </div>
                   <p className="text-zinc-400 text-[11px] leading-relaxed">
                     {rotation.soilProtectionScore}
                   </p>
@@ -148,10 +168,13 @@ export function RotationComparison({ farm, onOpenOnePager }: RotationComparisonP
 
                 {/* Optimal Planting Window (ZARC) */}
                 <div className="space-y-1">
-                  <span className="font-semibold text-zinc-300 flex items-center gap-1">
-                    <Calendar className="size-3.5 text-blue-400" />
-                    Janela Oficial ZARC:
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-zinc-300 flex items-center gap-1">
+                      <Calendar className="size-3.5 text-blue-400" />
+                      Janela Oficial de Semeadura:
+                    </span>
+                    <span className="text-[9px] text-blue-400 font-mono">MAPA / ZARC</span>
+                  </div>
                   <p className="text-zinc-300 font-medium text-[11px]">
                     {rotation.optimalWindow}
                   </p>
@@ -159,9 +182,12 @@ export function RotationComparison({ farm, onOpenOnePager }: RotationComparisonP
 
                 {/* Where to plant in the farm (Topography SRTM match) */}
                 <div className="p-2.5 rounded-lg bg-zinc-950/70 border border-zinc-800 space-y-1">
-                  <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
-                    Onde Plantar na Fazenda:
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+                      Onde Plantar na Fazenda:
+                    </span>
+                    <span className="text-[9px] text-zinc-400 font-mono">NASA SRTM 30m</span>
+                  </div>
                   <p className="text-xs text-zinc-200 font-semibold">
                     {rotation.idealMicrozone}
                   </p>
@@ -171,7 +197,7 @@ export function RotationComparison({ farm, onOpenOnePager }: RotationComparisonP
               {/* Agronomist check warning */}
               <div className="p-4 border-t border-zinc-800/80 bg-zinc-950/40 text-[11px] text-zinc-400 space-y-1">
                 <span className="font-medium text-amber-400 flex items-center gap-1">
-                  <HelpCircle className="size-3.5" /> Confirmar com agrônomo:
+                  <HelpCircle className="size-3.5" /> Confirmar com agrônomo da cooperativa:
                 </span>
                 <p>{rotation.agronomyRecommendation}</p>
               </div>
@@ -183,10 +209,13 @@ export function RotationComparison({ farm, onOpenOnePager }: RotationComparisonP
       {/* Decision Summary Banner */}
       <div className="p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="space-y-1 text-center md:text-left">
-          <h4 className="text-sm font-bold text-white flex items-center gap-2 justify-center md:justify-start">
-            <Check className="size-4 text-emerald-400" />
-            Estratégia Combinada Recomendada pelo GroundTruth
-          </h4>
+          <div className="flex items-center gap-2 justify-center md:justify-start">
+            <h4 className="text-sm font-bold text-white flex items-center gap-2">
+              <Check className="size-4 text-emerald-400" />
+              Estratégia Combinada Recomendada pelo GroundTruth
+            </h4>
+            <span className="text-[10px] text-blue-300 font-mono">Fontes: NASA POWER + SRTM + ZARC</span>
+          </div>
           <p className="text-xs text-zinc-300 max-w-3xl">
             <strong>Mosaico Inteligente:</strong> Plante <strong>Trigo</strong> nos 65 hectares de baixada (talhões 1 a 3) para neutralizar o lago de ar frio, e mantenha <strong>Milho consorciado com Braquiária</strong> nos 120 hectares de encosta e topo para segurar a umidade e conter erosão.
           </p>
@@ -196,7 +225,7 @@ export function RotationComparison({ farm, onOpenOnePager }: RotationComparisonP
           onClick={onOpenOnePager}
           className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs whitespace-nowrap"
         >
-          Visualizar Plano de Safra
+          Visualizar Plano de Safra (WhatsApp)
         </Button>
       </div>
     </div>
