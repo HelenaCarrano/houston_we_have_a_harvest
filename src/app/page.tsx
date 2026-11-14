@@ -7,7 +7,9 @@ import { ParanaRegionalMap } from "@/components/map/ParanaRegionalMap";
 import { TopographyPlotView } from "@/components/farm/TopographyPlotView";
 import { ClimateHistoryChart } from "@/components/farm/ClimateHistoryChart";
 import { RotationComparison } from "@/components/farm/RotationComparison";
+import { CurrentDateCropPlanner } from "@/components/farm/CurrentDateCropPlanner";
 import { CropPlanOnePagerModal } from "@/components/farm/CropPlanOnePagerModal";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -36,72 +38,75 @@ export default function Home() {
   const patoBrancoClim = nasaClimatology.find((l) => l.id === "pato-branco") || nasaClimatology[0];
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
-      {/* Top NASA Space Apps Navbar */}
-      <header className="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400">
-              <Satellite className="size-5" />
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col font-sans transition-colors duration-200 selection:bg-blue-600 selection:text-white">
+      {/* Top NASA Space Apps Navbar with Theme Toggle */}
+      <header className="sticky top-0 z-50 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4 transition-colors">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
+            <Satellite className="size-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-zinc-900 dark:text-white font-heading">
+                GROUNDTRUTH
+              </span>
+              <Badge className="bg-blue-600 text-white border-none text-[10px] py-0 px-2 font-bold rounded-full">
+                NASA Space Apps 2026
+              </Badge>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-base tracking-tight text-white">GROUNDTRUTH</span>
-                <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[10px] py-0 px-2">
-                  NASA Space Apps 2026
-                </Badge>
-              </div>
-              <p className="text-[11px] text-zinc-400">
-                Desafio Field Shift • Adaptação de Lavouras com 40 Anos de Satélites
-              </p>
-            </div>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
+              Field Shift • Decisões de safra com 40 anos de satélites da NASA
+            </p>
           </div>
         </div>
 
         {/* Level Breadcrumb Navigation Pills */}
-        <div className="hidden md:flex items-center gap-1.5 bg-zinc-900 p-1 rounded-xl border border-zinc-800 text-xs">
+        <div className="hidden lg:flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 text-xs shadow-inner">
           <button
             onClick={() => setCurrentLevel(1)}
-            className={`px-3 py-1 rounded-lg transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl transition-all font-semibold ${
               currentLevel === 1
-                ? "bg-blue-600 text-white font-semibold shadow-sm"
-                : "text-zinc-400 hover:text-white"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
             }`}
           >
-            1. Brasil
+            1. Brasil (27 Estados)
           </button>
-          <ChevronRight className="size-3 text-zinc-600" />
+          <ChevronRight className="size-3.5 text-zinc-400" />
           <button
             onClick={() => setCurrentLevel(2)}
-            className={`px-3 py-1 rounded-lg transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl transition-all font-semibold ${
               currentLevel === 2
-                ? "bg-blue-600 text-white font-semibold shadow-sm"
-                : "text-zinc-400 hover:text-white"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
             }`}
           >
-            2. Paraná
+            2. Mesorregiões do Paraná
           </button>
-          <ChevronRight className="size-3 text-zinc-600" />
+          <ChevronRight className="size-3.5 text-zinc-400" />
           <button
             onClick={() => setCurrentLevel(3)}
-            className={`px-3 py-1 rounded-lg transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl transition-all font-semibold ${
               currentLevel === 3
-                ? "bg-blue-600 text-white font-semibold shadow-sm"
-                : "text-zinc-400 hover:text-white"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
             }`}
           >
-            3. Fazenda & Relevo
+            3. Fazenda & Relevo SRTM
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Right Action Bar: Theme Toggle + One-Pager WhatsApp */}
+        <div className="flex items-center gap-2.5">
+          <ThemeToggle />
+          
           <Button
             size="sm"
             onClick={() => setIsOnePagerOpen(true)}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs gap-1.5 h-8 font-medium shadow-md shadow-emerald-600/20"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs gap-1.5 h-9 font-semibold px-3.5 rounded-full shadow-md shadow-emerald-600/20"
           >
             <Share2 className="size-3.5" />
-            <span className="hidden sm:inline">Plano de Safra</span>
+            <span className="hidden sm:inline">Plano de Safra (WhatsApp)</span>
           </Button>
         </div>
       </header>
@@ -111,19 +116,17 @@ export default function Home() {
         {/* LEVEL 1: National View (Brazil Map) */}
         {currentLevel === 1 && (
           <div className="space-y-6">
-            <div className="p-6 rounded-2xl bg-gradient-to-r from-blue-950/40 via-zinc-900/60 to-zinc-900/40 border border-blue-500/20 backdrop-blur">
-              <div className="max-w-3xl space-y-2">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs">
-                  <Sparkles className="size-3.5" />
-                  <span>Decisão real no nível da lavoura com dados espaciais</span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                  O que plantar, onde e quando com base em 40 anos de satélites da NASA
-                </h1>
-                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                  Cruze dados diários da NASA POWER (1981-2025) com o modelo de relevo SRTM (30m) para prever o risco de geada em baixadas e estiagem em anos de La Niña. Escolha um estado abaixo para iniciar.
-                </p>
+            <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-600/10 via-emerald-600/5 to-transparent border border-blue-200 dark:border-blue-900/40 backdrop-blur shadow-sm space-y-3">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 text-xs font-semibold">
+                <Sparkles className="size-3.5 text-blue-600 dark:text-blue-400" />
+                <span>Ciência da NASA explicada de forma simples para quem produz</span>
               </div>
+              <h1 className="text-2xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight font-heading">
+                O que plantar, onde na terra e quando, sem complicar
+              </h1>
+              <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-3xl">
+                O agricultor aposta o trabalho do ano em cada safra. O <strong>GroundTruth</strong> cruza 40 anos de satélites da NASA com as curvas do terreno para apontar onde o frio da geada se acumula e como proteger o solo da seca.
+              </p>
             </div>
 
             <BrazilDrilldownMap
@@ -156,58 +159,62 @@ export default function Home() {
         {currentLevel === 3 && (
           <div className="space-y-8">
             {/* Top Navigation & Breadcrumb for Level 3 */}
-            <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-zinc-900/80 border border-zinc-800">
+            <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm">
               <div className="flex items-center gap-2 text-xs">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setCurrentLevel(2)}
-                  className="text-zinc-400 hover:text-white gap-1 text-xs px-2 h-8"
+                  className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white gap-1 text-xs px-2.5 h-8 rounded-lg"
                 >
                   <ArrowLeft className="size-3.5" /> Mesorregiões do Paraná
                 </Button>
-                <span className="text-zinc-600">/</span>
-                <span className="font-semibold text-blue-400">{selectedMesoregion.name}</span>
-                <span className="text-zinc-600">/</span>
-                <span className="text-zinc-200 font-semibold">{currentFarm.name} ({currentFarm.municipality})</span>
+                <span className="text-zinc-400 dark:text-zinc-600">/</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400">{selectedMesoregion.name}</span>
+                <span className="text-zinc-400 dark:text-zinc-600">/</span>
+                <span className="text-zinc-800 dark:text-zinc-200 font-semibold">{currentFarm.name} ({currentFarm.municipality})</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10 text-xs">
+                <Badge variant="outline" className="border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 text-xs font-semibold py-1">
                   {currentFarm.totalHectares} ha Monitorados
                 </Badge>
                 <Button
                   size="sm"
-                  variant="outline"
                   onClick={() => setIsOnePagerOpen(true)}
-                  className="border-zinc-700 text-zinc-300 hover:text-white text-xs gap-1.5 h-8"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs gap-1.5 h-8 font-semibold rounded-lg shadow-sm"
                 >
-                  <Share2 className="size-3.5" /> Plano de Safra (WhatsApp)
+                  <Share2 className="size-3.5" /> Enviar no WhatsApp
                 </Button>
               </div>
             </div>
 
             {/* Farm Header Summary */}
-            <div className="p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800 backdrop-blur space-y-3">
+            <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                    <MapPin className="size-5 text-blue-400" />
+                  <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white flex items-center gap-2 font-heading">
+                    <MapPin className="size-6 text-blue-600 dark:text-blue-400" />
                     {currentFarm.name}
                   </h2>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-1">
                     {currentFarm.municipality} • Solo: {currentFarm.soilType}
                   </p>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xs text-zinc-400 block">Sistema Atual:</span>
-                  <span className="text-xs font-semibold text-zinc-200">
+                  <span className="text-xs text-zinc-600 dark:text-zinc-400 block">Cultivo Tradicional do Agricultor:</span>
+                  <span className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200">
                     {currentFarm.currentSystem}
                   </span>
                 </div>
               </div>
             </div>
+
+            {/* NEW MODULE: Current Date Real-time Crop Planner */}
+            <CurrentDateCropPlanner
+              onApplyPlan={() => setIsOnePagerOpen(true)}
+            />
 
             {/* Component 1: NASA SRTM Topography Model */}
             <TopographyPlotView
@@ -239,34 +246,34 @@ export default function Home() {
       />
 
       {/* Footer with Mandatory NASA Attribution */}
-      <footer className="border-t border-zinc-800 bg-zinc-950 px-6 py-6 mt-12 text-xs text-zinc-400">
+      <footer className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-6 py-8 mt-16 text-xs text-zinc-600 dark:text-zinc-400 transition-colors">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-1 text-center sm:text-left">
-            <p className="font-semibold text-zinc-300">
-              GroundTruth — Field Shift: Adapting Farms with NASA Data
+            <p className="font-bold text-zinc-800 dark:text-zinc-200">
+              GroundTruth — NASA Space Apps Challenge 2026 (Field Shift)
             </p>
-            <p className="text-[11px] text-zinc-400">
-              Fontes oficiais: NASA POWER (MERRA-2 Climatology & Daily), NASA SRTM 30m, NOAA CPC (ENSO ONI), MAPA ZARC & DERAL Paraná.
+            <p className="text-[11px] text-zinc-600 dark:text-zinc-400">
+              Fontes oficiais transparentes: NASA POWER (MERRA-2 1981-2025), NASA SRTM 30m, NOAA CPC (ENSO ONI), MAPA / ZARC 2026, DERAL Paraná e IBGE 2026.
             </p>
           </div>
 
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-4 text-xs font-semibold">
             <a
               href="https://power.larc.nasa.gov/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-blue-400 transition-colors"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
             >
-              NASA POWER
+              NASA POWER API
             </a>
             <span>•</span>
             <a
               href="https://www.spaceappschallenge.org/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-blue-400 transition-colors"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
             >
-              NASA Space Apps 2026
+              Space Apps 2026
             </a>
           </div>
         </div>
