@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "data:fetch": "node scripts/fetch_power_daily.mjs && node scripts/build_historical_events.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
