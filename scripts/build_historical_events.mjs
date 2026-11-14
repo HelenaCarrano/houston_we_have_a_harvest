@@ -8,7 +8,7 @@
 //   - lowestTempCelsius: menor T2M_MIN de maio a julho
 //   - aprilRainMm: soma de PRECTOTCORR em abril
 //   - hasSevereFrost: frostDaysCritical >= 1
-//   - hasSevereDrought: chuva de abril abaixo do percentil 20 de 1991–2025
+//   - hasSevereDrought: chuva de abril abaixo do percentil 20 de 1981–2025
 //
 // Uso: node scripts/build_historical_events.mjs
 
@@ -37,7 +37,7 @@ for (let i = 0; i < T2M_MIN.length; i++) {
   }
 }
 
-// percentil 20 da chuva de abril (anos completos 1991–2025)
+// percentil 20 da chuva de abril (anos completos 1981–2025)
 const aprilHist = [...byYear.entries()]
   .filter(([y, e]) => y <= 2025 && e.aprDays === 30)
   .map(([, e]) => e.aprRain)

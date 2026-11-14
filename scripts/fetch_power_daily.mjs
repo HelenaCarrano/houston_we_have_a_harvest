@@ -15,7 +15,7 @@ const LOCATIONS = [
 ];
 
 const PARAMETERS = ["T2M_MIN", "T2M_MAX", "PRECTOTCORR", "GWETROOT", "GWETTOP"];
-const START = "19910101";
+const START = "19810101";
 const PAUSE_MS = 3000; // pausa entre requisições para respeitar a API
 const OUT_DIR = path.resolve("src/data");
 
