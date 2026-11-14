@@ -29,7 +29,9 @@ export const PARAMS_PADRAO: EngineParams = {
   cicloSoja: 120,
   intervalo: 5,
   diasAteFlorescer: 65,
-  limiteGeadaC: 2,
+  // 3 °C no ar a 2 m: escolha do time (14/11/2026) como indicador de geada na superfície/relva.
+  // A validar com agronomia.
+  limiteGeadaC: 3,
   janelaFloracaoDias: 10,
   diasSecaInicio: 30,
   chuvaDiaSecoMm: 1,
