@@ -17,7 +17,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GroundTruth · Houston, We Have a Harvest",
+  title: "weharvest · Houston, We Have a Harvest",
   description:
     "Se eu plantar a soja nesta data, em quantos dos últimos 45 anos o milho safrinha teria pegado geada ou seca na fase crítica? Dados diários da NASA POWER desde 1981.",
 };

@@ -1,4 +1,4 @@
-# GroundTruth 🛰️🌱 — Houston, We Have a Harvest
+# weharvest 🛰️🌱 — Houston, We Have a Harvest
 
 **NASA Space Apps Challenge 2026 · Desafio _Field Shift: Adapting Farms with NASA Data_**
 
@@ -14,7 +14,7 @@
 
 No Sul do Brasil a mesma terra tem duas safras por ano: soja no verão e milho safrinha logo depois. **A data de plantio da soja define quando o milho safrinha floresce** e, portanto, o risco de geada e de seca nessa fase.
 
-O GroundTruth responde:
+O weharvest responde:
 
 > _"Se eu plantar a soja nesta data, em quantos dos últimos ~45 anos o milho safrinha teria pegado geada ou seca na fase crítica?"_
 
@@ -87,7 +87,7 @@ Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 
 
 In southern Brazil the same field yields two crops a year: soybean in summer, then _safrinha_ (second-season) corn. **The soybean sowing date sets when the corn flowers**, and therefore its frost and drought risk.
 
-GroundTruth answers:
+weharvest answers:
 
 > _"If I sow soybean on this date, in how many of the last ~45 years would the second-season corn have been hit by frost or drought during its critical stage (tasseling and grain fill)?"_
 

@@ -396,7 +396,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-5 pb-16 pt-6 sm:px-6">
       <header className="flex flex-col gap-2">
         <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-green">
-          <span className="gt-pulse">●</span> GroundTruth · NASA Space Apps 2026 · Field Shift
+          <span className="gt-pulse">●</span> weharvest · NASA Space Apps 2026 · Field Shift
         </p>
         <h1 className="text-[30px] font-black leading-tight sm:text-5xl">
           Se eu plantar a soja nesta data, o milho safrinha pega geada ou seca?
