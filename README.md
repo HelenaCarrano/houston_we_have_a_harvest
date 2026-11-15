@@ -26,7 +26,7 @@ Demonstration case: southwestern Paraná (Pato Branco, Cascavel, Francisco Beltr
 
 ### What the NASA data does here
 
-NASA data is the core of the answer, not decoration. **NASA POWER daily data (1981–2026)** gives, for each municipality, the minimum air temperature (frost), rainfall and root-zone soil wetness (drought). **NASA SRTM 30 m** gives the elevation and the relief around each point. The data is downloaded once and stored with the code (`src/data/`), so the app works without a live data connection.
+NASA data is the core of the answer, not decoration. **NASA POWER daily data (1981–2026)** gives, for each municipality, the minimum air temperature (frost), rainfall and root-zone soil wetness (drought). **NASA SRTM 30 m** gives the elevation and the relief around each point. **Any municipality in southern Brazil:** the user can search a municipality by name (Open-Meteo geocoding) or use their location, and the app downloads the 45 years of NASA POWER data for that point **straight from NASA, in the browser** (about 2 seconds, 1.3 MB), then runs the same engine there. Three municipalities (Pato Branco, Cascavel, Francisco Beltrão) are also stored with the code (`src/data/`), so the app still works without a live connection for them, and they include the SRTM relief and the 2026 comparison. We checked that a fresh download of Cascavel equals the stored file (67,004 values, 0 differences). The app only computes south of 22°S (PR, SC, RS and nearby areas): the cycles and the drought rule were calibrated there, and elsewhere (for example the dry season in Mato Grosso) the drought rule would flag normal conditions as risk.
 
 ### Run locally
 
@@ -51,7 +51,7 @@ npm run data:ibge  # re-download IBGE yield data, then: npm run backtest
 | **IBGE SIDRA · Municipal Agricultural Survey (PAM), table 839** | Second-crop corn yield and harvested area (Cascavel, Francisco Beltrão, Pato Branco) for the reality check | https://sidra.ibge.gov.br/tabela/839 |
 | **ZARC (Brazilian Ministry of Agriculture)** | Reference for official planting windows; **not yet integrated** | https://dados.agricultura.gov.br/dataset/6d3d141c-885e-41a4-ab7f-dc8ff323b96f |
 
-Each data file stores the arrays per variable, the start date, the URL used and the download date.
+Each data file stores the arrays per variable, the start date, the URL used and the download date. For municipalities chosen by the user, the same format is built in the browser from the API response (`src/lib/power.ts`; tests check the conversion and that the result equals the pre-downloaded path). Only the typed name (to Open-Meteo) or the coordinates (to NASA POWER, if "use my location") leave the device; nothing is stored.
 
 ### How risk is computed
 
@@ -119,6 +119,7 @@ We tested whether the seasons the app flags had lower **second-crop corn yields*
 - Wheat drought is not computed, and the wheat frost result depends strongly on the assumed sowing date.
 - ENSO classification uses NOAA's official table but with a simplified rule, and samples per phase are short.
 - The risk levels are **not yet confirmed** against real yields: the IBGE test above was inconclusive.
+- For municipalities chosen by the user, SRTM relief and the 2026 proof are not available, and results rest on the same hypotheses (check ZARC); outside southern Brazil the app does not compute.
 - Not built yet: local soil data (for example SoilGrids), vegetation stress (NASA MODIS NDVI), an interactive map, ZARC integration and a stronger validation against yield statistics (IBGE test inconclusive so far).
 
 ### Technology
@@ -167,7 +168,7 @@ npm run data:ibge  # baixa a produtividade do IBGE; depois: npm run backtest
 | **IBGE SIDRA · PAM, tabela 839** | Rendimento e área colhida do milho 2ª safra (3 municípios), para o teste com dados reais | https://sidra.ibge.gov.br/tabela/839 |
 | **ZARC (MAPA)** | Referência para janelas de semeadura (ainda não integrado ao app) | https://dados.agricultura.gov.br/dataset/6d3d141c-885e-41a4-ab7f-dc8ff323b96f |
 
-Os dados ficam em `src/data/power_daily_<id>.json` (arrays por parâmetro + data inicial, com a URL usada e a data do download). O app não depende da API ao vivo.
+Os dados dos 3 municípios de demonstração ficam em `src/data/power_daily_<id>.json` (arrays por parâmetro + data inicial, com a URL usada e a data do download) e funcionam sem a API ao vivo. **Qualquer município do Sul do Brasil** (ao sul de 22°S) pode ser escolhido pelo nome ou pela localização: o navegador baixa na hora os 45 anos da NASA POWER daquele ponto (cerca de 2 s) e roda o mesmo motor (`src/lib/power.ts`, `src/lib/local-view.ts`). Fora do Sul o app não calcula, porque os ciclos e a regra de seca foram calibrados lá. Municípios escolhidos não têm o relevo SRTM nem a comparação com 2026.
 
 ### Como os riscos são calculados
 

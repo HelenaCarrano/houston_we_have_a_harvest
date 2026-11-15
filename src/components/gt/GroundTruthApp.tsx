@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { DataView, LocalView, RiscoView, ViewData } from "@/lib/view-data";
 import { Rotacoes, SeloNivel } from "@/components/gt/Rotacoes";
 import { ConfrontoIbge } from "@/components/gt/ConfrontoIbge";
+import { EscolherLugar } from "@/components/gt/EscolherLugar";
 import { Previsao } from "@/components/gt/Previsao";
 import { CampoDescoberto } from "@/components/gt/CampoDescoberto";
 import {
@@ -621,7 +622,10 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
   }, [lang]);
 
   const [localId, setLocalId] = useState(data.locais[0].id);
-  const local = useMemo(() => data.locais.find((l) => l.id === localId) ?? data.locais[0], [data, localId]);
+  /** Municípios escolhidos pelo usuário (dados da NASA baixados na hora), além dos 3 de demonstração. */
+  const [extras, setExtras] = useState<LocalView[]>([]);
+  const locais = useMemo(() => [...data.locais, ...extras], [data, extras]);
+  const local = useMemo(() => locais.find((l) => l.id === localId) ?? locais[0], [locais, localId]);
   const [idx, setIdx] = useState(Math.max(local.datas.findIndex((d) => d.dataSoja === "10-20"), 0));
   const [baixada, setBaixada] = useState(false);
   const [fase, setFase] = useState<FiltroEnso>("todos");
@@ -701,7 +705,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               role="radiogroup"
               aria-label={t("Município", "Municipality")}
             >
-              {data.locais.map((l) => (
+              {locais.map((l) => (
                 <button
                   key={l.id}
                   role="radio"
@@ -720,6 +724,24 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
                 </button>
               ))}
             </div>
+            <div className="mt-3">
+              <EscolherLugar
+                params={data.params}
+                indiceEnso={data.indiceEnso}
+                onLocal={(l) => {
+                  setExtras((xs) => (xs.some((x) => x.id === l.id) ? xs : [...xs, l]));
+                  setLocalId(l.id);
+                }}
+              />
+            </div>
+            {local.personalizado && (
+              <p className="mt-2 rounded-xl border border-gt-frost-line bg-gt-frost-bg p-3 text-sm text-gt-frost-text">
+                {t(
+                  `Dados da NASA POWER de ${local.nome} baixados agora (grade de ~50 km, ${fmtData(local.periodoDados.inicio, lang)} a ${fmtData(local.periodoDados.fim, lang)}). Os ciclos e limites seguem as mesmas hipóteses do app: confira a janela do ZARC do seu município. A comparação com 2026 e o relevo SRTM só existem para os 3 municípios de demonstração.`,
+                  `NASA POWER data for ${local.nome} downloaded just now (~50 km grid, ${fmtData(local.periodoDados.inicio, lang)} to ${fmtData(local.periodoDados.fim, lang)}). Cycles and thresholds are the same hypotheses as in the rest of the app: check your municipality's ZARC window. The 2026 comparison and SRTM relief exist only for the 3 demonstration municipalities.`,
+                )}
+              </p>
+            )}
           </div>
 
           <div>
@@ -919,7 +941,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
 
         <Rotacoes d={dEf} trigo={local.trigo} nomeLocal={local.nome} baixada={baixada} filtroRotulo={filtroTexto} />
 
-        <Prova2026 local={local} d={d} limite={p.limiteGeadaC} />
+        {!local.personalizado && <Prova2026 local={local} d={d} limite={p.limiteGeadaC} />}
 
         <MaisEvidencias
           titulo={t("Mais evidências", "More evidence")}
