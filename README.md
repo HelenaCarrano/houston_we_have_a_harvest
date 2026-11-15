@@ -1,10 +1,117 @@
 # weharvest 🛰️🌱 — Houston, We Have a Harvest
 
-**NASA Space Apps Challenge 2026 · Desafio _Field Shift: Adapting Farms with NASA Data_**
+**NASA Space Apps Challenge 2026 · Challenge _Field Shift: Adapting Farms with NASA Data_**
 
 🔗 **App:** https://houston-we-have-a-harvest.vercel.app
 
-[Português](#português) · [English](#english)
+[English](#english) · [Português](#português)
+
+---
+
+## English
+
+> **App language:** English by default (required by NASA Space Apps) and Portuguese with one click on the **EN | PT** switch at the top. Every screen, rule and message exists in both languages.
+
+### What it is
+
+In southern Brazil the same field yields two crops a year: soybean in summer, then _safrinha_ (second-season) corn. **The soybean planting date decides when the corn reaches its critical stage** (tasseling and grain fill), and so its frost and drought risk.
+
+weharvest answers one question:
+
+> _"If I plant soybeans on this date, in how many of the last ~45 seasons would the second-crop corn have met frost or drought in its critical stage?"_
+
+It then compares three rotations (soybean → corn, soybean → wheat, soybean → corn + _Brachiaria_ grass) for the farmer's own field. The farmer says what matters most (income, protect soil and water, balance) and what they cannot do (grow wheat, manage brachiaria, little water), and the options are re-ordered with the reason shown. It is a **decision-support tool**: it does not replace the farmer or the agronomist.
+
+Demonstration case: southwestern Paraná (Pato Branco, Cascavel, Francisco Beltrão), where the April 2026 drought and the May 2026 frost caused losses reported by Deral (the Paraná state agriculture department).
+
+### What the NASA data does here
+
+NASA data is the core of the answer, not decoration. **NASA POWER daily data (1981–2026)** gives, for each municipality, the minimum air temperature (frost), rainfall and root-zone soil wetness (drought). **NASA SRTM 30 m** gives the elevation and the relief around each point. The data is downloaded once and stored with the code (`src/data/`), so the app works without a live data connection.
+
+### Run locally
+
+```bash
+nvm use            # Node 24 (.nvmrc)
+npm install
+npm run dev        # http://localhost:3000
+npm test           # 48 automated tests of the risk engine and the rotation ordering
+npm run data:fetch # re-download NASA POWER, NOAA RONI and SRTM data
+```
+
+### Data sources
+
+| Source | Use | Link |
+|---|---|---|
+| **NASA POWER Daily API** (community=AG) | Daily T2M_MIN, T2M_MAX, PRECTOTCORR, GWETROOT, GWETTOP, 1981-01-01 to the latest day available, for Pato Branco (-26.2295, -52.6716), Cascavel (-24.9578, -53.4595) and Francisco Beltrão (-26.0811, -53.0558) | https://power.larc.nasa.gov/docs/services/api/temporal/daily/ |
+| **NASA SRTM 30 m** (SRTM v3, via OpenTopoData, dataset `srtm30m`) | Elevation at each municipality point and relief within 1.5 km (49 points every 500 m) | https://www.opentopodata.org/datasets/srtm/ |
+| **NOAA CPC · RONI** (Relative Oceanic Niño Index); the older ONI (ERSST v5) is kept only for comparison | El Niño / La Niña phase of each season (optional "advanced filter") | https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/ |
+| **Open-Meteo** (CC BY 4.0, non-commercial use) | 16-day forecast for the "can I plant now?" check, read in the browser only when the user opens that section | https://open-meteo.com/ |
+| **Deral via Revista Cultivar**, Apr 9 and May 19, 2026 | Field reports used only for the "2026 proof" card | https://revistacultivar.com.br/noticias/pr-safra-2025-26-estiagem-e-calor-afetam-feijao-e-milho · https://revistacultivar.com.br/noticias/pr-safra-2025-26-milho-e-feijao-sofrem-impacto-das-geadas |
+| **ZARC (Brazilian Ministry of Agriculture)** | Reference for official planting windows; **not yet integrated** | https://dados.agricultura.gov.br/dataset/6d3d141c-885e-41a4-ab7f-dc8ff323b96f |
+
+Each data file stores the arrays per variable, the start date, the URL used and the download date.
+
+### How risk is computed
+
+Code in `src/lib/engine/` (pure functions with tests); parameters in `src/lib/engine/params.ts`. The rules follow the team's methodology document, with the deviations listed below.
+
+1. **Calendar:** soybean harvest = planting + 120 days; corn planting = harvest + 5 days; **corn critical stage** = 55 to 100 days after corn planting.
+2. **Likely frost:** a season counts if the 2 m minimum air temperature (T2M_MIN) was **≤ 3 °C** on any day of the critical stage; **strong frost** ≤ 1 °C. Why 3 °C: screen-height and grass-level temperatures differ by 3–6 °C, so 3 °C at 2 m ≈ frost on the grass ([Embrapa Trigo](https://www.alice.cnptia.embrapa.br/alice/bitstream/doc/1084446/1/ID442832017CBAGRO20MM398.pdf), [Embrapa agroclimatic bulletin](https://www.infoteca.cnptia.embrapa.br/infoteca/bitstream/doc/1139138/1/BolAgroClimatico-dez21.pdf), [Semina/UEL](https://ojs.uel.br/revistas/uel/index.php/semagrarias/article/download/30322/24555/166627)).
+3. **Drought:** a season counts when, in the critical stage, **either** signal holds: a dry spell of **15+ consecutive days with rain < 1 mm**, **or** mean root-zone soil wetness (GWETROOT) **below the 20th percentile** of the same series for the same calendar dates. The screen shows both signals separately and the years with **both** (the most severe). **Deviation from the methodology:** the document asked for "and"; we use "or" because the "and" rule did not flag the documented 2026 drought. Because the soil signal is relative, about 1 in 5 years always shows up as dry soil; the rule should be calibrated with yield statistics (IBGE), which is future work.
+4. **Lowland:** the frost limit rises by **+1 °C** (3 → 4 °C), because lowlands pool cold air. A hypothesis to calibrate. SRTM relief is shown but does not yet classify each plot as lowland.
+5. **Frequency:** event seasons ÷ evaluated seasons, shown as "X in 10" and "N of 45 seasons". **Level:** Low (up to 1 in 10), Medium (2–3), High (4 or more). **Confidence:** high (≥ 12 seasons), medium (7–11), low (< 7).
+6. **Rotations:** each rotation shows levels per criterion (frost, drought, erosion), with no hidden single score. In **"For your field"** the farmer chooses what matters most and what they cannot do; this changes only the **order** and the labels (a qualitative 1–3 sum), never the risk numbers. A rotation the farmer cannot do moves to the end with the reason; it is not removed. A "Copy summary" button makes a short text to share.
+7. **Wheat:** the risk of **frost at heading** (70–110 days after sowing on May 15, i.e. Jul 24 to Sep 2) is computed from the same NASA POWER series and the same limits as corn; it does **not depend on the soybean date**. The screen also shows the result for sowing on Apr 30, May 30 and Jun 15, because it depends strongly on that assumption (Pato Branco: 36, 33, 30 and 19 of 46 seasons for Apr 30, May 15, May 30 and Jun 15). Wheat drought and the El Niño filter are **not** applied to wheat, and wheat stays neutral in the tie-break of the rotation order.
+
+### 2026 test (Pato Branco, soybean planted Oct 20)
+
+- **Frost in the critical stage in 2026: yes** (also with the lowland limit), consistent with the Deral report of May 2026.
+- **Drought in the critical stage in 2026:** POWER shows the 5th driest April soil moisture since 1981 but no 15-day dry spell. The original "dry spell **and** dry soil" rule said "no", against Deral's drought report; with "dry spell **or** dry soil" the year is flagged. The screen shows the signals separately so the technician can see what supports the number.
+- **Wheat heading window (Jul 24–Sep 2, 2026):** lowest minimum 4.4 °C, no frost ≤ 3 °C. The Deral report on wheat is from May, with the crop still vegetative, so it does **not** test this window.
+
+### El Niño / La Niña ("similar years") — advanced filter
+
+The user can restrict every count to **All / El Niño / La Niña / Neutral** seasons. The app **never guesses** the phase of the coming season: it only shows NOAA's latest published value (informative) and a link to the seasonal outlook.
+
+- **Index:** NOAA's **RONI**. NOAA's ONI page says it has moved and that RONI is the index now used for official ENSO monitoring. The older ONI is downloaded too (`scripts/fetch_enso.mjs`, `src/data/enso.json`) only for comparison; it would classify about **15%** of the April–August seasons (1982–2026) differently.
+- **Phase of each season:** the 3-month season centered on the **middle of the corn critical stage** for that planting date. **El Niño** if the index ≥ +0.5, **La Niña** if ≤ −0.5, **Neutral** in between. This is a simplification (NOAA declares an episode only after 5 consecutive seasons).
+- **Drought limits** (20th percentile of soil wetness) are still computed with **all** years; the filter only counts how many years of the phase had the event.
+- **Sample size:** each phase has 8–25 seasons depending on the date. Below 12 seasons the screen warns to read with caution and confidence drops.
+- **What the data shows (Pato Branco, soybean on Oct 20):** frost in 3 of 8 El Niño seasons, 6 of 12 La Niña and 10 of 25 neutral (19 of 45 overall). The difference between phases is small next to the uncertainty of such short samples: **there is no strong El Niño/La Niña signal here**, and the app does not pretend there is.
+
+### Bare field through the year
+
+For each rotation and planting date the app builds the 365-day line from one soybean planting to the next (`src/lib/engine/calendario.ts`, with tests) and shows when the field has **no crop** (only residue), living cover (brachiaria) or a crop.
+
+- **Cycle hypotheses (to validate with agronomy/ZARC):** soybean 120 days, 5-day gap, corn 135 days, wheat sown on May 15 with a 130-day cycle. Because cycles are fixed, the **days without a crop are the same for any soybean date** (110 for corn, 115 for wheat, 5 for brachiaria); what changes is **which months** they fall in.
+- **Rain on those days:** average rainfall and days with 50 mm or more, computed from NASA POWER daily data (1981–2025) on the no-crop days only. It is a ~50 km grid average and understates local storms.
+- **Erosion level** (team methodology), computed from days without a crop: more than 60 = **High**; up to 15 = **Low** (our tolerance, equal to the sowing gap); in between = **Medium**. It ignores terrain slope and the month of the rain.
+- **Wheat and the next soybean:** with the example sowing on May 15, wheat harvest runs past the next soybean planting date when soybean is planted up to about Sep 29; the screen warns.
+
+### 16-day check before planting
+
+The app reads the 16-day Open-Meteo forecast in the browser (only the municipality's public coordinates are sent; if the service fails, the page keeps working). Rules in `src/lib/engine/previsao.ts`, with tests: minimum air temperature ≤ 3 °C (4 °C in lowlands) or rain ≥ 50 mm in the next 7 days = **"Do not plant this week"**; less than 10 mm of rain in 7 days, or the same events after the first week = **caution**. These are **hypotheses to validate with agronomy**; a forecast is not a guarantee and uncertainty grows after about 7 days.
+
+### Hypotheses and what is estimated
+
+- Cycles (soybean 120, gap 5, corn 135, wheat 130 days; wheat sowing on May 15), the critical stage (55–100 days), the frost limits (3 °C and 1 °C), the lowland adjustment (+1 °C) and the drought criteria are **starting hypotheses to validate with agronomy and ZARC**.
+- **Wheat sensitive stage:** the literature points to booting-to-flowering as the stage of serious frost damage, with minimum temperatures at the plant around 0 to −2 °C ([Revista Cultivar](https://revistacultivar.com.br/noticias/como-ocorrem-os-danos-por-geada-no-trigo); [GRDC](https://grdc.com.au/resources-and-publications/grdc-update-papers/tab-content/grdc-update-papers/2015/02/preliminary-rating-of-wheat-varieties-for-susceptibility-to-reproductive-frost-damage)). The 70–110-day window after sowing and the 3 °C screen limit are **hypotheses** to validate with Embrapa Trigo and ZARC.
+- How well each rotation meets the farmer's priorities, and the mapping of "what matters most" to those priorities, are **qualitative** (marked "to be validated with an agronomist"). The erosion level is **computed** from the days without a crop (example cycles) and ignores slope.
+- If the SRTM service fails, `scripts/fetch_srtm_relief.mjs` falls back to the mean elevation of the POWER cell and the screen marks the value as **estimated**. POWER temperature gets no elevation correction.
+
+### Limitations
+
+- NASA POWER is a **~50 km grid**: it does not represent the microclimate of a single field.
+- Temperature is **2 m air temperature**, not surface temperature. Frost on grass or leaves can occur with the 2 m air above 0 °C; hence the 3 °C limit.
+- Crop cycles are **examples**; cultivar, management and region change everything.
+- **Not a weather forecast.** It is historical frequency.
+- Wheat drought is not computed, and the wheat frost result depends strongly on the assumed sowing date.
+- ENSO classification uses NOAA's official table but with a simplified rule, and samples per phase are short.
+- Not built yet: local soil data (for example SoilGrids), vegetation stress (NASA MODIS NDVI), an interactive map, ZARC integration and validation against municipal yield statistics (IBGE).
+
+### Technology
+
+Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 · tests with Node's built-in test runner · deployed on Vercel (no secret keys in the code). Fonts: Archivo and IBM Plex Mono (Google Fonts, SIL Open Font License). The app contains no photographs, no images of people and no NASA logos.
 
 ---
 
@@ -30,7 +137,7 @@ Caso de demonstração: Sudoeste do Paraná (Pato Branco), onde estiagem (abril/
 nvm use            # Node 24 (.nvmrc)
 npm install
 npm run dev        # http://localhost:3000
-npm test           # testes do motor de risco
+npm test           # 48 testes automáticos do motor e da ordem das rotações
 npm run data:fetch # baixa de novo os dados diários da NASA POWER e regenera o histórico
 ```
 
@@ -94,7 +201,7 @@ O app lê a previsão de 16 dias da Open-Meteo no navegador (só as coordenadas 
 
 - Ciclos (soja 120, intervalo 5, milho 135 e trigo 130 dias, semeadura do trigo em 15/05), fase crítica (55–100 dias), limites de geada (3 °C e 1 °C), ajuste de baixada (+1 °C) e critérios de seca são **hipóteses de partida a validar com agronomia/ZARC**.
 - **Trigo, fase sensível:** a literatura aponta que o dano grave da geada no trigo vem do emborrachamento ao florescimento, com mínimas na planta em torno de 0 °C a −2 °C ([Revista Cultivar](https://revistacultivar.com.br/noticias/como-ocorrem-os-danos-por-geada-no-trigo); [GRDC](https://grdc.com.au/resources-and-publications/grdc-update-papers/tab-content/grdc-update-papers/2015/02/preliminary-rating-of-wheat-varieties-for-susceptibility-to-reproductive-frost-damage)). A janela de 70–110 dias após a semeadura e o limite de 3 °C no abrigo são **hipóteses** a validar com a Embrapa Trigo/ZARC. O relato do Deral de maio 2026 sobre o trigo é de lavoura ainda vegetativa e não testa essa janela.
-- Quanto cada rotação atende às prioridades são **qualitativos** (marcados "a validar com técnico"). O nível de erosão é **calculado** pelos dias sem cultura (ciclos de exemplo) e ignora o declive.
+- Quanto cada rotação atende às prioridades (e o que cada "o que pesa mais" significa) são **qualitativos** (marcados "a validar com técnico"). O nível de erosão é **calculado** pelos dias sem cultura (ciclos de exemplo) e ignora o declive.
 - O relevo vem de `scripts/fetch_srtm_relief.mjs` (altitude do ponto e 49 pontos a cada 500 m ao redor). Se o serviço falhar, o script usa a altitude média da célula do POWER e a tela marca o valor como **estimado**. A temperatura do POWER não recebe correção de altitude.
 
 ### Limitações
@@ -108,40 +215,3 @@ O app lê a previsão de 16 dias da Open-Meteo no navegador (só as coordenadas 
 ### Tecnologia
 
 Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 · testes com `node:test` · deploy no Vercel (sem chaves secretas no código).
-
----
-
-## English
-
-> **App language:** English by default (required by NASA Space Apps) and Portuguese with one click on the **EN | PT** switch at the top. Every screen, rule and message exists in both languages.
-
-### What it is
-
-In southern Brazil the same field yields two crops a year: soybean in summer, then _safrinha_ (second-season) corn. **The soybean sowing date sets when the corn flowers**, and therefore its frost and drought risk.
-
-weharvest answers:
-
-> _"If I sow soybean on this date, in how many of the last ~45 years would the second-season corn have been hit by frost or drought during its critical stage (tasseling and grain fill)?"_
-
-It also compares three rotations (soy → corn, soy → wheat, soy → corn + _Brachiaria_ grass) according to the farmer's priorities (income, lower risk, soil). It **supports** the decisions of farmers and agronomists; it does not replace them.
-
-### Run locally
-
-```bash
-nvm use && npm install && npm run dev   # http://localhost:3000
-npm test                                # risk engine tests
-npm run data:fetch                      # re-download NASA POWER daily data
-```
-
-### Data sources
-
-- **NASA POWER Daily API** (community=AG): daily T2M_MIN, T2M_MAX, PRECTOTCORR, GWETROOT, GWETTOP from 1981-01-01 to the latest available day, for Pato Branco, Cascavel and Francisco Beltrão (Paraná). https://power.larc.nasa.gov/docs/services/api/temporal/daily/
-- **Deral (Paraná state agriculture department) via Revista Cultivar**, Apr and May 2026 field reports (links above), used only for the 2026 season.
-
-### How risk is computed
-
-Rules follow the team's methodology document. Soybean harvest = sowing + 120 d; corn sowing = harvest + 5 d; **corn critical stage** (tasseling and grain fill) = 55–100 d after corn sowing. **Likely frost:** 2 m air minimum ≤ 3 °C on any day of the critical stage (**strong frost** ≤ 1 °C); 3 °C at screen height ≈ −1 °C at grass level (Embrapa; Semina/UEL). **Drought:** within the critical stage, a dry spell of 15+ days with rain < 1 mm **or** mean root-zone soil wetness (GWETROOT) below the 20th percentile for the same calendar dates (shown separately, plus years with both). We deviate from the original methodology ("and") because it missed the documented 2026 drought. **Lowland:** frost threshold +1 °C (hypothesis to calibrate). Frequency = event years ÷ evaluated years; level Low (≤ 1 in 10), Medium (2–3), High (≥ 4). Confidence: high (≥ 12 years), medium (7–11), low (< 7). **El Niño / La Niña filter:** the user can restrict the count to seasons of one ENSO phase (NOAA's RONI, the official ENSO index: ≥ +0.5 El Niño, ≤ −0.5 La Niña, taken in the 3-month season at the middle of the critical stage); the app never guesses the coming phase. Samples are short (8–25 seasons) and the signal at this location is weak. 2026 backtest (Pato Branco, soy sown Oct 20): frost flagged, matching field reports; drought not flagged by the strict rule.
-
-### Limitations
-
-~50 km grid; 2 m air temperature, not surface temperature; crop-cycle parameters are example values to be validated with agronomists and Brazil's ZARC zoning; historical frequency, **not a weather forecast**; income/soil scores and wheat risk are qualitative.
