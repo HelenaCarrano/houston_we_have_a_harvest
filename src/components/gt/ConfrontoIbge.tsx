@@ -16,7 +16,7 @@ export function ConfrontoIbge({ b }: { b: BacktestView }) {
   );
   return (
     <section className="gt-rise rounded-[22px] border border-gt-line bg-gt-card p-4 sm:p-6">
-      <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint">
+      <p className="text-xs font-semibold text-gt-faint">
         {t("Teste com dados reais de produtividade", "Reality check with real yield data")} · IBGE PAM
       </p>
       <h2 className="mt-1 text-2xl font-black">
@@ -46,7 +46,7 @@ export function ConfrontoIbge({ b }: { b: BacktestView }) {
           `Across the ${b.testes} comparisons (8 soybean dates × 3 event types), ${b.significativos} had p < 0.05; with that many tests about ${fmtNum(b.esperadosPorAcaso, 1, lang)} would be expected by chance alone.`,
         )}
       </p>
-      <p className="mt-3 font-mono text-[11px] leading-relaxed text-gt-faint">
+      <p className="mt-3 text-xs leading-relaxed text-gt-faint">
         {t(
           "Por que o teste pode não enxergar o efeito: as produtividades municipais são estimativas (muitos valores redondos); a grade da NASA tem ~50 km; a data real de plantio varia entre lavouras; mais da metade dos anos é marcada (pouco contraste); e são poucos anos. O p-valor vem de permutação dentro de cada município. Não é uma prova de que o risco não existe, e sim de que este teste não o confirma.",
           "Why the test may miss the effect: municipal yields are estimates (many round values); the NASA grid is ~50 km; real planting dates vary between farms; more than half of the years are flagged (little contrast); and there are few years. The p-value comes from permutation within each municipality. It does not prove the risk is absent, only that this test does not confirm it.",

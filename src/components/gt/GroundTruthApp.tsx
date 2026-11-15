@@ -88,12 +88,12 @@ function MaisEvidencias({ titulo, itens, children }: { titulo: string; itens: st
 
 function Rotulo({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className={`font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint ${className}`}>{children}</p>
+    <p className={`text-xs font-semibold text-gt-faint ${className}`}>{children}</p>
   );
 }
 
 function Fonte({ children }: { children: React.ReactNode }) {
-  return <p className="font-mono text-[11px] leading-relaxed text-gt-faint">{children}</p>;
+  return <p className="text-xs leading-relaxed text-gt-faint">{children}</p>;
 }
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -184,7 +184,7 @@ function BlocoRelevo({ local, baixada }: { local: LocalView; baixada: boolean })
     : t(r.fonte, "NASA SRTM 30 m (SRTM v3, 1 arc-second) via OpenTopoData");
   return (
     <div className="rounded-[18px] border border-gt-line bg-gt-card2 p-4">
-      <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-green">
+      <p className="text-xs font-semibold text-gt-green">
         {t("Relevo", "Relief")} · {r.estimado ? t("valor ESTIMADO", "ESTIMATED value") : "NASA SRTM 30 m"}
       </p>
       <ul className="mt-2 space-y-1 text-sm">
@@ -333,7 +333,7 @@ function CardRisco({
       )}
       <p className="text-sm text-gt-muted">{regra}</p>
       {extra}
-      <p className="mt-auto font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint">
+      <p className="mt-auto text-xs font-semibold text-gt-faint">
         NASA POWER {r.periodo ? `${r.periodo[0]}–${r.periodo[1]}` : ""}
         {filtro ? ` · ${filtro}` : ""} · {t("confiança", "confidence")}{" "}
         {t(r.confianca, CONFIANCA_EN[r.confianca] ?? r.confianca)}
@@ -479,7 +479,7 @@ function Prova2026({ local, d, limite }: { local: LocalView; d: DataView; limite
       ) : (
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="rounded-[18px] border border-gt-frost-line bg-gt-frost-bg p-4 text-gt-frost-text">
-            <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-frost">
+            <p className="text-xs font-semibold text-gt-frost">
               NASA POWER · {t("dados diários", "daily data")}
             </p>
             <ul className="mt-2 space-y-2 text-sm">
@@ -548,7 +548,7 @@ function Prova2026({ local, d, limite }: { local: LocalView; d: DataView; limite
             </ul>
           </div>
           <div className="rounded-[18px] border border-gt-risk-line bg-gt-risk-bg p-4 text-gt-risk-text">
-            <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-orange">
+            <p className="text-xs font-semibold text-gt-orange">
               Deral · {t("relatos de campo", "field reports")}
             </p>
             <ul className="mt-2 space-y-2 text-sm">
@@ -591,7 +591,7 @@ function Prova2026({ local, d, limite }: { local: LocalView; d: DataView; limite
             </p>
           </div>
           <div className="rounded-[18px] border border-gt-line bg-gt-card2 p-4 md:col-span-2">
-            <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-green">
+            <p className="text-xs font-semibold text-gt-green">
               {t("O que o app marca para 2026", "What the app flags for 2026")} · {t("soja em", "soybean on")}{" "}
               {fmtDia(d.dataSoja, lang)}
             </p>
@@ -650,6 +650,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
   const [localId, setLocalId] = useState(data.locais[0].id);
   /** Municípios escolhidos pelo usuário (dados da NASA baixados na hora), além dos 3 de demonstração. */
   const [extras, setExtras] = useState<LocalView[]>([]);
+  const [buscaAberta, setBuscaAberta] = useState(false);
   const locais = useMemo(() => [...data.locais, ...extras], [data, extras]);
   const local = useMemo(() => locais.find((l) => l.id === localId) ?? locais[0], [locais, localId]);
   const [idx, setIdx] = useState(Math.max(local.datas.findIndex((d) => d.dataSoja === "10-20"), 0));
@@ -702,8 +703,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
         )}
         <header className="flex flex-col gap-2">
           <div className="flex items-start justify-between gap-3">
-            <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-green">
-              <span className="gt-pulse">●</span> weharvest · NASA Space Apps 2026 · Field Shift
+            <p className="text-xs font-semibold text-gt-green">
+              <span className="gt-pulse">●</span> weharvest · NASA Space Apps 2026
             </p>
             <div
               className="flex shrink-0 rounded-full border border-gt-btn-line bg-gt-card2 p-0.5"
@@ -725,69 +726,73 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               ))}
             </div>
           </div>
-          <h1 className="text-[30px] font-black leading-tight sm:text-5xl">
+          <h1 className="text-[26px] font-black leading-tight sm:text-4xl">
             {t(
               "Se eu plantar a soja nesta data, o milho safrinha pega geada ou seca?",
               "If I plant soybeans on this date, will the second-crop corn meet frost or drought?",
             )}
           </h1>
-          <p className="max-w-3xl text-base text-gt-muted sm:text-lg">
+          <p className="max-w-3xl text-base text-gt-muted">
             {t(
-              `A data da soja define quando o milho safrinha chega à fase em que mais sofre com frio e falta de água (floração e enchimento de grãos). Contamos, em ${d.geada.totalAnos} anos de dados diários da NASA desde 1981, quantas vezes essa fase pegou geada ou seca.`,
-              `The soybean planting date decides when the second-crop corn (safrinha) reaches its critical stage (tasseling and grain fill). Using ${d.geada.totalAnos} years of NASA daily data since 1981, we count how often that stage met frost or drought.`,
+              `Em ${d.geada.totalAnos} anos de dados da NASA, contamos quantas vezes o milho safrinha pegou geada ou seca.`,
+              `Across ${d.geada.totalAnos} years of NASA data, we count how often second-crop corn met frost or drought.`,
             )}
           </p>
         </header>
 
         <Card className="flex flex-col gap-5">
           <div>
-            <Rotulo>1 · {t("Município", "Municipality")}</Rotulo>
-            <div
-              className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3"
-              role="radiogroup"
-              aria-label={t("Município", "Municipality")}
-            >
+            <p className="text-base font-extrabold">{t("Onde fica sua lavoura?", "Where is your field?")}</p>
+            <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label={t("Município", "Municipality")}>
               {locais.map((l) => (
                 <button
                   key={l.id}
                   role="radio"
                   aria-checked={l.id === localId}
                   onClick={() => setLocalId(l.id)}
-                  className={`min-h-11 rounded-2xl border px-4 py-2 text-left ${
+                  className={`min-h-11 rounded-full border px-4 font-semibold ${
                     l.id === localId
-                      ? "border-gt-green bg-gt-safe-bg text-gt-text"
-                      : "border-gt-btn-line bg-gt-card2 text-gt-text hover:border-gt-faint"
+                      ? "border-gt-green bg-gt-green text-gt-bg"
+                      : "border-gt-line bg-gt-card2 text-gt-text hover:border-gt-btn-line"
                   }`}
                 >
-                  <span className="block font-extrabold">{l.nome}</span>
-                  <span className="block font-mono text-[11px] text-gt-faint">
-                    {l.lat.toFixed(2)}, {l.lon.toFixed(2)}
-                  </span>
+                  {l.nome}
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={() => setBuscaAberta((b) => !b)}
+                aria-expanded={buscaAberta}
+                className="min-h-11 rounded-full border border-dashed border-gt-btn-line px-4 text-sm font-semibold text-gt-green"
+              >
+                {t("+ Outro município", "+ Another municipality")}
+              </button>
             </div>
-            <div className="mt-3">
-              <EscolherLugar
-                params={data.params}
-                indiceEnso={data.indiceEnso}
-                onLocal={(l) => {
-                  setExtras((xs) => (xs.some((x) => x.id === l.id) ? xs : [...xs, l]));
-                  setLocalId(l.id);
-                }}
-              />
-            </div>
+            {buscaAberta && (
+              <div className="mt-3">
+                <EscolherLugar
+                  params={data.params}
+                  indiceEnso={data.indiceEnso}
+                  onLocal={(l) => {
+                    setExtras((xs) => (xs.some((x) => x.id === l.id) ? xs : [...xs, l]));
+                    setLocalId(l.id);
+                    setBuscaAberta(false);
+                  }}
+                />
+              </div>
+            )}
             {local.personalizado && (
-              <p className="mt-2 rounded-xl border border-gt-frost-line bg-gt-frost-bg p-3 text-sm text-gt-frost-text">
+              <p className="mt-2 text-sm text-gt-muted">
                 {t(
-                  `Dados da NASA POWER de ${local.nome} baixados agora (grade de ~50 km, ${fmtData(local.periodoDados.inicio, lang)} a ${fmtData(local.periodoDados.fim, lang)}). Os ciclos e limites seguem as mesmas hipóteses do app: confira a janela do ZARC do seu município. A comparação com 2026 e o relevo SRTM só existem para os 3 municípios de demonstração.`,
-                  `NASA POWER data for ${local.nome} downloaded just now (~50 km grid, ${fmtData(local.periodoDados.inicio, lang)} to ${fmtData(local.periodoDados.fim, lang)}). Cycles and thresholds are the same hypotheses as in the rest of the app: check your municipality's ZARC window. The 2026 comparison and SRTM relief exist only for the 3 demonstration municipalities.`,
+                  `Dados da NASA de ${local.nome}, baixados agora (grade de ~50 km). Confira a janela do ZARC do seu município. Sem comparação com 2026 e sem relevo.`,
+                  `NASA data for ${local.nome}, downloaded just now (~50 km grid). Check your municipality's ZARC window. No 2026 comparison and no relief.`,
                 )}
               </p>
             )}
           </div>
 
           <div>
-            <Rotulo>2 · {t("Data de plantio da soja", "Soybean planting date")}</Rotulo>
+            <p className="text-base font-extrabold">{t("Quando você vai plantar a soja?", "When will you plant soybeans?")}</p>
             <div
               className="mt-2 flex flex-wrap gap-2"
               role="radiogroup"
@@ -819,24 +824,19 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               className="size-5 accent-[#9BE36B]"
             />
             <span>
-              {t("Minha lavoura fica em ", "My field is in a ")}
+              {t("Minha lavoura é em ", "My field is in a ")}
               <b>{t("baixada", "lowland")}</b>{" "}
-              <span className="text-sm text-gt-faint">
-                {t(
-                  `(limite de geada sobe de ${p.limiteGeadaC} para ${p.limiteGeadaC + p.ajusteBaixadaC} °C)`,
-                  `(frost limit rises from ${p.limiteGeadaC} to ${p.limiteGeadaC + p.ajusteBaixadaC} °C)`,
-                )}
-              </span>
+              <span className="text-sm text-gt-muted">{t("(fundo de vale, onde o frio se acumula)", "(valley floor, where cold air pools)")}</span>
             </span>
           </label>
         </Card>
 
         <Card className="flex flex-col gap-4 border-gt-green">
-          <Rotulo>
-            {t(`Resposta para ${local.nome} · soja em ${dia(dEf.dataSoja)}`, `Answer for ${local.nome} · soybean on ${dia(dEf.dataSoja)}`)}
+          <p className="text-lg font-extrabold">
+            {local.nome} · {t("soja em", "soybean on")} {dia(dEf.dataSoja)}
             {baixada ? ` · ${t("baixada", "lowland")}` : ""}
             {filtroTexto ? ` · ${filtroTexto}` : ""}
-          </Rotulo>
+          </p>
           <div className="grid gap-3 sm:grid-cols-2">
             {(
               [
@@ -845,7 +845,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               ] as const
             ).map((x) => (
               <div key={x.id} className="rounded-[18px] border border-gt-line bg-gt-card2 p-4">
-                <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint">{t(x.pt, x.en)}</p>
+                <p className="text-sm font-semibold text-gt-muted">{t(x.pt, x.en)}</p>
                 <p className="mt-1 text-2xl font-black leading-tight">{deCada10(x.r, lang).frase}</p>
                 <p className="mt-1 text-sm text-gt-muted">
                   {x.r.anosComEvento} {t("de", "of")} {x.r.totalAnos} {t("safras", "seasons")}
@@ -856,237 +856,241 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               </div>
             ))}
           </div>
-          <p className="text-sm text-gt-muted">
-            <b className="text-gt-text">{t("Fase do milho contada:", "Corn stage counted:")}</b>{" "}
-            {t(
-              `floração e enchimento de grãos, de ${dia(dEf.faseInicio)} a ${dia(dEf.faseFim)} (milho plantado em ${dia(dEf.plantioMilho)}).`,
-              `flowering and grain fill, ${dia(dEf.faseInicio)} to ${dia(dEf.faseFim)} (corn planted on ${dia(dEf.plantioMilho)}).`,
-            )}{" "}
-            <b className="text-gt-text">{t("Risco:", "Risk:")}</b>{" "}
-            {t(
-              "Baixo = até 1 ano em 10 · Médio = 2 ou 3 · Alto = 4 ou mais.",
-              "Low = up to 1 year in 10 · Medium = 2 or 3 · High = 4 or more.",
-            )}
-          </p>
-          <div className="rounded-xl border border-gt-line bg-gt-card2 p-3 text-sm">
-            <p>
-              <b>{t("Anos considerados:", "Years counted:")}</b>{" "}
-              {fase === "todos"
-                ? t(`todos os ${d.geada.totalAnos} anos`, `all ${d.geada.totalAnos} years`)
-                : t(`só ${fraseFase(fase)} (${anosDaFase.length})`, `only ${fraseFase(fase)} (${anosDaFase.length})`)}
-            </p>
-            <details className="mt-1" open={fase !== "todos" ? true : undefined}>
-              <summary className="flex min-h-11 cursor-pointer list-none items-center font-semibold text-gt-green underline underline-offset-2 [&::-webkit-details-marker]:hidden">
-                {t("Ver só anos de El Niño ou La Niña", "See only El Niño or La Niña years")}
-              </summary>
-              <p className="text-gt-muted">
-                {t(
-                  "El Niño e La Niña são mudanças na temperatura do Oceano Pacífico que alteram o frio e a chuva no Sul do Brasil. Escolha uma opção para contar só os anos parecidos. O app não prevê qual fase virá.",
-                  "El Niño and La Niña are changes in Pacific Ocean temperature that alter cold and rain in southern Brazil. Pick one to count only similar years. The app does not predict which phase is coming.",
-                )}
-              </p>
-              <div
-                className="mt-2 flex flex-wrap gap-2"
-                role="radiogroup"
-                aria-label={t("Anos a considerar", "Years to consider")}
-              >
-                {FILTROS_ENSO.map((f) => {
-                  const n = f.id === "todos" ? d.geada.totalAnos : d.anosPorFase[f.id].length;
-                  return (
-                    <button
-                      key={f.id}
-                      role="radio"
-                      aria-checked={fase === f.id}
-                      onClick={() => setFase(f.id)}
-                      className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${
-                        fase === f.id
-                          ? "border-gt-green bg-gt-green text-gt-bg"
-                          : "border-gt-line bg-gt-card text-gt-text hover:border-gt-btn-line"
-                      }`}
-                    >
-                      {t(f.pt, f.en)} <span className="font-mono text-xs font-normal">({n})</span>
-                    </button>
-                  );
-                })}
-              </div>
-              {fase !== "todos" && (
-                <p className="mt-2 text-gt-muted">
-                  {t(`Anos contados: ${anosDaFase.join(", ")}.`, `Years counted: ${anosDaFase.join(", ")}.`)}
-                </p>
-              )}
-              {fase !== "todos" && anosDaFase.length < AMOSTRA_MINIMA && (
-                <p className="mt-2 rounded-xl border border-gt-risk-line bg-gt-risk-bg p-3 text-gt-risk-text">
-                  {t(
-                    `Poucos anos (${anosDaFase.length}): um ano a mais ou a menos muda bastante o resultado. Leia com cautela.`,
-                    `Few seasons (${anosDaFase.length}): one more or one fewer year changes the result a lot. Read with caution.`,
-                  )}
-                </p>
-              )}
-              {ult && (
-                <p className="mt-2 text-gt-muted">
-                  {t(
-                    `Hoje a NOAA indica condições ${ultFaseNome === "El Niño" ? "de El Niño" : ultFaseNome === "La Niña" ? "de La Niña" : "neutras"} (última leitura, ${TRIMESTRE_MESES[ult.trimestre]?.pt ?? ult.trimestre}/${ult.ano}: ${ult.valor > 0 ? "+" : ""}${fmtNum(ult.valor, 2, lang)}). É a leitura mais recente, não uma previsão da próxima safra.`,
-                    `Today NOAA indicates ${ultFaseNome} conditions (latest reading, ${TRIMESTRE_MESES[ult.trimestre]?.en ?? ult.trimestre} ${ult.ano}: ${ult.valor > 0 ? "+" : ""}${fmtNum(ult.valor, 2, lang)}). It is the most recent reading, not a forecast for the coming season.`,
-                  )}{" "}
-                  <a
-                    className="underline underline-offset-2"
-                    href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {t("Previsão da NOAA", "NOAA outlook")}
-                  </a>
-                  .
-                </p>
-              )}
-              <details className="mt-2">
-                <summary className="flex min-h-11 cursor-pointer list-none items-center text-gt-faint underline underline-offset-2 [&::-webkit-details-marker]:hidden">
-                  {t("Como classificamos as safras (técnico)", "How we classify seasons (technical)")}
-                </summary>
-                <Fonte>
-              {t(
-                "Fase de cada safra = RONI da NOAA (índice oficial do ENSO) no trimestre do meio da floração e enchimento do milho; ≥ +0,5 = El Niño, ≤ −0,5 = La Niña. Regra simplificada (a NOAA exige 5 trimestres seguidos para declarar um episódio). O ONI antigo classificaria cerca de 15% dos trimestres de outra forma. Limites de seca continuam calculados com todos os anos.",
-                "Phase of each season = NOAA's RONI (official ENSO index) in the 3-month season at the middle of the corn critical stage; ≥ +0.5 = El Niño, ≤ −0.5 = La Niña. Simplified rule (NOAA requires 5 consecutive seasons to declare an episode). The older ONI would classify about 15% of seasons differently. Drought limits are still computed with all years.",
-              )}{" "}
-              {t("Dados baixados em", "Data downloaded on")} {fmtData(data.enso.baixadoEm.slice(0, 10), lang)}.{" "}
-              <a className="underline underline-offset-2" href={data.enso.url} target="_blank" rel="noreferrer">
-                {t("Fonte", "Source")}
-              </a>
-              .
-            </Fonte>
-              </details>
-            </details>
-          </div>
           <Recomendacao datas={datasEf} idx={idx} baixada={baixada} />
+
           <details className="rounded-xl border border-gt-line bg-gt-card2 p-3 text-sm">
             <summary className="flex min-h-11 cursor-pointer list-none items-center font-semibold text-gt-green underline underline-offset-2 [&::-webkit-details-marker]:hidden">
-              {t("O que significam essas palavras?", "What do these words mean?")}
+              {t("Entender os números", "Understand the numbers")}
             </summary>
-            <dl className="mt-1 space-y-2 text-gt-muted">
-              {(
-                [
-                  [
-                    "Safrinha",
-                    "Second-crop corn (safrinha)",
-                    "É o milho plantado logo depois da colheita da soja, na mesma terra.",
-                    "Corn planted right after the soybean harvest, on the same field.",
-                  ],
-                  [
-                    "Geada",
-                    "Frost",
-                    "Contamos como geada quando a temperatura mínima do ar (a 2 m do chão) chega a 3 °C ou menos. Perto disso a planta já pode congelar. Geada forte: 1 °C ou menos.",
-                    "We count frost when the minimum air temperature (2 m above ground) reaches 3 °C or less. Near that, the plant itself can already freeze. Strong frost: 1 °C or less.",
-                  ],
-                  [
-                    "Seca e veranico",
-                    "Drought and dry spell (veranico)",
-                    "Veranico é um período de dias secos no meio da época de chuva. Contamos como seca 15 dias seguidos quase sem chuva, ou solo bem mais seco que o normal para a época.",
-                    "A veranico is a run of dry days in the middle of the rainy season. We count drought as 15 days in a row with almost no rain, or soil much drier than normal for the time of year.",
-                  ],
-                  [
-                    "Floração e enchimento",
-                    "Critical stage (flowering and grain fill)",
-                    "É a fase em que o milho mais sofre com frio e falta de água, mais ou menos de 55 a 100 dias depois que o milho é plantado.",
-                    "The stage when corn suffers most from cold and lack of water, about 55 to 100 days after the corn is planted.",
-                  ],
-                  [
-                    "Baixada",
-                    "Lowland",
-                    "Terreno baixo, onde o ar frio se acumula nas noites calmas. Marque a caixa se a sua lavoura é assim.",
-                    "Low ground where cold air pools on calm nights. Tick the box if your field is like that.",
-                  ],
-                  [
-                    "ZARC",
-                    "ZARC",
-                    "Zoneamento Agrícola de Risco Climático, do Ministério da Agricultura. Define as datas de plantio permitidas para crédito e seguro. Confira a do seu município.",
-                    "Brazil's agricultural climate-risk zoning (Ministry of Agriculture). It sets the planting dates allowed for credit and crop insurance. Check your municipality's.",
-                  ],
-                ] as const
-              ).map(([ptTermo, enTermo, ptTexto, enTexto]) => (
-                <div key={ptTermo}>
-                  <dt className="font-semibold text-gt-text">{t(ptTermo, enTermo)}</dt>
-                  <dd>{t(ptTexto, enTexto)}</dd>
-                </div>
-              ))}
-            </dl>
-          </details>
-        </Card>
-
-        <Card>
-          <Rotulo>{t("Linha do tempo soja → milho safrinha", "Timeline: soybean → second-crop corn")}</Rotulo>
-          <div className="mt-3">
-            <LinhaDoTempo d={d} local={local} />
-          </div>
-          <Fonte>
-            {t(
-              `Hipóteses a validar com agronomia/ZARC: soja ${p.cicloSoja} dias, intervalo ${p.intervalo} dias, floração e enchimento do milho de ${p.faseCriticaInicio} a ${p.faseCriticaFim} dias após o plantio.`,
-              `Hypotheses to validate with agronomy/ZARC: soybean ${p.cicloSoja} days, gap ${p.intervalo} days, corn critical stage from ${p.faseCriticaInicio} to ${p.faseCriticaFim} days after planting.`,
-            )}
-          </Fonte>
-        </Card>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <CardRisco
-            titulo={
-              baixada
-                ? t("Geada na floração e enchimento · baixada", "Frost in the critical stage · lowland")
-                : t("Geada na floração e enchimento", "Frost in the critical stage")
-            }
-            tipo="geada"
-            r={geada}
-            filtro={filtroTexto}
-            regra={t(
-              `Ano com geada = em algum dia entre ${dia(d.faseInicio)} e ${dia(d.faseFim)} a temperatura mínima do ar chegou a ${limiteAtual} °C ou menos (medida a 2 m do chão; com ${p.limiteGeadaC} °C no ar, a planta já pode congelar, segundo a Embrapa).`,
-              `Frost year = 2 m air minimum ≤ ${limiteAtual} °C on any day between ${dia(d.faseInicio)} and ${dia(d.faseFim)}. ${p.limiteGeadaC} °C at screen height ≈ frost at grass level (Embrapa).`,
-            )}
-            extra={
-              baixada ? (
-                <p className="rounded-xl border border-gt-frost-line bg-gt-frost-bg p-3 text-sm text-gt-frost-text">
+            <div className="mt-2 flex flex-col gap-4">
+            <p className="text-sm text-gt-muted">
+              <b className="text-gt-text">{t("Fase do milho contada:", "Corn stage counted:")}</b>{" "}
+              {t(
+                `floração e enchimento de grãos, de ${dia(dEf.faseInicio)} a ${dia(dEf.faseFim)} (milho plantado em ${dia(dEf.plantioMilho)}).`,
+                `flowering and grain fill, ${dia(dEf.faseInicio)} to ${dia(dEf.faseFim)} (corn planted on ${dia(dEf.plantioMilho)}).`,
+              )}{" "}
+              <b className="text-gt-text">{t("Risco:", "Risk:")}</b>{" "}
+              {t(
+                "Baixo = até 1 ano em 10 · Médio = 2 ou 3 · Alto = 4 ou mais.",
+                "Low = up to 1 year in 10 · Medium = 2 or 3 · High = 4 or more.",
+              )}
+            </p>
+            <div className="rounded-xl border border-gt-line bg-gt-card2 p-3 text-sm">
+              <p>
+                <b>{t("Anos considerados:", "Years counted:")}</b>{" "}
+                {fase === "todos"
+                  ? t(`todos os ${d.geada.totalAnos} anos`, `all ${d.geada.totalAnos} years`)
+                  : t(`só ${fraseFase(fase)} (${anosDaFase.length})`, `only ${fraseFase(fase)} (${anosDaFase.length})`)}
+              </p>
+              <details className="mt-1" open={fase !== "todos" ? true : undefined}>
+                <summary className="flex min-h-11 cursor-pointer list-none items-center font-semibold text-gt-green underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+                  {t("Ver só anos de El Niño ou La Niña", "See only El Niño or La Niña years")}
+                </summary>
+                <p className="text-gt-muted">
                   {t(
-                    `❄ Baixadas acumulam ar frio em noites calmas. Usamos +${p.ajusteBaixadaC} °C no limite (hipótese a calibrar); o risco local pode ser ainda maior. Sem baixada: ${dEf.geada.anosComEvento} de ${dEf.geada.totalAnos}.`,
-                    `❄ Lowlands trap cold air on calm nights. We add +${p.ajusteBaixadaC} °C to the limit (hypothesis to calibrate); local risk may be even higher. Without lowland: ${dEf.geada.anosComEvento} of ${dEf.geada.totalAnos}.`,
+                    "El Niño e La Niña são mudanças na temperatura do Oceano Pacífico que alteram o frio e a chuva no Sul do Brasil. Escolha uma opção para contar só os anos parecidos. O app não prevê qual fase virá.",
+                    "El Niño and La Niña are changes in Pacific Ocean temperature that alter cold and rain in southern Brazil. Pick one to count only similar years. The app does not predict which phase is coming.",
                   )}
                 </p>
-              ) : null
-            }
-          />
-          <CardRisco
-            titulo={t("Seca na floração e enchimento", "Drought in the critical stage")}
-            tipo="seca"
-            r={dEf.seca}
-            filtro={filtroTexto}
-            regra={t(
-              `Ano seco = ${p.sequenciaSecaDias} dias ou mais seguidos com menos de ${p.chuvaDiaSecoMm} mm de chuva por dia, OU solo na raiz entre os ${p.percentilUmidadeSolo}% mais secos da história para essas datas, entre ${dia(d.faseInicio)} e ${dia(d.faseFim)}. Como o solo é comparado com a própria história, cerca de 1 em cada 5 anos sempre aparece como solo seco.`,
-              `Drought year = ${p.sequenciaSecaDias}+ consecutive days with rain < ${p.chuvaDiaSecoMm} mm OR root-zone soil moisture among the ${p.percentilUmidadeSolo}% lowest for the same dates, between ${dia(d.faseInicio)} and ${dia(d.faseFim)}. Because soil is compared with its own history, about 1 in 5 years always shows up as dry soil.`,
-            )}
-          />
-        </div>
+                <div
+                  className="mt-2 flex flex-wrap gap-2"
+                  role="radiogroup"
+                  aria-label={t("Anos a considerar", "Years to consider")}
+                >
+                  {FILTROS_ENSO.map((f) => {
+                    const n = f.id === "todos" ? d.geada.totalAnos : d.anosPorFase[f.id].length;
+                    return (
+                      <button
+                        key={f.id}
+                        role="radio"
+                        aria-checked={fase === f.id}
+                        onClick={() => setFase(f.id)}
+                        className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${
+                          fase === f.id
+                            ? "border-gt-green bg-gt-green text-gt-bg"
+                            : "border-gt-line bg-gt-card text-gt-text hover:border-gt-btn-line"
+                        }`}
+                      >
+                        {t(f.pt, f.en)} <span className="font-mono text-xs font-normal">({n})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {fase !== "todos" && (
+                  <p className="mt-2 text-gt-muted">
+                    {t(`Anos contados: ${anosDaFase.join(", ")}.`, `Years counted: ${anosDaFase.join(", ")}.`)}
+                  </p>
+                )}
+                {fase !== "todos" && anosDaFase.length < AMOSTRA_MINIMA && (
+                  <p className="mt-2 rounded-xl border border-gt-risk-line bg-gt-risk-bg p-3 text-gt-risk-text">
+                    {t(
+                      `Poucos anos (${anosDaFase.length}): um ano a mais ou a menos muda bastante o resultado. Leia com cautela.`,
+                      `Few seasons (${anosDaFase.length}): one more or one fewer year changes the result a lot. Read with caution.`,
+                    )}
+                  </p>
+                )}
+                {ult && (
+                  <p className="mt-2 text-gt-muted">
+                    {t(
+                      `Hoje a NOAA indica condições ${ultFaseNome === "El Niño" ? "de El Niño" : ultFaseNome === "La Niña" ? "de La Niña" : "neutras"} (última leitura, ${TRIMESTRE_MESES[ult.trimestre]?.pt ?? ult.trimestre}/${ult.ano}: ${ult.valor > 0 ? "+" : ""}${fmtNum(ult.valor, 2, lang)}). É a leitura mais recente, não uma previsão da próxima safra.`,
+                      `Today NOAA indicates ${ultFaseNome} conditions (latest reading, ${TRIMESTRE_MESES[ult.trimestre]?.en ?? ult.trimestre} ${ult.ano}: ${ult.valor > 0 ? "+" : ""}${fmtNum(ult.valor, 2, lang)}). It is the most recent reading, not a forecast for the coming season.`,
+                    )}{" "}
+                    <a
+                      className="underline underline-offset-2"
+                      href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {t("Previsão da NOAA", "NOAA outlook")}
+                    </a>
+                    .
+                  </p>
+                )}
+                <details className="mt-2">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center text-gt-faint underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+                    {t("Como classificamos as safras (técnico)", "How we classify seasons (technical)")}
+                  </summary>
+                  <Fonte>
+                {t(
+                  "Fase de cada safra = RONI da NOAA (índice oficial do ENSO) no trimestre do meio da floração e enchimento do milho; ≥ +0,5 = El Niño, ≤ −0,5 = La Niña. Regra simplificada (a NOAA exige 5 trimestres seguidos para declarar um episódio). O ONI antigo classificaria cerca de 15% dos trimestres de outra forma. Limites de seca continuam calculados com todos os anos.",
+                  "Phase of each season = NOAA's RONI (official ENSO index) in the 3-month season at the middle of the corn critical stage; ≥ +0.5 = El Niño, ≤ −0.5 = La Niña. Simplified rule (NOAA requires 5 consecutive seasons to declare an episode). The older ONI would classify about 15% of seasons differently. Drought limits are still computed with all years.",
+                )}{" "}
+                {t("Dados baixados em", "Data downloaded on")} {fmtData(data.enso.baixadoEm.slice(0, 10), lang)}.{" "}
+                <a className="underline underline-offset-2" href={data.enso.url} target="_blank" rel="noreferrer">
+                  {t("Fonte", "Source")}
+                </a>
+                .
+              </Fonte>
+                </details>
+              </details>
+            </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <CardRisco
+              titulo={
+                baixada
+                  ? t("Geada na floração e enchimento · baixada", "Frost in the critical stage · lowland")
+                  : t("Geada na floração e enchimento", "Frost in the critical stage")
+              }
+              tipo="geada"
+              r={geada}
+              filtro={filtroTexto}
+              regra={t(
+                `Ano com geada = em algum dia entre ${dia(d.faseInicio)} e ${dia(d.faseFim)} a temperatura mínima do ar chegou a ${limiteAtual} °C ou menos (medida a 2 m do chão; com ${p.limiteGeadaC} °C no ar, a planta já pode congelar, segundo a Embrapa).`,
+                `Frost year = 2 m air minimum ≤ ${limiteAtual} °C on any day between ${dia(d.faseInicio)} and ${dia(d.faseFim)}. ${p.limiteGeadaC} °C at screen height ≈ frost at grass level (Embrapa).`,
+              )}
+              extra={
+                baixada ? (
+                  <p className="rounded-xl border border-gt-frost-line bg-gt-frost-bg p-3 text-sm text-gt-frost-text">
+                    {t(
+                      `❄ Baixadas acumulam ar frio em noites calmas. Usamos +${p.ajusteBaixadaC} °C no limite (hipótese a calibrar); o risco local pode ser ainda maior. Sem baixada: ${dEf.geada.anosComEvento} de ${dEf.geada.totalAnos}.`,
+                      `❄ Lowlands trap cold air on calm nights. We add +${p.ajusteBaixadaC} °C to the limit (hypothesis to calibrate); local risk may be even higher. Without lowland: ${dEf.geada.anosComEvento} of ${dEf.geada.totalAnos}.`,
+                    )}
+                  </p>
+                ) : null
+              }
+            />
+            <CardRisco
+              titulo={t("Seca na floração e enchimento", "Drought in the critical stage")}
+              tipo="seca"
+              r={dEf.seca}
+              filtro={filtroTexto}
+              regra={t(
+                `Ano seco = ${p.sequenciaSecaDias} dias ou mais seguidos com menos de ${p.chuvaDiaSecoMm} mm de chuva por dia, OU solo na raiz entre os ${p.percentilUmidadeSolo}% mais secos da história para essas datas, entre ${dia(d.faseInicio)} e ${dia(d.faseFim)}. Como o solo é comparado com a própria história, cerca de 1 em cada 5 anos sempre aparece como solo seco.`,
+                `Drought year = ${p.sequenciaSecaDias}+ consecutive days with rain < ${p.chuvaDiaSecoMm} mm OR root-zone soil moisture among the ${p.percentilUmidadeSolo}% lowest for the same dates, between ${dia(d.faseInicio)} and ${dia(d.faseFim)}. Because soil is compared with its own history, about 1 in 5 years always shows up as dry soil.`,
+              )}
+            />
+          </div>
+            <details className="rounded-xl border border-gt-line bg-gt-card2 p-3 text-sm">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center font-semibold text-gt-green underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+                {t("O que significam essas palavras?", "What do these words mean?")}
+              </summary>
+              <dl className="mt-1 space-y-2 text-gt-muted">
+                {(
+                  [
+                    [
+                      "Safrinha",
+                      "Second-crop corn (safrinha)",
+                      "É o milho plantado logo depois da colheita da soja, na mesma terra.",
+                      "Corn planted right after the soybean harvest, on the same field.",
+                    ],
+                    [
+                      "Geada",
+                      "Frost",
+                      "Contamos como geada quando a temperatura mínima do ar (a 2 m do chão) chega a 3 °C ou menos. Perto disso a planta já pode congelar. Geada forte: 1 °C ou menos.",
+                      "We count frost when the minimum air temperature (2 m above ground) reaches 3 °C or less. Near that, the plant itself can already freeze. Strong frost: 1 °C or less.",
+                    ],
+                    [
+                      "Seca e veranico",
+                      "Drought and dry spell (veranico)",
+                      "Veranico é um período de dias secos no meio da época de chuva. Contamos como seca 15 dias seguidos quase sem chuva, ou solo bem mais seco que o normal para a época.",
+                      "A veranico is a run of dry days in the middle of the rainy season. We count drought as 15 days in a row with almost no rain, or soil much drier than normal for the time of year.",
+                    ],
+                    [
+                      "Floração e enchimento",
+                      "Critical stage (flowering and grain fill)",
+                      "É a fase em que o milho mais sofre com frio e falta de água, mais ou menos de 55 a 100 dias depois que o milho é plantado.",
+                      "The stage when corn suffers most from cold and lack of water, about 55 to 100 days after the corn is planted.",
+                    ],
+                    [
+                      "Baixada",
+                      "Lowland",
+                      "Terreno baixo, onde o ar frio se acumula nas noites calmas. Marque a caixa se a sua lavoura é assim.",
+                      "Low ground where cold air pools on calm nights. Tick the box if your field is like that.",
+                    ],
+                    [
+                      "ZARC",
+                      "ZARC",
+                      "Zoneamento Agrícola de Risco Climático, do Ministério da Agricultura. Define as datas de plantio permitidas para crédito e seguro. Confira a do seu município.",
+                      "Brazil's agricultural climate-risk zoning (Ministry of Agriculture). It sets the planting dates allowed for credit and crop insurance. Check your municipality's.",
+                    ],
+                  ] as const
+                ).map(([ptTermo, enTermo, ptTexto, enTexto]) => (
+                  <div key={ptTermo}>
+                    <dt className="font-semibold text-gt-text">{t(ptTermo, enTermo)}</dt>
+                    <dd>{t(ptTexto, enTexto)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+            </div>
+          </details>
 
-        <Card className="flex flex-col gap-5">
-          <Rotulo>{t(`Todas as datas de plantio · ${local.nome}`, `All planting dates · ${local.nome}`)}</Rotulo>
-          <GraficoDatas datas={datasEf} idx={idx} onSelect={setIdx} baixada={baixada} />
-          {fase !== "todos" && (
+          <details className="rounded-xl border border-gt-line bg-gt-card2 p-3 text-sm">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center font-semibold text-gt-green underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+              {t("Comparar todas as datas e ver a linha do tempo", "Compare all dates and see the timeline")}
+            </summary>
+            <div className="mt-2 flex flex-col gap-4">
+            <GraficoDatas datas={datasEf} idx={idx} onSelect={setIdx} baixada={baixada} />
+            {fase !== "todos" && (
+              <Fonte>
+                {t(
+                  `Gráfico e recomendação calculados só com os ${fraseFase(fase)}; o número de anos muda de uma data para outra.`,
+                  `Chart and recommendation use only the ${fraseFase(fase)}; the number of years differs from one date to another.`,
+                )}
+              </Fonte>
+            )}
+            <div className="mt-3">
+              <LinhaDoTempo d={d} local={local} />
+            </div>
             <Fonte>
               {t(
-                `Gráfico e recomendação calculados só com os ${fraseFase(fase)}; o número de anos muda de uma data para outra.`,
-                `Chart and recommendation use only the ${fraseFase(fase)}; the number of years differs from one date to another.`,
+                `Hipóteses a validar com agronomia/ZARC: soja ${p.cicloSoja} dias, intervalo ${p.intervalo} dias, floração e enchimento do milho de ${p.faseCriticaInicio} a ${p.faseCriticaFim} dias após o plantio.`,
+                `Hypotheses to validate with agronomy/ZARC: soybean ${p.cicloSoja} days, gap ${p.intervalo} days, corn critical stage from ${p.faseCriticaInicio} to ${p.faseCriticaFim} days after planting.`,
               )}
             </Fonte>
-          )}
+            </div>
+          </details>
         </Card>
 
         <Rotacoes d={dEf} trigo={local.trigo} nomeLocal={local.nome} baixada={baixada} filtroRotulo={filtroTexto} />
 
-        {!local.personalizado && <Prova2026 local={local} d={d} limite={p.limiteGeadaC} />}
-
         <MaisEvidencias
-          titulo={t("Mais evidências", "More evidence")}
+          titulo={t("Mais detalhes e provas", "More details and proof")}
           itens={t(
-            "relevo do terreno (SRTM) · previsão de 16 dias · campo descoberto ao longo do ano · teste com produtividade do IBGE",
-            "terrain relief (SRTM) · 16-day forecast · bare field through the year · IBGE yield check",
+            "previsão de 16 dias · prova com 2026 · relevo · campo descoberto · teste com o IBGE",
+            "16-day forecast · 2026 proof · relief · bare field · IBGE check",
           )}
         >
-          <BlocoRelevo local={local} baixada={baixada} />
           <Previsao
             key={local.id}
             nome={local.nome}
@@ -1096,12 +1100,17 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
             limiteGeadaC={p.limiteGeadaC}
             ajusteBaixadaC={p.ajusteBaixadaC}
           />
+        {!local.personalizado && <Prova2026 local={local} d={d} limite={p.limiteGeadaC} />}
+          <BlocoRelevo local={local} baixada={baixada} />
           <CampoDescoberto d={d} nomeLocal={local.nome} params={p} />
           <ConfrontoIbge b={data.backtest} />
         </MaisEvidencias>
 
-        <footer className="flex flex-col gap-2 border-t border-gt-line pt-5">
-          <Rotulo>{t("Fontes e limitações", "Sources and limitations")}</Rotulo>
+        <footer className="border-t border-gt-line pt-3">
+          <details className="text-sm">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center font-semibold text-gt-green underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+              {t("Fontes e limitações", "Sources and limitations")}
+            </summary>
           <Fonte>
             {t("Dados:", "Data:")} NASA POWER Daily API, community AG (T2M_MIN, PRECTOTCORR, GWETROOT),{" "}
             {fmtData(local.periodoDados.inicio, lang)} {t("a", "to")} {fmtData(local.periodoDados.fim, lang)},{" "}
@@ -1149,6 +1158,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               `Limitations: NASA POWER is a ~50 km grid (mean cell elevation: ${local.elevacaoGradeM ?? "?"} m); temperature is 2 m air temperature, not at the plant; crop stages and thresholds are hypotheses to calibrate; the lowland adjustment is a hypothesis (+1 °C) and SRTM relief does not yet classify each plot; this is not a weather forecast, and the risk levels are not yet confirmed against real yields (the IBGE test was inconclusive). A support tool: the decision belongs to the farmer together with the technician.`,
             )}
           </Fonte>
+          </details>
         </footer>
       </div>
     </LangContext.Provider>

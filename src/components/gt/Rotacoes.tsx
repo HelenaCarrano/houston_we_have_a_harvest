@@ -57,7 +57,7 @@ function Pontos({ n }: { n: number }) {
 function Lista({ titulo, itens, cor }: { titulo: string; itens: string[]; cor: string }) {
   return (
     <div>
-      <p className={`font-mono text-[11px] uppercase tracking-[0.1em] ${cor}`}>{titulo}</p>
+      <p className={`text-xs font-semibold ${cor}`}>{titulo}</p>
       <ul className="mt-1 list-disc space-y-0.5 pl-4 text-sm text-gt-muted">
         {itens.map((x) => (
           <li key={x}>{x}</li>
@@ -155,15 +155,10 @@ export function Rotacoes({
 
   return (
     <section className="rounded-[22px] border border-gt-line bg-gt-card p-4 sm:p-6">
-      <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint">
-        {t("Comparar rotações", "Compare rotations")} · {nomeLocal} · {t("soja em", "soybean on")} {dia(d.dataSoja)}
-        {baixada ? ` · ${t("baixada", "lowland")}` : ""}
-        {filtroRotulo ? ` · ${filtroRotulo}` : ""}
-      </p>
       <h2 className="mt-1 text-2xl font-black">{t("O que plantar depois da soja?", "What to plant after soybean?")}</h2>
 
       <div className="mt-4 rounded-2xl border border-gt-green bg-gt-safe-bg/60 p-4">
-        <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-green">
+        <p className="text-xs font-semibold text-gt-green">
           {t("Para o seu campo", "For your field")}
         </p>
         <p className="mt-1 text-lg font-extrabold">{txt(melhor.r).nome}</p>
@@ -233,7 +228,6 @@ export function Rotacoes({
           </div>
         </div>
       </div>
-      <p className="mt-2 text-sm text-gt-muted">{t(NOTA_NITROGENIO.pt, NOTA_NITROGENIO.en)}</p>
 
       <ol className="mt-5 grid gap-4 lg:grid-cols-3">
         {avaliadas.map(({ r, soma, bloqueios }, i) => {
@@ -252,11 +246,11 @@ export function Rotacoes({
               }`}
             >
               <div>
-                <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint">
+                <p className="text-xs font-semibold text-gt-faint">
                   #{i + 1} · {x.rotulo}
                   {destaque && !fora ? ` · ${t("mais alinhada ao seu campo", "best fit for your field")}` : ""}
                 </p>
-                <h3 className="text-[17px] font-extrabold">{x.nome}</h3>
+                <h3 className="text-lg font-extrabold">{x.nome}</h3>
                 {fora && (
                   <p className="mt-1 rounded-lg border border-gt-risk-line bg-gt-risk-bg p-2 text-sm text-gt-risk-text">
                     {t("Não se aplica ao seu campo: ", "Not applicable to your field: ")}
@@ -280,6 +274,13 @@ export function Rotacoes({
                 <SeloNivel nivel={d.campo[r.id].nivelErosao} rotulo={t("Erosão", "Erosion")} />
               </div>
 
+              <p className="text-sm">{x.justificativa}</p>
+
+              <details className="rounded-xl border border-gt-line bg-gt-bg/40 p-3">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center font-semibold text-gt-green underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+                  {t("Ver detalhes", "See details")}
+                </summary>
+                <div className="mt-2 flex flex-col gap-3">
               <p className="rounded-xl bg-gt-bg/60 p-2.5 text-sm">
                 {r.riscoCalculado ? (
                   <>
@@ -341,7 +342,6 @@ export function Rotacoes({
                 </dl>
               )}
 
-              <p className="text-sm">{x.justificativa}</p>
               <Lista titulo={t("Evidência", "Evidence")} itens={x.evidencia} cor="text-gt-frost" />
               <Lista titulo={t("Benefícios", "Benefits")} itens={x.beneficios} cor="text-gt-green" />
               <Lista titulo={t("Riscos", "Risks")} itens={x.riscos} cor="text-gt-orange" />
@@ -357,11 +357,18 @@ export function Rotacoes({
                   `(${d.campo[r.id].diasDescoberto} days a year without a crop)`,
                 )}
               </p>
+                </div>
+              </details>
             </li>
           );
         })}
       </ol>
 
+      <details className="mt-4 rounded-xl border border-gt-line bg-gt-card2 p-3 text-sm">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center font-semibold text-gt-green underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+          {t("Como ordenamos e o que ainda precisa de técnico", "How we order them and what still needs an agronomist")}
+        </summary>
+        <div className="mt-2 flex flex-col gap-2">
       <p className="mt-4 rounded-xl border border-gt-risk-line bg-gt-risk-bg p-3 text-sm text-gt-risk-text">
         {t(
           "Textos agronômicos e quanto cada rotação atende às prioridades são qualitativos; o nível de erosão vem dos dias sem cultura (ciclos de exemplo) e ignora o declive. Tudo está ",
@@ -373,7 +380,10 @@ export function Rotacoes({
           ". This tool supports the decision; it does not replace the farmer or the agronomist.",
         )}
       </p>
-      <p className="mt-2 font-mono text-[11px] leading-relaxed text-gt-faint">{t(REGRA_ORDEM.pt, REGRA_ORDEM.en)}</p>
+      <p className="mt-2 text-xs leading-relaxed text-gt-faint">{t(REGRA_ORDEM.pt, REGRA_ORDEM.en)}</p>
+          <p className="text-gt-muted">{t(NOTA_NITROGENIO.pt, NOTA_NITROGENIO.en)}</p>
+        </div>
+      </details>
     </section>
   );
 }

@@ -58,7 +58,7 @@ export function CampoDescoberto({
 
   return (
     <section className="gt-rise rounded-[22px] border border-gt-line bg-gt-card p-4 sm:p-6">
-      <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint">
+      <p className="text-xs font-semibold text-gt-faint">
         {t("Campo descoberto ao longo do ano", "Bare field through the year")} · {nomeLocal} · {t("soja em", "soybean on")}{" "}
         {fmtDia(d.dataSoja, lang)}
       </p>
@@ -165,13 +165,13 @@ export function CampoDescoberto({
       </p>
 
       <div className="mt-3 flex flex-col gap-1">
-        <p className="font-mono text-[11px] leading-relaxed text-gt-faint">
+        <p className="text-xs leading-relaxed text-gt-faint">
           {t(
             `Hipóteses a validar com agronomia/ZARC: soja ${params.cicloSoja} dias, intervalo ${params.intervalo} dias, milho ${params.cicloMilho} dias, trigo semeado em ${fmtDia(params.semeaduraTrigo, lang)} com ${params.cicloTrigo} dias de ciclo. Como os ciclos são fixos, os dias sem cultura são os mesmos para qualquer data da soja; o que muda é em quais meses eles caem.`,
             `Hypotheses to validate with agronomy/ZARC: soybean ${params.cicloSoja} days, ${params.intervalo}-day gap, corn ${params.cicloMilho} days, wheat sown on ${fmtDia(params.semeaduraTrigo, lang)} with a ${params.cicloTrigo}-day cycle. Because cycles are fixed, the days without a crop are the same for any soybean date; what changes is which months they fall in.`,
           )}
         </p>
-        <p className="font-mono text-[11px] leading-relaxed text-gt-faint">
+        <p className="text-xs leading-relaxed text-gt-faint">
           {t(
             `Nível de erosão (Metodologia do time): mais de ${params.limiteErosaoAltaDias} dias sem cultura = Alto; até ${params.toleranciaCobertoDias} = Baixo; entre os dois = Médio. Não considera o declive do terreno nem o mês da chuva, e a chuva é a média da grade de ~50 km, que subestima temporais locais.`,
             `Erosion level (team methodology): more than ${params.limiteErosaoAltaDias} days without a crop = High; up to ${params.toleranciaCobertoDias} = Low; in between = Medium. It ignores terrain slope and the month of the rain, and rainfall is the ~50 km grid average, which understates local storms.`,

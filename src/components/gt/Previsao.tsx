@@ -59,7 +59,7 @@ export function Previsao({ nome, lat, lon, baixada, limiteGeadaC, ajusteBaixadaC
 
   return (
     <section className="gt-rise rounded-[22px] border border-gt-line bg-gt-card p-4 sm:p-6">
-      <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint">
+      <p className="text-xs font-semibold text-gt-faint">
         {t("Checagem antes de plantar · próximos 16 dias", "Check before planting · next 16 days")} · {nome}
       </p>
       <h2 className="mt-1 text-2xl font-black">{t("Posso plantar a soja agora?", "Can I plant soybeans now?")}</h2>
@@ -127,7 +127,7 @@ export function Previsao({ nome, lat, lon, baixada, limiteGeadaC, ajusteBaixadaC
       )}
 
       <div className="mt-3 flex flex-col gap-1">
-        <p className="font-mono text-[11px] leading-relaxed text-gt-faint">
+        <p className="text-xs leading-relaxed text-gt-faint">
           {t(
             `Regras de exemplo, a validar com agronomia: geada (mínima ≤ ${limite} °C) ou chuva ≥ ${PARAMS_PREVISAO.chuvaForteMm} mm nos próximos ${PARAMS_PREVISAO.diasSemana} dias = “não plante esta semana”; menos de ${PARAMS_PREVISAO.chuvaMinSemanaMm} mm na semana = atenção. Previsão não é garantia e a incerteza cresce depois de ~7 dias. Confira também o ZARC e o vazio sanitário.`,
             `Example rules, to be validated with agronomy: frost (minimum ≤ ${limite} °C) or rain ≥ ${PARAMS_PREVISAO.chuvaForteMm} mm in the next ${PARAMS_PREVISAO.diasSemana} days = “do not plant this week”; less than ${PARAMS_PREVISAO.chuvaMinSemanaMm} mm in the week = caution. A forecast is not a guarantee and uncertainty grows after ~7 days. Also check the ZARC window and the soybean-free period (“vazio sanitário”).`,

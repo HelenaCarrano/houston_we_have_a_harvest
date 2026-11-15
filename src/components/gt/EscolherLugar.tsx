@@ -193,7 +193,7 @@ export function EscolherLugar({
         </ul>
       )}
 
-      <p className="mt-2 font-mono text-[11px] leading-relaxed text-gt-faint">
+      <p className="mt-2 text-xs leading-relaxed text-gt-faint">
         {t(
           "A busca usa o Open-Meteo (CC BY 4.0) e os dados vêm direto da NASA POWER, no seu navegador. Só o nome digitado (ou as coordenadas, se usar a localização) é enviado a esses serviços; nada é guardado.",
           "The search uses Open-Meteo (CC BY 4.0) and the data come straight from NASA POWER, in your browser. Only the typed name (or the coordinates, if you use your location) is sent to those services; nothing is stored.",
