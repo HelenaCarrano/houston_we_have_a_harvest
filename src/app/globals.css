@@ -139,3 +139,9 @@ h1, h2, h3, h4 {
 @keyframes gt-pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
 .gt-rise { animation: gt-rise .5s ease-out both; }
 .gt-pulse { animation: gt-pulse 2.4s ease-in-out infinite; }
+
+/* Foco visível para quem navega pelo teclado */
+:focus-visible {
+  outline: 2px solid var(--color-gt-green);
+  outline-offset: 2px;
+}

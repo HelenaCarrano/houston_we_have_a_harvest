@@ -91,7 +91,7 @@ export const ROTACOES: Rotacao[] = [
       rotulo: "Adaptação térmica",
       riscoQualitativo:
         "Não calculado no app (fase sensível do trigo é o espigamento, 70–110 dias). Deral (mai/2026): o trigo não teve dano significativo com as geadas que atingiram o milho.",
-      soloDescoberto: "Cobertura no inverno; janela curta entre o trigo e a soja.",
+      soloDescoberto: "Coberto no inverno, com o trigo; sem cultura da colheita da soja até a semeadura do trigo e entre o trigo e a próxima soja.",
       justificativa:
         "Trocar o milho safrinha por um cereal de inverno onde a geada na fase crítica do milho é frequente (por exemplo, em baixadas).",
       evidencia: [
@@ -114,7 +114,7 @@ export const ROTACOES: Rotacao[] = [
       rotulo: "Thermal adaptation",
       riscoQualitativo:
         "Not computed in the app (wheat's sensitive stage is heading, 70–110 days). Deral (May 2026): wheat had no significant damage from the frosts that hit corn.",
-      soloDescoberto: "Winter cover; short window between wheat and soybean.",
+      soloDescoberto: "Covered in winter by the wheat; no crop from the soybean harvest until wheat sowing, and between wheat and the next soybean.",
       justificativa:
         "Replace second-crop corn with a winter cereal where frost in corn's critical stage is frequent (for example, in lowlands).",
       evidencia: [
