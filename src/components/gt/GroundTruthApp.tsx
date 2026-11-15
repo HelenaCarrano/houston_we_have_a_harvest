@@ -811,92 +811,6 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
             </div>
           </div>
 
-          <details className="group rounded-2xl border border-gt-line bg-gt-card2 p-3" open={fase !== "todos" ? true : undefined}>
-            <summary className="flex min-h-11 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex-wrap items-center justify-between gap-2">
-              <Rotulo>3 · {t("Filtro avançado: fase do El Niño", "Advanced filter: El Niño phase")}</Rotulo>
-              <span className="font-mono text-xs text-gt-muted">
-                {fase === "todos"
-                  ? t(`todos os ${d.geada.totalAnos} anos`, `all ${d.geada.totalAnos} years`)
-                  : t(`filtro ativo: ${nomeFase(fase)} (${anosDaFase.length})`, `filter on: ${nomeFase(fase)} (${anosDaFase.length})`)}
-              </span>
-            </summary>
-            <div
-              className="mt-2 flex flex-wrap gap-2"
-              role="radiogroup"
-              aria-label={t("Anos a considerar", "Years to consider")}
-            >
-              {FILTROS_ENSO.map((f) => {
-                const n = f.id === "todos" ? d.geada.totalAnos : d.anosPorFase[f.id].length;
-                return (
-                  <button
-                    key={f.id}
-                    role="radio"
-                    aria-checked={fase === f.id}
-                    onClick={() => setFase(f.id)}
-                    className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${
-                      fase === f.id
-                        ? "border-gt-green bg-gt-green text-gt-bg"
-                        : "border-gt-line bg-gt-card2 text-gt-text hover:border-gt-btn-line"
-                    }`}
-                  >
-                    {t(f.pt, f.en)} <span className="font-mono text-xs font-normal">({n})</span>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-2 text-sm text-gt-muted">
-              {fase === "todos"
-                ? t(
-                    "Dica: escolha a fase prevista para a próxima safra para ver só os anos parecidos. O app não adivinha a fase por você.",
-                    "Tip: pick the phase forecast for the coming season to see only similar years. The app does not guess the phase for you.",
-                  )
-                : t(
-                    `Mostrando só os ${anosDaFase.length} ${fraseFase(fase)} para esta data de plantio: ${anosDaFase.join(", ")}.`,
-                    `Showing only the ${anosDaFase.length} ${fraseFase(fase)} for this planting date: ${anosDaFase.join(", ")}.`,
-                  )}
-            </p>
-            {fase !== "todos" && anosDaFase.length < AMOSTRA_MINIMA && (
-              <p className="mt-2 rounded-xl border border-gt-risk-line bg-gt-risk-bg p-3 text-sm text-gt-risk-text">
-                {t(
-                  `Poucos anos (${anosDaFase.length}): um ano a mais ou a menos muda bastante o resultado. Leia com cautela.`,
-                  `Few seasons (${anosDaFase.length}): one more or one fewer year changes the result a lot. Read with caution.`,
-                )}
-              </p>
-            )}
-            {ult && (
-              <p className="mt-2 rounded-xl border border-gt-frost-line bg-gt-frost-bg p-3 text-sm text-gt-frost-text">
-                {t(
-                  `Último valor publicado pela NOAA (RONI, ${TRIMESTRE_MESES[ult.trimestre]?.pt ?? ult.trimestre}/${ult.ano}): ${ult.valor > 0 ? "+" : ""}${fmtNum(ult.valor, 2, lang)} → condições ${ultFaseNome === "El Niño" ? "de El Niño" : ultFaseNome === "La Niña" ? "de La Niña" : "neutras"}. `,
-                  `Latest value published by NOAA (RONI, ${TRIMESTRE_MESES[ult.trimestre]?.en ?? ult.trimestre} ${ult.ano}): ${ult.valor > 0 ? "+" : ""}${fmtNum(ult.valor, 2, lang)} → ${ultFaseNome} conditions. `,
-                )}
-                {t(
-                  "É a leitura mais recente, não uma previsão: a fase da próxima safra é decidida pela previsão sazonal da NOAA.",
-                  "This is the most recent reading, not a forecast: the phase of the coming season depends on NOAA's seasonal outlook.",
-                )}{" "}
-                <a
-                  className="underline underline-offset-2"
-                  href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {t("Previsão da NOAA", "NOAA ENSO outlook")}
-                </a>
-                .
-              </p>
-            )}
-            <Fonte>
-              {t(
-                "Fase de cada safra = RONI da NOAA (índice oficial do ENSO) no trimestre do meio da fase crítica do milho; ≥ +0,5 = El Niño, ≤ −0,5 = La Niña. Regra simplificada (a NOAA exige 5 trimestres seguidos para declarar um episódio). O ONI antigo classificaria cerca de 15% dos trimestres de outra forma. Limites de seca continuam calculados com todos os anos.",
-                "Phase of each season = NOAA's RONI (official ENSO index) in the 3-month season at the middle of the corn critical stage; ≥ +0.5 = El Niño, ≤ −0.5 = La Niña. Simplified rule (NOAA requires 5 consecutive seasons to declare an episode). The older ONI would classify about 15% of seasons differently. Drought limits are still computed with all years.",
-              )}{" "}
-              {t("Dados baixados em", "Data downloaded on")} {fmtData(data.enso.baixadoEm.slice(0, 10), lang)}.{" "}
-              <a className="underline underline-offset-2" href={data.enso.url} target="_blank" rel="noreferrer">
-                {t("Fonte", "Source")}
-              </a>
-              .
-            </Fonte>
-          </details>
-
           <label className="flex min-h-11 cursor-pointer items-center gap-3">
             <input
               type="checkbox"
@@ -941,6 +855,95 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
                 </div>
               </div>
             ))}
+          </div>
+          <div className="rounded-xl border border-gt-line bg-gt-card2 p-3 text-sm">
+            <p>
+              <b>{t("Anos considerados:", "Years counted:")}</b>{" "}
+              {fase === "todos"
+                ? t(`todos os ${d.geada.totalAnos} anos`, `all ${d.geada.totalAnos} years`)
+                : t(`só ${fraseFase(fase)} (${anosDaFase.length})`, `only ${fraseFase(fase)} (${anosDaFase.length})`)}
+            </p>
+            <details className="mt-1" open={fase !== "todos" ? true : undefined}>
+              <summary className="flex min-h-11 cursor-pointer list-none items-center font-semibold text-gt-green underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+                {t("Ver só anos de El Niño ou La Niña", "See only El Niño or La Niña years")}
+              </summary>
+              <p className="text-gt-muted">
+                {t(
+                  "El Niño e La Niña são mudanças na temperatura do Oceano Pacífico que alteram o frio e a chuva no Sul do Brasil. Escolha uma opção para contar só os anos parecidos. O app não prevê qual fase virá.",
+                  "El Niño and La Niña are changes in Pacific Ocean temperature that alter cold and rain in southern Brazil. Pick one to count only similar years. The app does not predict which phase is coming.",
+                )}
+              </p>
+              <div
+                className="mt-2 flex flex-wrap gap-2"
+                role="radiogroup"
+                aria-label={t("Anos a considerar", "Years to consider")}
+              >
+                {FILTROS_ENSO.map((f) => {
+                  const n = f.id === "todos" ? d.geada.totalAnos : d.anosPorFase[f.id].length;
+                  return (
+                    <button
+                      key={f.id}
+                      role="radio"
+                      aria-checked={fase === f.id}
+                      onClick={() => setFase(f.id)}
+                      className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${
+                        fase === f.id
+                          ? "border-gt-green bg-gt-green text-gt-bg"
+                          : "border-gt-line bg-gt-card text-gt-text hover:border-gt-btn-line"
+                      }`}
+                    >
+                      {t(f.pt, f.en)} <span className="font-mono text-xs font-normal">({n})</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {fase !== "todos" && (
+                <p className="mt-2 text-gt-muted">
+                  {t(`Anos contados: ${anosDaFase.join(", ")}.`, `Years counted: ${anosDaFase.join(", ")}.`)}
+                </p>
+              )}
+              {fase !== "todos" && anosDaFase.length < AMOSTRA_MINIMA && (
+                <p className="mt-2 rounded-xl border border-gt-risk-line bg-gt-risk-bg p-3 text-gt-risk-text">
+                  {t(
+                    `Poucos anos (${anosDaFase.length}): um ano a mais ou a menos muda bastante o resultado. Leia com cautela.`,
+                    `Few seasons (${anosDaFase.length}): one more or one fewer year changes the result a lot. Read with caution.`,
+                  )}
+                </p>
+              )}
+              {ult && (
+                <p className="mt-2 text-gt-muted">
+                  {t(
+                    `Hoje a NOAA indica condições ${ultFaseNome === "El Niño" ? "de El Niño" : ultFaseNome === "La Niña" ? "de La Niña" : "neutras"} (última leitura, ${TRIMESTRE_MESES[ult.trimestre]?.pt ?? ult.trimestre}/${ult.ano}: ${ult.valor > 0 ? "+" : ""}${fmtNum(ult.valor, 2, lang)}). É a leitura mais recente, não uma previsão da próxima safra.`,
+                    `Today NOAA indicates ${ultFaseNome} conditions (latest reading, ${TRIMESTRE_MESES[ult.trimestre]?.en ?? ult.trimestre} ${ult.ano}: ${ult.valor > 0 ? "+" : ""}${fmtNum(ult.valor, 2, lang)}). It is the most recent reading, not a forecast for the coming season.`,
+                  )}{" "}
+                  <a
+                    className="underline underline-offset-2"
+                    href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {t("Previsão da NOAA", "NOAA outlook")}
+                  </a>
+                  .
+                </p>
+              )}
+              <details className="mt-2">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center text-gt-faint underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+                  {t("Como classificamos as safras (técnico)", "How we classify seasons (technical)")}
+                </summary>
+                <Fonte>
+              {t(
+                "Fase de cada safra = RONI da NOAA (índice oficial do ENSO) no trimestre do meio da fase crítica do milho; ≥ +0,5 = El Niño, ≤ −0,5 = La Niña. Regra simplificada (a NOAA exige 5 trimestres seguidos para declarar um episódio). O ONI antigo classificaria cerca de 15% dos trimestres de outra forma. Limites de seca continuam calculados com todos os anos.",
+                "Phase of each season = NOAA's RONI (official ENSO index) in the 3-month season at the middle of the corn critical stage; ≥ +0.5 = El Niño, ≤ −0.5 = La Niña. Simplified rule (NOAA requires 5 consecutive seasons to declare an episode). The older ONI would classify about 15% of seasons differently. Drought limits are still computed with all years.",
+              )}{" "}
+              {t("Dados baixados em", "Data downloaded on")} {fmtData(data.enso.baixadoEm.slice(0, 10), lang)}.{" "}
+              <a className="underline underline-offset-2" href={data.enso.url} target="_blank" rel="noreferrer">
+                {t("Fonte", "Source")}
+              </a>
+              .
+            </Fonte>
+              </details>
+            </details>
           </div>
           <Recomendacao datas={datasEf} idx={idx} baixada={baixada} />
         </Card>

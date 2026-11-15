@@ -45,7 +45,7 @@ npm run data:ibge  # re-download IBGE yield data, then: npm run backtest
 |---|---|---|
 | **NASA POWER Daily API** (community=AG) | Daily T2M_MIN, T2M_MAX, PRECTOTCORR, GWETROOT, GWETTOP, 1981-01-01 to the latest day available, for Pato Branco (-26.2295, -52.6716), Cascavel (-24.9578, -53.4595) and Francisco Beltrão (-26.0811, -53.0558) | https://power.larc.nasa.gov/docs/services/api/temporal/daily/ |
 | **NASA SRTM 30 m** (SRTM v3, via OpenTopoData, dataset `srtm30m`) | Elevation at each municipality point and relief within 1.5 km (49 points every 500 m) | https://www.opentopodata.org/datasets/srtm/ |
-| **NOAA CPC · RONI** (Relative Oceanic Niño Index); the older ONI (ERSST v5) is kept only for comparison | El Niño / La Niña phase of each season (optional "advanced filter") | https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/ |
+| **NOAA CPC · RONI** (Relative Oceanic Niño Index); the older ONI (ERSST v5) is kept only for comparison | El Niño / La Niña phase of each season (optional "See only El Niño or La Niña years" link under the answer) | https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/ |
 | **Open-Meteo** (CC BY 4.0, non-commercial use) | 16-day forecast for the "can I plant now?" check, read in the browser only when the user opens that section | https://open-meteo.com/ |
 | **Deral via Revista Cultivar**, Apr 9 and May 19, 2026 | Field reports used only for the "2026 proof" card | https://revistacultivar.com.br/noticias/pr-safra-2025-26-estiagem-e-calor-afetam-feijao-e-milho · https://revistacultivar.com.br/noticias/pr-safra-2025-26-milho-e-feijao-sofrem-impacto-das-geadas |
 | **IBGE SIDRA · Municipal Agricultural Survey (PAM), table 839** | Second-crop corn yield and harvested area (Cascavel, Francisco Beltrão, Pato Branco) for the reality check | https://sidra.ibge.gov.br/tabela/839 |
@@ -71,9 +71,9 @@ Code in `src/lib/engine/` (pure functions with tests); parameters in `src/lib/en
 - **Drought in the critical stage in 2026:** POWER shows the 5th driest April soil moisture since 1981 but no 15-day dry spell. The original "dry spell **and** dry soil" rule said "no", against Deral's drought report; with "dry spell **or** dry soil" the year is flagged. The screen shows the signals separately so the technician can see what supports the number.
 - **Wheat heading window (Jul 24–Sep 2, 2026):** lowest minimum 4.4 °C, no frost ≤ 3 °C. The Deral report on wheat is from May, with the crop still vegetative, so it does **not** test this window.
 
-### El Niño / La Niña ("similar years") — advanced filter
+### El Niño / La Niña ("similar years") — optional
 
-The user can restrict every count to **All / El Niño / La Niña / Neutral** seasons. The app **never guesses** the phase of the coming season: it only shows NOAA's latest published value (informative) and a link to the seasonal outlook.
+Under the answer, a link "See only El Niño or La Niña years" opens a short plain-language explanation and the choice. The user can restrict every count to **All / El Niño / La Niña / Neutral** seasons. The app **never guesses** the phase of the coming season: it only shows NOAA's latest published value (informative) and a link to the seasonal outlook.
 
 - **Index:** NOAA's **RONI**. NOAA's ONI page says it has moved and that RONI is the index now used for official ENSO monitoring. The older ONI is downloaded too (`scripts/fetch_enso.mjs`, `src/data/enso.json`) only for comparison; it would classify about **15%** of the April–August seasons (1982–2026) differently.
 - **Phase of each season:** the 3-month season centered on the **middle of the corn critical stage** for that planting date. **El Niño** if the index ≥ +0.5, **La Niña** if ≤ −0.5, **Neutral** in between. This is a simplification (NOAA declares an episode only after 5 consecutive seasons).
