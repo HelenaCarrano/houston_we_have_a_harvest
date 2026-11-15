@@ -94,8 +94,6 @@ O app lê a previsão de 16 dias da Open-Meteo no navegador (só as coordenadas 
 
 - Ciclos (soja 120, intervalo 5, milho 135 e trigo 130 dias, semeadura do trigo em 15/05), fase crítica (55–100 dias), limites de geada (3 °C e 1 °C), ajuste de baixada (+1 °C) e critérios de seca são **hipóteses de partida a validar com agronomia/ZARC**.
 - Quanto cada rotação atende às prioridades e o risco do trigo são **qualitativos** (marcados "a validar com técnico"). O nível de erosão é **calculado** pelos dias sem cultura (ciclos de exemplo) e ignora o declive.
-- O histórico anual em `src/data/historical_events_40years.json` é **calculado** dos dados diários (`scripts/build_historical_events.mjs`). Não há listas de "anos conhecidos" nem valores inventados. Perdas do Deral só aparecem para 2026.
-- `scripts/fetch_nasa_data.mjs` (climatologia mensal) tem altitudes fixas no código que **estavam erradas** frente ao SRTM (por exemplo, Francisco Beltrão: 650 m no código, 560 m no SRTM); elas não são usadas na tela principal, que usa `src/data/srtm_relief.json`.
 - O relevo vem de `scripts/fetch_srtm_relief.mjs` (altitude do ponto e 49 pontos a cada 500 m ao redor). Se o serviço falhar, o script usa a altitude média da célula do POWER e a tela marca o valor como **estimado**. A temperatura do POWER não recebe correção de altitude.
 
 ### Limitações
