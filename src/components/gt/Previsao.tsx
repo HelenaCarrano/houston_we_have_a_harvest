@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { CircleCheck, CloudSun, OctagonAlert, Snowflake, TriangleAlert } from "lucide-react";
 import { avaliarPrevisao, PARAMS_PREVISAO, type PrevisaoDiaria } from "@/lib/engine/previsao.ts";
+import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
+import { Card, CardHeader } from "@/components/ui/Card";
+import { Fonte } from "@/components/ui/Fonte";
 import { fmtDia, fmtNum, useLang, useT } from "@/lib/i18n";
 
 type Estado = { tipo: "carregando" } | { tipo: "erro" } | { tipo: "ok"; dados: PrevisaoDiaria };
@@ -15,8 +20,39 @@ interface Props {
   ajusteBaixadaC: number;
 }
 
-/** Previsão de 16 dias (Open-Meteo) lida no navegador; se falhar, a página continua funcionando. */
-export function Previsao({ nome, lat, lon, baixada, limiteGeadaC, ajusteBaixadaC }: Props) {
+/** Card "Posso plantar esta semana?": só consulta o Open-Meteo depois que a pessoa toca em "Ver previsão". */
+export function Previsao(props: Props) {
+  const t = useT();
+  const [pedida, setPedida] = useState(false);
+  return (
+    <Card>
+      <CardHeader
+        eyebrow={t("Próximos 16 dias", "Next 16 days")}
+        title={
+          <span className="inline-flex items-center gap-2">
+            <CloudSun className="size-6 text-brand" aria-hidden="true" />
+            {t("Posso plantar a soja esta semana?", "Can I plant soybeans this week?")}
+          </span>
+        }
+      />
+      {!pedida ? (
+        <div className="mt-3 flex flex-col items-start gap-3">
+          <p className="text-ink-muted">
+            {t(
+              `Consulta a previsão do tempo para ${props.nome}. Só as coordenadas públicas do município são enviadas.`,
+              `Checks the weather forecast for ${props.nome}. Only the municipality’s public coordinates are sent.`,
+            )}
+          </p>
+          <Button onClick={() => setPedida(true)}>{t("Ver previsão", "Show forecast")}</Button>
+        </div>
+      ) : (
+        <PrevisaoConteudo {...props} />
+      )}
+    </Card>
+  );
+}
+
+function PrevisaoConteudo({ lat, lon, baixada, limiteGeadaC, ajusteBaixadaC }: Props) {
   const t = useT();
   const lang = useLang();
   const [estado, setEstado] = useState<Estado>({ tipo: "carregando" });
@@ -50,46 +86,38 @@ export function Previsao({ nome, lat, lon, baixada, limiteGeadaC, ajusteBaixadaC
     [estado, limiteGeadaC, baixada, ajusteBaixadaC, lang],
   );
 
-  const cor =
-    av?.nivel === "nao-plantar"
-      ? "border-gt-orange bg-gt-risk-bg text-gt-risk-text"
-      : av?.nivel === "atencao"
-        ? "border-gt-risk-line bg-gt-risk-bg text-gt-risk-text"
-        : "border-gt-safe-line bg-gt-safe-bg text-gt-safe-text";
-
   return (
-    <section className="gt-rise rounded-[22px] border border-gt-line bg-gt-card p-4 sm:p-6">
-      <p className="text-xs font-semibold text-gt-faint">
-        {t("Checagem antes de plantar · próximos 16 dias", "Check before planting · next 16 days")} · {nome}
-      </p>
-      <h2 className="mt-1 text-2xl font-black">{t("Posso plantar a soja agora?", "Can I plant soybeans now?")}</h2>
-
-      {estado.tipo === "carregando" && <p className="mt-3 text-gt-muted">{t("Buscando a previsão…", "Loading the forecast…")}</p>}
+    <div className="mt-3">
+      {estado.tipo === "carregando" && <p className="text-ink-muted">{t("Buscando a previsão…", "Loading the forecast…")}</p>}
       {estado.tipo === "erro" && (
-        <p className="mt-3 rounded-xl border border-gt-line bg-gt-card2 p-3 text-sm text-gt-muted">
-          {t(
-            "Não foi possível carregar a previsão agora (serviço indisponível ou sem internet). O restante da página usa dados históricos e continua valendo. Tente de novo mais tarde.",
-            "The forecast could not be loaded right now (service unavailable or offline). The rest of the page uses historical data and still applies. Please try again later.",
-          )}
-        </p>
+        <Callout tom="info">
+          <p className="text-sm">
+            {t(
+              "Não foi possível carregar a previsão agora (serviço indisponível ou sem internet). O restante da página usa dados históricos e continua valendo. Tente de novo mais tarde.",
+              "The forecast could not be loaded right now (service unavailable or offline). The rest of the page uses historical data and still applies. Please try again later.",
+            )}
+          </p>
+        </Callout>
       )}
 
       {estado.tipo === "ok" && av && (
         <>
-          <div className={`mt-3 rounded-[18px] border p-4 ${cor}`} role="status">
-            <p className="text-xl font-black">
-              {av.nivel === "nao-plantar" ? "⛔ " : av.nivel === "atencao" ? "⚠️ " : "✅ "}
-              {av.titulo}
-            </p>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
-              {av.mensagens.map((m) => (
-                <li key={m}>{m}</li>
-              ))}
-            </ul>
+          <div role="status">
+            <Callout
+              tom={av.nivel === "nao-plantar" ? "alto" : av.nivel === "atencao" ? "cautela" : "positivo"}
+              icone={av.nivel === "nao-plantar" ? OctagonAlert : av.nivel === "atencao" ? TriangleAlert : CircleCheck}
+            >
+              <p className="text-xl font-extrabold">{av.titulo}</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+                {av.mensagens.map((m) => (
+                  <li key={m}>{m}</li>
+                ))}
+              </ul>
+            </Callout>
           </div>
 
           <div
-            className="mt-4 flex gap-1.5 overflow-x-auto pb-2"
+            className="mt-4 flex snap-x gap-1.5 overflow-x-auto pb-2"
             role="list"
             aria-label={t("Previsão dia a dia", "Day-by-day forecast")}
           >
@@ -102,48 +130,58 @@ export function Previsao({ nome, lat, lon, baixada, limiteGeadaC, ajusteBaixadaC
                 <div
                   key={d}
                   role="listitem"
-                  className={`min-w-[3.9rem] rounded-xl border p-2 text-center ${
-                    i < PARAMS_PREVISAO.diasSemana ? "border-gt-btn-line" : "border-gt-line"
-                  } ${frio ? "bg-gt-frost-bg" : "bg-gt-card2"}`}
+                  className={`min-w-16 snap-start rounded-xl border p-2 text-center ${
+                    frio
+                      ? "border-frost/40 bg-frost-soft text-frost-ink"
+                      : i < PARAMS_PREVISAO.diasSemana
+                        ? "border-line-strong bg-surface"
+                        : "border-line bg-surface-2"
+                  }`}
                 >
-                  <p className="font-mono text-[10px] text-gt-faint">{fmtDia(d.slice(5, 10), lang)}</p>
-                  <p className={`text-sm font-extrabold ${frio ? "text-gt-frost" : ""}`}>
+                  <p className="text-[13px] text-ink-faint">{fmtDia(d.slice(5, 10), lang)}</p>
+                  <p className="flex items-center justify-center gap-0.5 text-sm font-extrabold tabular-nums">
+                    {frio && <Snowflake className="size-4" aria-hidden="true" />}
                     {tmin === null ? "–" : `${fmtNum(tmin, 1, lang)}°`}
                   </p>
-                  <p className={`font-mono text-[11px] ${forte ? "font-semibold text-gt-orange" : "text-gt-muted"}`}>
+                  <p className={`text-[13px] tabular-nums ${forte ? "font-bold text-drought" : "text-ink-muted"}`}>
                     {chuva === null ? "–" : `${fmtNum(chuva, 1, lang)} mm`}
                   </p>
                 </div>
               );
             })}
           </div>
-          <p className="font-mono text-[11px] text-gt-faint">
+          <Fonte className="inline-flex flex-wrap items-center gap-1">
             {t(
-              `Cada dia: temperatura mínima do ar a 2 m e chuva prevista. Azul = mínima ≤ ${limite} °C. Os 7 primeiros dias têm borda mais clara.`,
-              `Each day: 2 m air minimum temperature and forecast rain. Blue = minimum ≤ ${limite} °C. The first 7 days have a lighter border.`,
+              `Cada dia: temperatura mínima do ar a 2 m e chuva prevista. Azul com`,
+              `Each day: 2 m air minimum temperature and forecast rain. Blue with`,
             )}
-          </p>
+            <Snowflake className="size-4" aria-hidden="true" />
+            {t(
+              `= mínima ≤ ${limite} °C. Os 7 primeiros dias têm fundo branco.`,
+              `= minimum ≤ ${limite} °C. The first 7 days have a white background.`,
+            )}
+          </Fonte>
         </>
       )}
 
       <div className="mt-3 flex flex-col gap-1">
-        <p className="text-xs leading-relaxed text-gt-faint">
+        <Fonte>
           {t(
             `Regras de exemplo, a validar com agronomia: geada (mínima ≤ ${limite} °C) ou chuva ≥ ${PARAMS_PREVISAO.chuvaForteMm} mm nos próximos ${PARAMS_PREVISAO.diasSemana} dias = “não plante esta semana”; menos de ${PARAMS_PREVISAO.chuvaMinSemanaMm} mm na semana = atenção. Previsão não é garantia e a incerteza cresce depois de ~7 dias. Confira também o ZARC e o vazio sanitário.`,
             `Example rules, to be validated with agronomy: frost (minimum ≤ ${limite} °C) or rain ≥ ${PARAMS_PREVISAO.chuvaForteMm} mm in the next ${PARAMS_PREVISAO.diasSemana} days = “do not plant this week”; less than ${PARAMS_PREVISAO.chuvaMinSemanaMm} mm in the week = caution. A forecast is not a guarantee and uncertainty grows after ~7 days. Also check the ZARC window and the soybean-free period (“vazio sanitário”).`,
           )}
-        </p>
-        <p className="font-mono text-[11px] text-gt-faint">
+        </Fonte>
+        <Fonte>
           {t("Previsão:", "Forecast:")}{" "}
-          <a className="underline underline-offset-2" href="https://open-meteo.com/" target="_blank" rel="noreferrer">
+          <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">
             Open-Meteo.com
           </a>{" "}
           {t(
             "(CC BY 4.0, uso não comercial). Só as coordenadas públicas do município são enviadas ao serviço.",
             "(CC BY 4.0, non-commercial use). Only the municipality’s public coordinates are sent to the service.",
           )}
-        </p>
+        </Fonte>
       </div>
-    </section>
+    </div>
   );
 }

@@ -6,7 +6,15 @@ import type { IndiceEnso } from "@/lib/engine/enso.ts";
 import { buildLocalView, type LocalView } from "@/lib/local-view.ts";
 import { baixarPower } from "@/lib/power.ts";
 import { buscarLugares, dentroDoBrasil, idDoPonto, noSulDoBrasil, type Lugar } from "@/lib/lugares.ts";
+import { LocateFixed, Search } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
+import { Fonte } from "@/components/ui/Fonte";
 import { useT } from "@/lib/i18n";
+
+function Spinner() {
+  return <span className="inline-block size-4 rounded-full border-2 border-brand border-t-transparent motion-safe:animate-spin" aria-hidden="true" />;
+}
 
 type Aviso = { tipo: "erro" | "info"; pt: string; en: string };
 
@@ -120,41 +128,42 @@ export function EscolherLugar({
   };
 
   return (
-    <div className="rounded-2xl border border-gt-line bg-gt-card2 p-3">
-      <p className="text-sm font-semibold">{t("Outro município do Sul do Brasil", "Another municipality in southern Brazil")}</p>
+    <div className="rounded-xl border border-line bg-surface-2 p-3">
+      <p className="font-semibold">{t("Outro município do Sul do Brasil", "Another municipality in southern Brazil")}</p>
       <form onSubmit={buscar} className="mt-2 flex flex-wrap gap-2">
         <label className="sr-only" htmlFor="busca-municipio">
           {t("Nome do município", "Municipality name")}
         </label>
-        <input
-          id="busca-municipio"
-          value={texto}
-          onChange={(e) => setTexto(e.target.value)}
-          placeholder={t("Ex.: Guarapuava", "E.g. Guarapuava")}
-          autoComplete="off"
-          className="min-h-11 min-w-0 flex-1 rounded-full border border-gt-btn-line bg-gt-bg px-4 text-base text-gt-text placeholder:text-gt-faint"
-        />
-        <button
-          type="submit"
-          disabled={ocupado !== null || texto.trim().length < 2}
-          className="min-h-11 rounded-full border border-gt-green bg-gt-green px-4 text-sm font-semibold text-gt-bg disabled:opacity-50"
-        >
+        <div className="relative min-w-0 flex-1 basis-48">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-5 -translate-y-1/2 text-ink-faint" aria-hidden="true" />
+          <input
+            id="busca-municipio"
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            placeholder={t("Ex.: Guarapuava", "E.g. Guarapuava")}
+            autoComplete="off"
+            className="min-h-11 w-full rounded-full border border-line-strong bg-surface pl-10 pr-4 text-base text-ink placeholder:text-ink-faint"
+          />
+        </div>
+        <Button type="submit" disabled={ocupado !== null || texto.trim().length < 2}>
           {t("Buscar", "Search")}
-        </button>
-        <button
-          type="button"
-          onClick={usarGps}
-          disabled={ocupado !== null}
-          className="min-h-11 rounded-full border border-gt-btn-line bg-gt-card px-4 text-sm font-semibold text-gt-text disabled:opacity-50"
-        >
+        </Button>
+        <Button variant="secondary" onClick={usarGps} disabled={ocupado !== null}>
+          <LocateFixed className="size-5" aria-hidden="true" />
           {t("Usar minha localização", "Use my location")}
-        </button>
+        </Button>
       </form>
 
       <div role="status" aria-live="polite" className="mt-2 text-sm">
-        {ocupado === "buscando" && <p className="text-gt-muted">{t("Buscando…", "Searching…")}</p>}
+        {ocupado === "buscando" && (
+          <p className="flex items-center gap-2 text-ink-muted">
+            <Spinner />
+            {t("Buscando…", "Searching…")}
+          </p>
+        )}
         {ocupado === "baixando" && (
-          <p className="text-gt-muted">
+          <p className="flex items-center gap-2 text-ink-muted">
+            <Spinner />
             {t(
               `Baixando 45 anos de dados da NASA para ${baixandoNome}… (alguns segundos)`,
               `Downloading 45 years of NASA data for ${baixandoNome}… (a few seconds)`,
@@ -162,15 +171,9 @@ export function EscolherLugar({
           </p>
         )}
         {aviso && (
-          <p
-            className={`rounded-xl border p-3 ${
-              aviso.tipo === "erro"
-                ? "border-gt-risk-line bg-gt-risk-bg text-gt-risk-text"
-                : "border-gt-frost-line bg-gt-frost-bg text-gt-frost-text"
-            }`}
-          >
-            {t(aviso.pt, aviso.en)}
-          </p>
+          <Callout tom={aviso.tipo === "erro" ? "cautela" : "info"}>
+            <p>{t(aviso.pt, aviso.en)}</p>
+          </Callout>
         )}
       </div>
 
@@ -181,10 +184,10 @@ export function EscolherLugar({
               <button
                 onClick={() => calcular(l.estado ? `${l.nome} (${l.estado})` : l.nome, l.lat, l.lon)}
                 disabled={ocupado !== null}
-                className="min-h-11 w-full rounded-2xl border border-gt-btn-line bg-gt-card px-4 py-2 text-left hover:border-gt-faint disabled:opacity-50"
+                className="min-h-11 w-full rounded-xl border border-line-strong bg-surface px-4 py-2 text-left hover:bg-surface-2 disabled:opacity-50"
               >
-                <span className="block font-extrabold">{l.nome}</span>
-                <span className="block font-mono text-[11px] text-gt-faint">
+                <span className="block font-bold">{l.nome}</span>
+                <span className="block text-[13px] text-ink-faint">
                   {l.estado ?? "—"} · {l.lat.toFixed(2)}, {l.lon.toFixed(2)}
                 </span>
               </button>
@@ -193,12 +196,12 @@ export function EscolherLugar({
         </ul>
       )}
 
-      <p className="mt-2 text-xs leading-relaxed text-gt-faint">
+      <Fonte className="mt-2">
         {t(
           "A busca usa o Open-Meteo (CC BY 4.0) e os dados vêm direto da NASA POWER, no seu navegador. Só o nome digitado (ou as coordenadas, se usar a localização) é enviado a esses serviços; nada é guardado.",
           "The search uses Open-Meteo (CC BY 4.0) and the data come straight from NASA POWER, in your browser. Only the typed name (or the coordinates, if you use your location) is sent to those services; nothing is stored.",
         )}
-      </p>
+      </Fonte>
     </div>
   );
 }

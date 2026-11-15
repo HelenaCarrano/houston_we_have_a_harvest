@@ -124,7 +124,7 @@ We tested whether the seasons the app flags had lower **second-crop corn yields*
 
 ### Technology
 
-Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 · tests with Node's built-in test runner · deployed on Vercel (no secret keys in the code). Fonts: Archivo and IBM Plex Mono (Google Fonts, SIL Open Font License). The app contains no photographs, no images of people and no NASA logos.
+Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 · tests with Node's built-in test runner · deployed on Vercel (no secret keys in the code). Font: Archivo (Google Fonts, SIL Open Font License); icons: Lucide (ISC). The app contains no photographs, no images of people and no NASA logos.
 
 ---
 
@@ -238,4 +238,4 @@ Testamos se as safras marcadas pelo app tiveram **produtividade menor do milho 2
 
 ### Tecnologia
 
-Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 · testes com `node:test` · deploy no Vercel (sem chaves secretas no código).
+Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 · testes com `node:test` · deploy no Vercel (sem chaves secretas no código). Fonte: Archivo (Google Fonts, SIL OFL); ícones: Lucide (ISC).

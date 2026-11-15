@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check, Copy, Share2 } from "lucide-react";
 import type { DataView, TrigoView } from "@/lib/view-data";
 import {
   ROTACOES,
@@ -15,40 +16,22 @@ import {
   type Foco,
   type Restricao,
 } from "@/lib/rotacoes";
-import { NIVEL_EN, fmtDia, useLang, useT } from "@/lib/i18n";
+import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
+import { Card, CardHeader } from "@/components/ui/Card";
+import { Disclosure } from "@/components/ui/Disclosure";
+import { Fonte } from "@/components/ui/Fonte";
+import { NivelBadge, nivelPorFreq, type Nivel } from "@/components/ui/NivelBadge";
+import { Segmented } from "@/components/ui/Segmented";
+import { fmtDia, useLang, useT } from "@/lib/i18n";
 
-
-type Nivel = "Baixo" | "Médio" | "Alto";
 const PESO_NIVEL: Record<Nivel, number> = { Baixo: 0, Médio: 1, Alto: 2 };
-
-function nivelPorFreq(f: number): Nivel {
-  const x = Math.round(f * 10);
-  return x <= 1 ? "Baixo" : x <= 3 ? "Médio" : "Alto";
-}
-
-export function SeloNivel({ nivel, rotulo }: { nivel: Nivel | "Não calculado"; rotulo?: string }) {
-  const t = useT();
-  const cls =
-    nivel === "Baixo"
-      ? "bg-gt-safe-bg border-gt-safe-line text-gt-safe-text"
-      : nivel === "Médio"
-        ? "bg-gt-risk-bg border-gt-risk-line text-gt-risk-text"
-        : nivel === "Alto"
-          ? "bg-gt-risk-bg border-gt-orange text-gt-orange"
-          : "bg-gt-card2 border-gt-line text-gt-muted";
-  return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 font-mono text-[11px] font-semibold ${cls}`}>
-      {rotulo ? `${rotulo}: ` : ""}
-      {t(nivel, NIVEL_EN[nivel] ?? nivel)}
-    </span>
-  );
-}
 
 function Pontos({ n }: { n: number }) {
   return (
     <span aria-label={`${n}/3`} className="inline-flex gap-0.5 align-middle">
       {[1, 2, 3].map((i) => (
-        <span key={i} className={`inline-block size-2.5 rounded-full ${i <= n ? "bg-gt-green" : "bg-gt-line"}`} />
+        <span key={i} className={`inline-block size-2.5 rounded-full ${i <= n ? "bg-brand" : "bg-line"}`} />
       ))}
     </span>
   );
@@ -57,8 +40,8 @@ function Pontos({ n }: { n: number }) {
 function Lista({ titulo, itens, cor }: { titulo: string; itens: string[]; cor: string }) {
   return (
     <div>
-      <p className={`text-xs font-semibold ${cor}`}>{titulo}</p>
-      <ul className="mt-1 list-disc space-y-0.5 pl-4 text-sm text-gt-muted">
+      <p className={`text-sm font-semibold ${cor}`}>{titulo}</p>
+      <ul className="mt-1 list-disc space-y-0.5 pl-4 text-sm text-ink-muted">
         {itens.map((x) => (
           <li key={x}>{x}</li>
         ))}
@@ -109,7 +92,6 @@ export function Rotacoes({
     bloqueios: o.bloqueios,
   }));
   const melhor = avaliadas[0];
-  const descartadas = avaliadas.filter((a) => a.bloqueios.length > 0);
   const txt = (r: (typeof ROTACOES)[number]) => (lang === "en" ? r.en : r.pt);
   const fortes = prios.filter((p) => melhor.r.atende[p] === 3).map((p) => PRIORIDADES.find((q) => q.id === p)!);
   const motivo =
@@ -127,14 +109,9 @@ export function Rotacoes({
           ` Wheat frost at heading: ${geadaTrigo.anosComEvento} of ${geadaTrigo.totalAnos} seasons (depends on the sowing date).`,
         )
       : "";
-  const descartadasTxt = descartadas
-    .map((a) => {
-      const k = a.bloqueios[0];
-      return `${txt(a.r).nome} (${t(MOTIVO_BLOQUEIO[k].pt, MOTIVO_BLOQUEIO[k].en)})`;
-    })
-    .join("; ");
 
-  const copiar = async () => {
+  /** Texto de resumo (mesmo conteúdo para "Copiar" e para o WhatsApp). */
+  const montarResumo = (): string => {
     const linhas = [
       `weharvest · ${nomeLocal} · ${t("soja em", "soybean on")} ${dia(d.dataSoja)}${baixada ? " · " + t("baixada", "lowland") : ""}`,
       `${t("Para o seu campo", "For your field")}: ${txt(melhor.r).nome}. ${motivo}${climaMilho}`,
@@ -144,8 +121,12 @@ export function Rotacoes({
       }),
       `${t("Dados: NASA POWER, 1981–2025. Apoio à decisão, a validar com técnico.", "Data: NASA POWER, 1981–2025. Decision support, to be validated with an agronomist.")}`,
     ];
+    return linhas.join("\n");
+  };
+
+  const copiar = async () => {
     try {
-      await navigator.clipboard.writeText(linhas.join("\n"));
+      await navigator.clipboard.writeText(montarResumo());
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2500);
     } catch {
@@ -154,236 +135,240 @@ export function Rotacoes({
   };
 
   return (
-    <section className="rounded-[22px] border border-gt-line bg-gt-card p-4 sm:p-6">
-      <h2 className="mt-1 text-2xl font-black">{t("O que plantar depois da soja?", "What to plant after soybean?")}</h2>
+    <Card>
+      <CardHeader title={t("O que plantar depois da soja?", "What to plant after soybeans?")} />
+      <p className="mt-1 text-ink-muted">
+        {t(
+          "Compare 3 opções para o seu campo. Diga o que importa e o que você não consegue fazer.",
+          "Compare 3 options for your field. Tell us what matters and what you can’t do.",
+        )}
+      </p>
 
-      <div className="mt-4 rounded-2xl border border-gt-green bg-gt-safe-bg/60 p-4">
-        <p className="text-xs font-semibold text-gt-green">
-          {t("Para o seu campo", "For your field")}
-        </p>
-        <p className="mt-1 text-lg font-extrabold">{txt(melhor.r).nome}</p>
-        <p className="mt-1 text-sm text-gt-muted">
-          {motivo}
-          {climaMilho}
-          {descartadas.length > 0 && (
-            <>
-              {" "}
-              {t("Fora da comparação:", "Not applicable to you:")} {descartadasTxt}.
-            </>
-          )}
-        </p>
-        <button
-          onClick={copiar}
-          className="mt-3 min-h-11 rounded-full border border-gt-btn-line bg-gt-card2 px-4 text-sm font-semibold text-gt-text hover:border-gt-faint"
-        >
-          {copiado ? t("✓ Copiado", "✓ Copied") : t("Copiar resumo", "Copy summary")}
-        </button>
-        <span className="sr-only" role="status">
-          {copiado ? t("Resumo copiado", "Summary copied") : ""}
-        </span>
-      </div>
-
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <div className="mt-4 grid gap-4 rounded-xl bg-surface-2 p-4 md:grid-cols-2">
         <div>
-          <p className="text-sm font-semibold">{t("O que pesa mais para você?", "What matters most to you?")}</p>
-          <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label={t("O que pesa mais", "What matters most")}>
-            {FOCOS.map((f) => (
-              <button
-                key={f.id}
-                role="radio"
-                aria-checked={foco === f.id}
-                onClick={() => setFoco(f.id)}
-                className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${
-                  foco === f.id
-                    ? "border-gt-green bg-gt-green text-gt-bg"
-                    : "border-gt-line bg-gt-card2 text-gt-text hover:border-gt-btn-line"
-                }`}
-              >
-                {t(f.pt, f.en)}
-              </button>
+          <p className="font-bold">{t("O que pesa mais para você?", "What matters most to you?")}</p>
+          <Segmented<Foco>
+            label={t("O que pesa mais", "What matters most")}
+            value={foco}
+            onChange={setFoco}
+            redondo={false}
+            className="mt-2 !bg-surface"
+            options={FOCOS.map((f) => ({ id: f.id, label: t(f.pt, f.en) }))}
+          />
+        </div>
+        <div>
+          <p className="font-bold">{t("Não consigo…", "I can’t…")}</p>
+          <div className="mt-1 flex flex-col" role="group" aria-label={t("Restrições", "Constraints")}>
+            {RESTRICOES.map((k) => (
+              <label key={k.id} className="flex min-h-11 cursor-pointer items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={restricoes.includes(k.id)}
+                  onChange={() => toggle(k.id)}
+                  className="size-5 accent-[#2C6A38]"
+                />
+                <span>{t(k.pt, k.en)}</span>
+              </label>
             ))}
           </div>
         </div>
-        <div>
-          <p className="text-sm font-semibold">{t("O que você não consegue fazer?", "What can't you do?")}</p>
-          <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label={t("Restrições", "Constraints")}>
-            {RESTRICOES.map((k) => {
-              const on = restricoes.includes(k.id);
-              return (
-                <button
-                  key={k.id}
-                  aria-pressed={on}
-                  onClick={() => toggle(k.id)}
-                  className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${
-                    on
-                      ? "border-gt-orange bg-gt-risk-bg text-gt-risk-text"
-                      : "border-gt-line bg-gt-card2 text-gt-text hover:border-gt-btn-line"
-                  }`}
-                >
-                  {on ? "✕ " : ""}
-                  {t(k.pt, k.en)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
       </div>
 
-      <ol className="mt-5 grid gap-4 lg:grid-cols-3">
+      <ol className="mt-5 grid gap-3">
         {avaliadas.map(({ r, soma, bloqueios }, i) => {
           const x = lang === "en" ? r.en : r.pt;
-          const destaque = r.id === melhor.r.id;
+          const destaque = r.id === melhor.r.id && bloqueios.length === 0;
           const fora = bloqueios.length > 0;
           return (
             <li
               key={r.id}
-              className={`flex flex-col gap-3 rounded-[18px] border p-4 motion-safe:transition-colors ${
-                fora
-                  ? "border-gt-line bg-gt-card2 opacity-70"
-                  : destaque
-                    ? "border-gt-green bg-gt-safe-bg/60"
-                    : "border-gt-line bg-gt-card2"
+              className={`flex gap-4 rounded-xl border p-4 ${
+                fora ? "border-line bg-surface-2 opacity-80" : destaque ? "border-2 border-brand bg-surface" : "border-line bg-surface"
               }`}
             >
-              <div>
-                <p className="text-xs font-semibold text-gt-faint">
-                  #{i + 1} · {x.rotulo}
-                  {destaque && !fora ? ` · ${t("mais alinhada ao seu campo", "best fit for your field")}` : ""}
-                </p>
-                <h3 className="text-lg font-extrabold">{x.nome}</h3>
-                {fora && (
-                  <p className="mt-1 rounded-lg border border-gt-risk-line bg-gt-risk-bg p-2 text-sm text-gt-risk-text">
-                    {t("Não se aplica ao seu campo: ", "Not applicable to your field: ")}
-                    {t(MOTIVO_BLOQUEIO[bloqueios[0]].pt, MOTIVO_BLOQUEIO[bloqueios[0]].en)}.
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-wrap gap-1.5">
-                {r.riscoCalculado ? (
-                  <>
-                    <SeloNivel nivel={nivelGeada} rotulo={t("Geada", "Frost")} />
-                    <SeloNivel nivel={nivelSeca} rotulo={t("Seca", "Drought")} />
-                  </>
-                ) : (
-                  <>
-                    <SeloNivel nivel={geadaTrigo.nivel} rotulo={t("Geada", "Frost")} />
-                    <SeloNivel nivel="Não calculado" rotulo={t("Seca", "Drought")} />
-                  </>
-                )}
-                <SeloNivel nivel={d.campo[r.id].nivelErosao} rotulo={t("Erosão", "Erosion")} />
-              </div>
-
-              <p className="text-sm">{x.justificativa}</p>
-
-              <details className="rounded-xl border border-gt-line bg-gt-bg/40 p-3">
-                <summary className="flex min-h-11 cursor-pointer list-none items-center font-semibold text-gt-green underline underline-offset-2 [&::-webkit-details-marker]:hidden">
-                  {t("Ver detalhes", "See details")}
-                </summary>
-                <div className="mt-2 flex flex-col gap-3">
-              <p className="rounded-xl bg-gt-bg/60 p-2.5 text-sm">
-                {r.riscoCalculado ? (
-                  <>
-                    {t("Milho: geada em ", "Corn: frost in ")}
-                    <b>{geada.anosComEvento}</b>
-                    {t(" e seca em ", " and drought in ")}
-                    <b>{d.seca.anosComEvento}</b> {t("de", "of")} <b>{geada.totalAnos}</b>{" "}
-                    {t("safras na floração e enchimento", "seasons in the critical stage")} ({dia(d.faseInicio)}–{dia(d.faseFim)}).{" "}
-                    {t("Fonte: NASA POWER.", "Source: NASA POWER.")}
-                  </>
-                ) : (
-                  <>
-                    {t("Trigo: geada no espigamento (", "Wheat: frost at heading (")}
-                    {dia(trigo.janela.inicio)}–{dia(trigo.janela.fim)}
-                    {t(`, semeadura em ${dia(trigo.semeadura)}) em `, `, sowing on ${dia(trigo.semeadura)}) in `)}
-                    <b>{geadaTrigo.anosComEvento}</b> {t("de", "of")} <b>{geadaTrigo.totalAnos}</b>{" "}
-                    {t("safras", "seasons")}
-                    {geadaTrigo.anosFortes && geadaTrigo.anosFortes.length > 0
-                      ? t(`; geada forte (≤ ${trigo.limiteForteC + (baixada ? trigo.ajusteBaixadaC : 0)} °C) em ${geadaTrigo.anosFortes.length}`, `; strong frost (≤ ${trigo.limiteForteC + (baixada ? trigo.ajusteBaixadaC : 0)} °C) in ${geadaTrigo.anosFortes.length}`)
-                      : ""}
-                    . {t("Seca do trigo não calculada. O mesmo resultado vale para qualquer data da soja. Fonte: NASA POWER.", "Wheat drought is not calculated. The same result holds for any soybean date. Source: NASA POWER.")}
-                    <span className="mt-1.5 block text-gt-muted">
-                      {t("Por data de semeadura: ", "By sowing date: ")}
-                      {sensTrigo.map((s, k) => (
-                        <span key={s.semeadura}>
-                          {k > 0 ? " · " : ""}
-                          {dia(s.semeadura)}: <b>{s.anosComEvento}</b>/{s.totalAnos}
-                        </span>
-                      ))}
-                      . {t(
-                        "O resultado depende muito da data de semeadura e da janela de 70–110 dias (hipóteses): confira a janela do ZARC. Semeadura mais tarde pode atrasar a colheita e a próxima soja.",
-                        "The result depends strongly on the sowing date and the 70–110-day window (hypotheses): check the ZARC window. Later sowing may delay harvest and the next soybean.",
-                      )}
-                    </span>
-                    {filtroRotulo && (
-                      <span className="mt-1.5 block text-gt-faint">
-                        {t("O filtro de El Niño/La Niña não é aplicado ao trigo.", "The El Niño/La Niña filter is not applied to wheat.")}
-                      </span>
-                    )}
-                  </>
-                )}
-              </p>
-
-              {prios.length > 0 && (
-                <dl className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 text-sm">
-                  {prios.map((p) => {
-                    const pr = PRIORIDADES.find((q) => q.id === p)!;
-                    return (
-                      <div key={p} className="contents">
-                        <dt className="text-gt-muted">{t(pr.pt, pr.en)}</dt>
-                        <dd>
-                          <Pontos n={r.atende[p]} />
-                        </dd>
-                      </div>
-                    );
-                  })}
-                  <dt className="font-mono text-[11px] text-gt-faint">{t("Soma (qualitativa)", "Sum (qualitative)")}</dt>
-                  <dd className="font-mono text-xs font-semibold">{soma}</dd>
-                </dl>
-              )}
-
-              <Lista titulo={t("Evidência", "Evidence")} itens={x.evidencia} cor="text-gt-frost" />
-              <Lista titulo={t("Benefícios", "Benefits")} itens={x.beneficios} cor="text-gt-green" />
-              <Lista titulo={t("Riscos", "Risks")} itens={x.riscos} cor="text-gt-orange" />
-              <Lista
-                titulo={t("Lacunas · confirmar com o agrônomo", "Information gaps · confirm with an agronomist")}
-                itens={x.lacunas}
-                cor="text-gt-faint"
-              />
-              <p className="text-xs text-gt-faint">
-                {t("Solo descoberto:", "Bare soil:")} {x.soloDescoberto}{" "}
-                {t(
-                  `(${d.campo[r.id].diasDescoberto} dias do ano sem cultura)`,
-                  `(${d.campo[r.id].diasDescoberto} days a year without a crop)`,
-                )}
-              </p>
+              <span
+                className={`flex size-8 shrink-0 items-center justify-center rounded-full font-bold ${
+                  destaque ? "bg-brand text-white" : "bg-surface-2 text-ink-muted"
+                } ${fora ? "!bg-line" : ""}`}
+                aria-hidden="true"
+              >
+                {i + 1}
+              </span>
+              <div className="flex min-w-0 flex-1 flex-col gap-3">
+                <div>
+                  <h3 className="text-lg font-bold">
+                    <span className="sr-only">{i + 1}. </span>
+                    {x.nome}
+                  </h3>
+                  <p className="text-sm text-ink-muted">{x.rotulo}</p>
                 </div>
-              </details>
+                {destaque && (
+                  <div>
+                    <span className="inline-flex rounded-full bg-brand-soft px-2.5 py-1 text-[13px] font-semibold text-brand">
+                      {t("Mais indicada para você", "Best fit for you")}
+                    </span>
+                    <p className="mt-2 text-sm">
+                      {motivo}
+                      {climaMilho}
+                    </p>
+                  </div>
+                )}
+                {fora && (
+                  <Callout tom="cautela">
+                    <p className="text-sm">
+                      {t("Não se aplica a você: ", "Not applicable to you: ")}
+                      {t(MOTIVO_BLOQUEIO[bloqueios[0]].pt, MOTIVO_BLOQUEIO[bloqueios[0]].en)}.
+                    </p>
+                  </Callout>
+                )}
+                <div className="flex flex-wrap gap-1.5">
+                  {r.riscoCalculado ? (
+                    <>
+                      <NivelBadge nivel={nivelGeada} prefixo={t("Geada", "Frost")} />
+                      <NivelBadge nivel={nivelSeca} prefixo={t("Seca", "Drought")} />
+                    </>
+                  ) : (
+                    <>
+                      <NivelBadge nivel={geadaTrigo.nivel} prefixo={t("Geada", "Frost")} />
+                      <NivelBadge nivel="Não calculado" prefixo={t("Seca", "Drought")} />
+                    </>
+                  )}
+                  <NivelBadge nivel={d.campo[r.id].nivelErosao} prefixo={t("Erosão", "Erosion")} />
+                </div>
+                <p className="text-sm">{x.justificativa}</p>
+
+                <Disclosure titulo={t("Ver detalhes", "See details")}>
+                  <div className="flex flex-col gap-3">
+                    <p className="rounded-xl bg-surface-2 p-3 text-sm">
+                      {r.riscoCalculado ? (
+                        <>
+                          {t("Milho: geada em ", "Corn: frost in ")}
+                          <b>{geada.anosComEvento}</b>
+                          {t(" e seca em ", " and drought in ")}
+                          <b>{d.seca.anosComEvento}</b> {t("de", "of")} <b>{geada.totalAnos}</b>{" "}
+                          {t("safras na floração e enchimento", "seasons in the critical stage")} ({dia(d.faseInicio)}–{dia(d.faseFim)}).{" "}
+                          {t("Fonte: NASA POWER.", "Source: NASA POWER.")}
+                        </>
+                      ) : (
+                        <>
+                          {t("Trigo: geada no espigamento (", "Wheat: frost at heading (")}
+                          {dia(trigo.janela.inicio)}–{dia(trigo.janela.fim)}
+                          {t(`, semeadura em ${dia(trigo.semeadura)}) em `, `, sowing on ${dia(trigo.semeadura)}) in `)}
+                          <b>{geadaTrigo.anosComEvento}</b> {t("de", "of")} <b>{geadaTrigo.totalAnos}</b> {t("safras", "seasons")}
+                          {geadaTrigo.anosFortes && geadaTrigo.anosFortes.length > 0
+                            ? t(
+                                `; geada forte (≤ ${trigo.limiteForteC + (baixada ? trigo.ajusteBaixadaC : 0)} °C) em ${geadaTrigo.anosFortes.length}`,
+                                `; strong frost (≤ ${trigo.limiteForteC + (baixada ? trigo.ajusteBaixadaC : 0)} °C) in ${geadaTrigo.anosFortes.length}`,
+                              )
+                            : ""}
+                          .{" "}
+                          {t(
+                            "Seca do trigo não calculada. O mesmo resultado vale para qualquer data da soja. Fonte: NASA POWER.",
+                            "Wheat drought is not calculated. The same result holds for any soybean date. Source: NASA POWER.",
+                          )}
+                          <span className="mt-1.5 block text-ink-muted">
+                            {t("Por data de semeadura: ", "By sowing date: ")}
+                            {sensTrigo.map((s, k) => (
+                              <span key={s.semeadura}>
+                                {k > 0 ? " · " : ""}
+                                {dia(s.semeadura)}: <b>{s.anosComEvento}</b>/{s.totalAnos}
+                              </span>
+                            ))}
+                            .{" "}
+                            {t(
+                              "O resultado depende muito da data de semeadura e da janela de 70–110 dias (hipóteses): confira a janela do ZARC. Semeadura mais tarde pode atrasar a colheita e a próxima soja.",
+                              "The result depends strongly on the sowing date and the 70–110-day window (hypotheses): check the ZARC window. Later sowing may delay harvest and the next soybean.",
+                            )}
+                          </span>
+                          {filtroRotulo && (
+                            <span className="mt-1.5 block text-ink-faint">
+                              {t(
+                                "O filtro de El Niño/La Niña não é aplicado ao trigo.",
+                                "The El Niño/La Niña filter is not applied to wheat.",
+                              )}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </p>
+
+                    {prios.length > 0 && (
+                      <dl className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 text-sm">
+                        {prios.map((p) => {
+                          const pr = PRIORIDADES.find((q) => q.id === p)!;
+                          return (
+                            <div key={p} className="contents">
+                              <dt className="text-ink-muted">{t(pr.pt, pr.en)}</dt>
+                              <dd>
+                                <Pontos n={r.atende[p]} />
+                              </dd>
+                            </div>
+                          );
+                        })}
+                        <dt className="text-[13px] text-ink-faint">{t("Soma (qualitativa)", "Sum (qualitative)")}</dt>
+                        <dd className="text-sm font-semibold tabular-nums">{soma}</dd>
+                      </dl>
+                    )}
+
+                    <Lista titulo={t("Evidência", "Evidence")} itens={x.evidencia} cor="text-frost-ink" />
+                    <Lista titulo={t("Benefícios", "Benefits")} itens={x.beneficios} cor="text-low" />
+                    <Lista titulo={t("Riscos", "Risks")} itens={x.riscos} cor="text-high" />
+                    <Lista
+                      titulo={t("Lacunas · confirmar com o agrônomo", "Information gaps · confirm with an agronomist")}
+                      itens={x.lacunas}
+                      cor="text-ink-faint"
+                    />
+                    <Fonte>
+                      {t("Solo descoberto:", "Bare soil:")} {x.soloDescoberto}{" "}
+                      {t(
+                        `(${d.campo[r.id].diasDescoberto} dias do ano sem cultura)`,
+                        `(${d.campo[r.id].diasDescoberto} days a year without a crop)`,
+                      )}
+                    </Fonte>
+                  </div>
+                </Disclosure>
+              </div>
             </li>
           );
         })}
       </ol>
 
-      <details className="mt-4 rounded-xl border border-gt-line bg-gt-card2 p-3 text-sm">
-        <summary className="flex min-h-11 cursor-pointer list-none items-center font-semibold text-gt-green underline underline-offset-2 [&::-webkit-details-marker]:hidden">
-          {t("Como ordenamos e o que ainda precisa de técnico", "How we order them and what still needs an agronomist")}
-        </summary>
-        <div className="mt-2 flex flex-col gap-2">
-      <p className="mt-4 rounded-xl border border-gt-risk-line bg-gt-risk-bg p-3 text-sm text-gt-risk-text">
-        {t(
-          "Textos agronômicos e quanto cada rotação atende às prioridades são qualitativos; o nível de erosão vem dos dias sem cultura (ciclos de exemplo) e ignora o declive. Tudo está ",
-          "Agronomic texts and how well each rotation meets the priorities are qualitative; the erosion level comes from the days without a crop (example cycles) and ignores slope. Everything is ",
-        )}
-        <b>{t("a validar com técnico", "to be validated with an agronomist")}</b>
-        {t(
-          ". A ferramenta apoia a decisão; não substitui o agricultor nem o agrônomo.",
-          ". This tool supports the decision; it does not replace the farmer or the agronomist.",
-        )}
-      </p>
-      <p className="mt-2 text-xs leading-relaxed text-gt-faint">{t(REGRA_ORDEM.pt, REGRA_ORDEM.en)}</p>
-          <p className="text-gt-muted">{t(NOTA_NITROGENIO.pt, NOTA_NITROGENIO.en)}</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button href={"https://wa.me/?text=" + encodeURIComponent(montarResumo())} target="_blank" rel="noreferrer">
+          <Share2 className="size-5" aria-hidden="true" />
+          {t("Enviar no WhatsApp", "Send on WhatsApp")}
+        </Button>
+        <Button variant="secondary" onClick={copiar}>
+          {copiado ? <Check className="size-5" aria-hidden="true" /> : <Copy className="size-5" aria-hidden="true" />}
+          {copiado ? t("Copiado", "Copied") : t("Copiar texto", "Copy text")}
+        </Button>
+        <span className="sr-only" role="status">
+          {copiado ? t("Resumo copiado", "Summary copied") : ""}
+        </span>
+      </div>
+
+      <Disclosure
+        className="mt-4"
+        titulo={t("Como ordenamos e o que precisa de técnico", "How we rank them and what needs an agronomist")}
+      >
+        <div className="flex flex-col gap-3">
+          <Callout tom="cautela">
+            <p className="text-sm">
+              {t(
+                "Textos agronômicos e quanto cada rotação atende às prioridades são qualitativos; o nível de erosão vem dos dias sem cultura (ciclos de exemplo) e ignora o declive. Tudo está ",
+                "Agronomic texts and how well each rotation meets the priorities are qualitative; the erosion level comes from the days without a crop (example cycles) and ignores slope. Everything is ",
+              )}
+              <b>{t("a validar com técnico", "to be validated with an agronomist")}</b>
+              {t(
+                ". A ferramenta apoia a decisão; não substitui o agricultor nem o agrônomo.",
+                ". This tool supports the decision; it does not replace the farmer or the agronomist.",
+              )}
+            </p>
+          </Callout>
+          <Fonte>{t(REGRA_ORDEM.pt, REGRA_ORDEM.en)}</Fonte>
+          <p className="text-sm text-ink-muted">{t(NOTA_NITROGENIO.pt, NOTA_NITROGENIO.en)}</p>
         </div>
-      </details>
-    </section>
+      </Disclosure>
+    </Card>
   );
 }
