@@ -6,6 +6,7 @@ import cv from "@/data/power_daily_cascavel.json";
 import fb from "@/data/power_daily_francisco-beltrao.json";
 import srtm from "@/data/srtm_relief.json";
 import ensoData from "@/data/enso.json";
+import backtestIbge from "@/data/backtest_ibge.json";
 import {
   PARAMS_PADRAO,
   riscoPorData,
@@ -164,10 +165,51 @@ export interface EnsoInfo {
   ultimo: { trimestre: string; ano: number; valor: number; fase: FaseEnso } | null;
 }
 
+export interface TesteIbge {
+  nMarc: number;
+  nNao: number;
+  mMarc: number;
+  mNao: number;
+  d: number;
+  p: number;
+}
+
+/** Teste retrospectivo com o IBGE (PAM): resultados de src/data/backtest_ibge.json, gerado por scripts/backtest_ibge.mjs. */
+export interface BacktestView {
+  baixadoEm: string;
+  minAreaHa: number;
+  /** Data principal da soja do teste, "MM-DD". */
+  dataPrincipal: string;
+  total: number;
+  principal: { qualquer: TesteIbge; geada: TesteIbge; seca: TesteIbge };
+  testes: number;
+  significativos: number;
+  esperadosPorAcaso: number;
+}
+
 export interface ViewData {
   params: EngineParams;
   locais: LocalView[];
   enso: EnsoInfo;
+  backtest: BacktestView;
+}
+
+function backtestView(): BacktestView {
+  const b = backtestIbge as unknown as {
+    meta: { baixadoEm: string; minAreaHa: number; dataPrincipal: string; anosPorMunicipio: Record<string, number> };
+    porData: Record<string, Record<"qualquer" | "geada" | "seca", TesteIbge>>;
+  };
+  const todos = Object.values(b.porData).flatMap((x) => Object.values(x));
+  return {
+    baixadoEm: b.meta.baixadoEm,
+    minAreaHa: b.meta.minAreaHa,
+    dataPrincipal: b.meta.dataPrincipal,
+    total: Object.values(b.meta.anosPorMunicipio).reduce((a, c) => a + c, 0),
+    principal: b.porData[b.meta.dataPrincipal],
+    testes: todos.length,
+    significativos: todos.filter((x) => x.p < 0.05).length,
+    esperadosPorAcaso: todos.length * 0.05,
+  };
 }
 
 /** Datas de plantio da soja oferecidas na tela (inclui as 5 datas padrão do motor). */
@@ -410,6 +452,7 @@ export function buildViewData(params: EngineParams = PARAMS_PADRAO): ViewData {
   return {
     params,
     locais,
+    backtest: backtestView(),
     enso: {
       indice: "RONI",
       url: metaEnso.fontes.roni.url,

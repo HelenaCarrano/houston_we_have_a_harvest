@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --test \"src/**/*.test.ts\"",
-    "data:fetch": "node scripts/fetch_power_daily.mjs && node scripts/fetch_enso.mjs && node scripts/fetch_srtm_relief.mjs"
+    "data:fetch": "node scripts/fetch_power_daily.mjs && node scripts/fetch_enso.mjs && node scripts/fetch_srtm_relief.mjs",
+    "data:ibge": "node scripts/fetch_ibge_pam.mjs",
+    "backtest": "node --no-warnings scripts/backtest_ibge.mjs"
   },
   "dependencies": {
     "next": "16.4.6",

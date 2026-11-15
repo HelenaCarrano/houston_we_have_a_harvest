@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { DataView, LocalView, RiscoView, ViewData } from "@/lib/view-data";
 import { Rotacoes, SeloNivel } from "@/components/gt/Rotacoes";
+import { ConfrontoIbge } from "@/components/gt/ConfrontoIbge";
 import { Previsao } from "@/components/gt/Previsao";
 import { CampoDescoberto } from "@/components/gt/CampoDescoberto";
 import {
@@ -923,8 +924,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
         <MaisEvidencias
           titulo={t("Mais evidências", "More evidence")}
           itens={t(
-            "relevo do terreno (SRTM) · previsão de 16 dias · campo descoberto ao longo do ano",
-            "terrain relief (SRTM) · 16-day forecast · bare field through the year",
+            "relevo do terreno (SRTM) · previsão de 16 dias · campo descoberto ao longo do ano · teste com produtividade do IBGE",
+            "terrain relief (SRTM) · 16-day forecast · bare field through the year · IBGE yield check",
           )}
         >
           <BlocoRelevo local={local} baixada={baixada} />
@@ -938,6 +939,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
             ajusteBaixadaC={p.ajusteBaixadaC}
           />
           <CampoDescoberto d={d} nomeLocal={local.nome} params={p} />
+          <ConfrontoIbge b={data.backtest} />
         </MaisEvidencias>
 
         <footer className="flex flex-col gap-2 border-t border-gt-line pt-5">
@@ -985,8 +987,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           </Fonte>
           <Fonte>
             {t(
-              `Limitações: o NASA POWER é uma grade de ~50 km (elevação média da célula: ${local.elevacaoGradeM ?? "?"} m); a temperatura é do ar a 2 m, não da planta; fases das culturas e limiares são hipóteses a calibrar; o ajuste de baixada é uma hipótese (+1 °C) e o relevo SRTM ainda não classifica cada talhão; isto não é previsão do tempo. Ferramenta de apoio: a decisão é do agricultor com o técnico.`,
-              `Limitations: NASA POWER is a ~50 km grid (mean cell elevation: ${local.elevacaoGradeM ?? "?"} m); temperature is 2 m air temperature, not at the plant; crop stages and thresholds are hypotheses to calibrate; the lowland adjustment is a hypothesis (+1 °C) and SRTM relief does not yet classify each plot; this is not a weather forecast. A support tool: the decision belongs to the farmer together with the technician.`,
+              `Limitações: o NASA POWER é uma grade de ~50 km (elevação média da célula: ${local.elevacaoGradeM ?? "?"} m); a temperatura é do ar a 2 m, não da planta; fases das culturas e limiares são hipóteses a calibrar; o ajuste de baixada é uma hipótese (+1 °C) e o relevo SRTM ainda não classifica cada talhão; isto não é previsão do tempo e os níveis de risco ainda não foram confirmados contra a produtividade real (teste com o IBGE sem resultado conclusivo). Ferramenta de apoio: a decisão é do agricultor com o técnico.`,
+              `Limitations: NASA POWER is a ~50 km grid (mean cell elevation: ${local.elevacaoGradeM ?? "?"} m); temperature is 2 m air temperature, not at the plant; crop stages and thresholds are hypotheses to calibrate; the lowland adjustment is a hypothesis (+1 °C) and SRTM relief does not yet classify each plot; this is not a weather forecast, and the risk levels are not yet confirmed against real yields (the IBGE test was inconclusive). A support tool: the decision belongs to the farmer together with the technician.`,
             )}
           </Fonte>
         </footer>
