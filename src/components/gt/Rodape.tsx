@@ -3,11 +3,25 @@
 import type { LocalView } from "@/lib/view-data";
 import { Disclosure } from "@/components/ui/Disclosure";
 import { Fonte } from "@/components/ui/Fonte";
-import { fmtData, useLang, useT } from "@/lib/i18n";
+import { fmtData, fmtNum, useLang, useT } from "@/lib/i18n";
+import estacoesRes from "@/data/validacao_estacoes.json";
+import ibgeRes from "@/data/validacao_ibge_sul.json";
+
+const E = estacoesRes as unknown as {
+  meta: { estacoes: number };
+  diario: { viesDiasFrios: number };
+  safra: { principal: { geada: { concordancia: number } } };
+  relevo: { diferencaBaixadaC: number | null };
+};
+const I = ibgeRes as unknown as { meta: { municipios: number }; principal: { seca: { A: { d: number } } } };
 
 export function Rodape({ local }: { local: LocalView }) {
   const t = useT();
   const lang = useLang();
+  const n0 = (x: number) => fmtNum(x, 0, lang);
+  const n1 = (x: number) => fmtNum(x, 1, lang);
+  const pp = (x: number) => `${x > 0 ? "+" : ""}${fmtNum(x * 100, 1, lang)}%`;
+  const g = E.safra.principal.geada;
   return (
     <footer className="mt-8 border-t border-line pb-10 pt-6 text-sm">
       <Disclosure titulo={t("Fontes e limitações", "Sources and limitations")}>
@@ -47,8 +61,8 @@ export function Rodape({ local }: { local: LocalView }) {
           </Fonte>
           <Fonte>
             {t(
-              `Limitações: o NASA POWER é uma grade de ~50 km (elevação média da célula: ${local.elevacaoGradeM ?? "?"} m); a temperatura é do ar a 2 m, não da planta; fases das culturas e limiares são hipóteses a calibrar; o ajuste de baixada é uma hipótese (+1 °C) e o relevo SRTM ainda não classifica cada talhão; isto não é previsão do tempo e os níveis de risco ainda não foram confirmados contra a produtividade real (teste com o IBGE sem resultado conclusivo). Ferramenta de apoio: a decisão é do agricultor com o técnico.`,
-              `Limitations: NASA POWER is a ~50 km grid (mean cell elevation: ${local.elevacaoGradeM ?? "?"} m); temperature is 2 m air temperature, not at the plant; crop stages and thresholds are hypotheses to calibrate; the lowland adjustment is a hypothesis (+1 °C) and SRTM relief does not yet classify each plot; this is not a weather forecast, and the risk levels are not yet confirmed against real yields (the IBGE test was inconclusive). A support tool: the decision belongs to the farmer together with the technician.`,
+              `Limitações: o NASA POWER é uma grade de ~50 km (elevação média da célula: ${local.elevacaoGradeM ?? "?"} m) e a temperatura é do ar a 2 m, não da planta. Comparado a ${E.meta.estacoes} estações do INMET, concordou em ${n0(g.concordancia)}% das safras sobre geada na flor do milho (soja em 20/10), mas fica ${n1(E.diario.viesDiasFrios)} °C mais quente nos dias frios e perde parte das geadas fracas. Fases das culturas e limiares são hipóteses a calibrar. O ajuste de baixada usa +1 °C; o teste com estações mediu ${n1(Math.abs(E.relevo.diferencaBaixadaC ?? 0))} °C, e o relevo do talhão pode ser medido pelo GPS na aba Mais (Copernicus DEM 90 m). O histórico não é previsão do tempo: só o cartão “Posso plantar esta semana?” usa previsão, e ela também foi testada. Nos anos marcados com seca, o milho safrinha rendeu ${pp(I.principal.seca.A.d)} (${n0(I.meta.municipios)} municípios, IBGE), mas contando cada ano uma vez a diferença ainda não é conclusiva; para geada com soja em 20/10 não houve diferença. Detalhes em “Testes com dados reais”. Ferramenta de apoio: a decisão é do agricultor com o técnico.`,
+              `Limitations: NASA POWER is a ~50 km grid (mean cell elevation: ${local.elevacaoGradeM ?? "?"} m) and temperature is 2 m air temperature, not at the plant. Against ${E.meta.estacoes} INMET stations it agreed in ${n0(g.concordancia)}% of seasons on frost at corn flowering (soybeans on Oct 20), but runs ${n1(E.diario.viesDiasFrios)} °C warmer on cold days and misses some light frosts. Crop stages and thresholds are hypotheses to calibrate. The lowland adjustment uses +1 °C; the station test measured ${n1(Math.abs(E.relevo.diferencaBaixadaC ?? 0))} °C, and each plot’s terrain can be measured by GPS in the More tab (Copernicus DEM 90 m). The history is not a weather forecast: only the “Can I plant this week?” card uses a forecast, and it was tested too. In years flagged for drought, second-crop corn yielded ${pp(I.principal.seca.A.d)} (${n0(I.meta.municipios)} municipalities, IBGE), but counting each year once the difference is not yet conclusive; for frost with soybeans on Oct 20 there was no difference. Details in “Tests with real-world data”. A support tool: the decision belongs to the farmer together with the technician.`,
             )}
           </Fonte>
         </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Lang } from "@/lib/i18n";
 
-/** Lê a escolha de idioma (só no cliente): ?lang=pt|en, depois a escolha guardada. */
+/** Lê a escolha de idioma (só no cliente): ?lang=pt|en, depois a escolha guardada, depois o idioma do celular. */
 function lerPreferenciaDeIdioma(): Lang | "nenhuma" {
   try {
     const q = new URLSearchParams(window.location.search).get("lang");
@@ -13,10 +13,10 @@ function lerPreferenciaDeIdioma(): Lang | "nenhuma" {
   } catch {
     /* ignora: sem acesso ao armazenamento */
   }
-  return "nenhuma";
+  return navigator.language?.toLowerCase().startsWith("pt") ? "pt" : "nenhuma";
 }
 
-/** Idioma: escolha no menu > ?lang=pt|en > escolha anterior > inglês (padrão exigido pelo NASA Space Apps). */
+/** Idioma: escolha no app > ?lang=pt|en > escolha anterior > celular em português > inglês (padrão do NASA Space Apps). */
 export function useIdioma(): { lang: Lang; setLang: (l: Lang) => void } {
   const preferencia = useSyncExternalStore(() => () => {}, lerPreferenciaDeIdioma, () => "nenhuma" as const);
   const [escolhido, setEscolhido] = useState<Lang | null>(null);

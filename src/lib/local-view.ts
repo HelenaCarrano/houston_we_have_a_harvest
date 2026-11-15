@@ -145,9 +145,12 @@ export interface Relevo {
   amostra: { pontos: number; espacamentoM: number; raioM: number; minM: number; maxM: number; mediaM: number } | null;
 }
 
-/** Datas de plantio da soja oferecidas na tela (inclui as 5 datas padrão do motor). */
+/** Datas de plantio da soja oferecidas na tela, a cada ~5 dias de 15/09 a 15/12 (inclui as 5 datas padrão do motor). */
 function datasSoja(): string[] {
-  return ["09-20", "10-01", "10-10", "10-20", "10-30", "11-10", "11-20", "11-30"];
+  return [
+    "09-15", "09-20", "09-25", "10-01", "10-05", "10-10", "10-15", "10-20", "10-25", "10-30",
+    "11-05", "11-10", "11-15", "11-20", "11-25", "11-30", "12-05", "12-10", "12-15",
+  ];
 }
 
 const mmdd = (d: Date) => d.toISOString().slice(5, 10);

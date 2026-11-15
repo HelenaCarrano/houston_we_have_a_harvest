@@ -23,10 +23,13 @@ export function EscolherLugar({
   params,
   indiceEnso,
   onLocal,
+  gpsDestaque = false,
 }: {
   params: EngineParams;
   indiceEnso: IndiceEnso;
   onLocal: (l: LocalView) => void;
+  /** Mostra "Usar minha localização" como botão grande no topo (primeiro acesso). */
+  gpsDestaque?: boolean;
 }) {
   const t = useT();
   const [texto, setTexto] = useState("");
@@ -59,9 +62,7 @@ export function EscolherLugar({
     setBaixandoNome(nome);
     setAviso(null);
     try {
-      const id = idDoPonto(lat, lon);
-      const dados = await baixarPower({ id, nome, lat, lon }, { signal: sinal });
-      onLocal(buildLocalView({ id, nome, lat, lon, dados, relevo: null, params, indiceEnso, personalizado: true }));
+      onLocal(await carregarLocal({ nome, lat, lon }, params, indiceEnso, sinal));
       setAchados(null);
       setTexto("");
     } catch (e) {
@@ -129,7 +130,18 @@ export function EscolherLugar({
 
   return (
     <div className="rounded-xl border border-line bg-surface-2 p-3">
-      <p className="font-semibold">{t("Outro município do Sul do Brasil", "Another municipality in southern Brazil")}</p>
+      {gpsDestaque && (
+        <button
+          type="button"
+          onClick={usarGps}
+          disabled={ocupado !== null}
+          className="mb-3 flex min-h-14 w-full cursor-pointer items-center justify-center gap-2.5 rounded-full border-none bg-lavoura text-[17px] font-extrabold text-white disabled:opacity-60"
+        >
+          <LocateFixed className="size-6" aria-hidden="true" />
+          {t("Usar minha localização", "Use my location")}
+        </button>
+      )}
+      <p className="font-semibold">{gpsDestaque ? t("Ou busque pelo nome", "Or search by name") : t("Outro município do Sul do Brasil", "Another municipality in southern Brazil")}</p>
       <form onSubmit={buscar} className="mt-2 flex flex-wrap gap-2">
         <label className="sr-only" htmlFor="busca-municipio">
           {t("Nome do município", "Municipality name")}
@@ -148,10 +160,12 @@ export function EscolherLugar({
         <Button type="submit" disabled={ocupado !== null || texto.trim().length < 2}>
           {t("Buscar", "Search")}
         </Button>
-        <Button variant="secondary" onClick={usarGps} disabled={ocupado !== null}>
-          <LocateFixed className="size-5" aria-hidden="true" />
-          {t("Usar minha localização", "Use my location")}
-        </Button>
+        {!gpsDestaque && (
+          <Button variant="secondary" onClick={usarGps} disabled={ocupado !== null}>
+            <LocateFixed className="size-5" aria-hidden="true" />
+            {t("Usar minha localização", "Use my location")}
+          </Button>
+        )}
       </form>
 
       <div role="status" aria-live="polite" className="mt-2 text-sm">
@@ -198,10 +212,23 @@ export function EscolherLugar({
 
       <Fonte className="mt-2">
         {t(
-          "A busca usa o Open-Meteo (CC BY 4.0) e os dados vêm direto da NASA POWER, no seu navegador. Só o nome digitado (ou as coordenadas, se usar a localização) é enviado a esses serviços; nada é guardado.",
-          "The search uses Open-Meteo (CC BY 4.0) and the data come straight from NASA POWER, in your browser. Only the typed name (or the coordinates, if you use your location) is sent to those services; nothing is stored.",
+          "A busca usa o Open-Meteo (CC BY 4.0) e os dados vêm direto da NASA POWER, no seu navegador. Só o nome digitado (ou as coordenadas, se usar a localização) é enviado a esses serviços. A cidade escolhida fica guardada só neste aparelho.",
+          "The search uses Open-Meteo (CC BY 4.0) and the data come straight from NASA POWER, in your browser. Only the typed name (or the coordinates, if you use your location) is sent to those services. The chosen town is stored only on this device.",
         )}
       </Fonte>
     </div>
   );
+}
+
+/** Baixa os 45 anos da NASA POWER para um ponto e calcula a tela (usado na busca e ao reabrir o app com uma cidade guardada). */
+export async function carregarLocal(
+  lugar: { nome: string; lat: number; lon: number },
+  params: EngineParams,
+  indiceEnso: IndiceEnso,
+  signal?: AbortSignal,
+): Promise<LocalView> {
+  const { nome, lat, lon } = lugar;
+  const id = idDoPonto(lat, lon);
+  const dados = await baixarPower({ id, nome, lat, lon }, { signal });
+  return buildLocalView({ id, nome, lat, lon, dados, relevo: null, params, indiceEnso, personalizado: true });
 }

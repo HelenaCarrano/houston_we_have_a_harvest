@@ -199,8 +199,10 @@ export function montarResumo(args: {
   baixada: boolean;
   modelo: ModeloRotacoes;
   lang: Lang;
+  /** Link que abre o app já com esta cidade e data. */
+  link?: string;
 }): string {
-  const { nomeLocal, d, baixada, modelo, lang } = args;
+  const { nomeLocal, d, baixada, modelo, lang, link } = args;
   const t = (pt: string, en: string) => (lang === "en" ? en : pt);
   const geada = baixada ? d.geadaBaixada : d.geada;
   const txt = (r: Rotacao) => (lang === "en" ? r.en : r.pt);
@@ -219,6 +221,7 @@ export function montarResumo(args: {
       "Dados: NASA POWER, 1981–2026. Apoio à decisão, a validar com técnico.",
       "Data: NASA POWER, 1981–2026. Decision support, to be validated with an agronomist.",
     ),
+    ...(link ? ["", `${t("Veja no app:", "See it in the app:")} ${link}`] : []),
   ];
   return linhas.join("\n");
 }
@@ -269,4 +272,13 @@ export function baixarIcs(eventos: EventoAgenda[], nome: string) {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Link que abre o Google Agenda com o evento preenchido (no Android abre o app de agenda). */
+export function linkGoogleAgenda(e: EventoAgenda): string {
+  const fim = new Date((e.fim ?? e.inicio).getTime());
+  fim.setDate(fim.getDate() + 1);
+  const q = new URLSearchParams({ action: "TEMPLATE", text: e.titulo, dates: `${ymd(e.inicio)}/${ymd(fim)}` });
+  if (e.descricao) q.set("details", e.descricao);
+  return `https://calendar.google.com/calendar/render?${q.toString().replace(/\+/g, "%20")}`;
 }

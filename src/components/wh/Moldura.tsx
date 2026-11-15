@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Broto, CeuAnimado, IcAgenda, IcMenu, IcVoltar, IcWhatsApp, Logo } from "@/components/wh/Arte";
 import { useT } from "@/lib/i18n";
 
@@ -55,17 +55,25 @@ export function CabecalhoInterno({
   titulo: string;
   subtitulo: string;
   etiqueta?: string;
-  onVoltar: () => void;
+  /** Sem `onVoltar` (telas das abas), mostra a marca no lugar do botão de voltar. */
+  onVoltar?: () => void;
 }) {
   const t = useT();
   return (
     <header className="flex flex-col gap-3.5 bg-ceu px-5 pb-10 pt-5">
-      <div className="flex items-center justify-between">
-        <button type="button" aria-label={t("Voltar", "Back")} onClick={onVoltar} className={BTN_REDONDO}>
-          <IcVoltar />
-        </button>
+      <div className="flex min-h-11 items-center justify-between">
+        {onVoltar ? (
+          <button type="button" aria-label={t("Voltar", "Back")} onClick={onVoltar} className={BTN_REDONDO}>
+            <IcVoltar />
+          </button>
+        ) : (
+          <span className="flex items-center gap-2">
+            <Logo size={30} />
+            <span className="text-[17px] font-black tracking-[-0.03em] text-claro">weharvest</span>
+          </span>
+        )}
         {etiqueta && <span className="font-mono text-xs tracking-[0.14em] text-broto">{etiqueta}</span>}
-        <span className="w-11" />
+        {onVoltar && <span className="w-11" />}
       </div>
       <h1 className="m-0 text-[27px] font-black leading-[1.1] tracking-[-0.02em] text-claro">{titulo}</h1>
       <p className={`m-0 ${etiqueta ? "text-sm" : "text-[15px]"} text-claro-2`}>{subtitulo}</p>
@@ -73,29 +81,151 @@ export function CabecalhoInterno({
   );
 }
 
-/** Barra fixa no rodapé: WhatsApp e Agenda. */
-export function BarraAcoes({ hrefWhatsApp, onAgenda }: { hrefWhatsApp: string; onAgenda: () => void }) {
+/** Botões WhatsApp e Agenda (no fim das telas). */
+export function BotoesCompartilhar({ hrefWhatsApp, onAgenda }: { hrefWhatsApp: string; onAgenda?: () => void }) {
   const t = useT();
   return (
-    <div className="fixed bottom-0 left-1/2 z-20 grid w-full max-w-[440px] -translate-x-1/2 grid-cols-[1fr_auto] gap-2.5 border-t border-borda bg-white/95 px-4 pb-[22px] pt-3 backdrop-blur">
+    <div className={`grid gap-2.5 ${onAgenda ? "grid-cols-[1fr_auto]" : "grid-cols-1"}`}>
       <a
         href={hrefWhatsApp}
         target="_blank"
         rel="noreferrer"
-        className="flex min-h-14 items-center justify-center gap-2.5 rounded-full bg-whatsapp text-base font-extrabold text-white shadow-[0_6px_16px_rgba(37,165,95,.35)]"
+        className="flex min-h-14 items-center justify-center gap-2.5 rounded-full bg-whatsapp text-base font-extrabold text-white no-underline shadow-[0_6px_16px_rgba(37,165,95,.35)]"
       >
         <IcWhatsApp />
-        WhatsApp
+        {t("Enviar no WhatsApp", "Send on WhatsApp")}
       </a>
-      <button
-        type="button"
-        onClick={onAgenda}
-        className="flex min-h-14 cursor-pointer items-center gap-2 rounded-full bg-campo px-4 text-[15px] font-extrabold text-texto"
-      >
-        <IcAgenda />
-        {t("Agenda", "Calendar")}
-      </button>
+      {onAgenda && (
+        <button
+          type="button"
+          onClick={onAgenda}
+          className="flex min-h-14 cursor-pointer items-center gap-2 rounded-full border-none bg-white px-4 text-[15px] font-extrabold text-texto"
+        >
+          <IcAgenda />
+          {t("Agenda", "Calendar")}
+        </button>
+      )}
     </div>
+  );
+}
+
+type EventoInstalar = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
+
+/** "Instalar o app": no Android usa o convite do navegador; no iPhone explica o caminho; some quando já está instalado. */
+export function InstalarApp() {
+  const t = useT();
+  const [convite, setConvite] = useState<EventoInstalar | null>(null);
+  const [estado, setEstado] = useState<"android" | "iphone" | "instalado" | "outro">("outro");
+  useEffect(() => {
+    const instalado = window.matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone === true;
+    const iphone = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const quando = (e: Event) => {
+      e.preventDefault();
+      setConvite(e as EventoInstalar);
+      setEstado("android");
+    };
+    const feito = () => setEstado("instalado");
+    window.addEventListener("beforeinstallprompt", quando);
+    window.addEventListener("appinstalled", feito);
+    // estado inicial lido do navegador depois de montar
+    queueMicrotask(() => setEstado((s) => (instalado ? "instalado" : iphone ? "iphone" : s)));
+    return () => {
+      window.removeEventListener("beforeinstallprompt", quando);
+      window.removeEventListener("appinstalled", feito);
+    };
+  }, []);
+  if (estado === "instalado" || estado === "outro") return null;
+  return (
+    <section className="flex items-center gap-3 rounded-3xl bg-ceu p-4 text-claro">
+      <Logo size={44} />
+      <div className="flex flex-1 flex-col gap-0.5">
+        <span className="text-[17px] font-extrabold">{t("Instale o app no celular", "Install the app on your phone")}</span>
+        <span className="text-sm text-claro-2">
+          {estado === "iphone"
+            ? t("Toque em Compartilhar e depois em “Adicionar à Tela de Início”.", "Tap Share, then “Add to Home Screen”.")
+            : t("Abre direto da tela inicial, mesmo com sinal fraco.", "Opens straight from your home screen, even with weak signal.")}
+        </span>
+      </div>
+      {estado === "android" && convite && (
+        <button
+          type="button"
+          onClick={async () => {
+            await convite.prompt();
+            const r = await convite.userChoice;
+            if (r.outcome === "accepted") setEstado("instalado");
+            setConvite(null);
+          }}
+          className="min-h-11 flex-none cursor-pointer rounded-full border-none bg-broto px-4 text-[15px] font-extrabold text-ceu"
+        >
+          {t("Instalar", "Install")}
+        </button>
+      )}
+    </section>
+  );
+}
+
+export type Aba = "risco" | "calendario" | "depois" | "mais";
+
+function IconeAba({ aba }: { aba: Aba }) {
+  const p = { width: 24, height: 24, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2.2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
+  if (aba === "risco")
+    return (
+      <svg {...p}>
+        <path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9" />
+      </svg>
+    );
+  if (aba === "calendario")
+    return (
+      <svg {...p}>
+        <rect x="3" y="5" width="18" height="16" rx="3" />
+        <path d="M3 10h18M8 3v4M16 3v4" />
+      </svg>
+    );
+  if (aba === "depois")
+    return (
+      <svg {...p}>
+        <path d="M12 21V6M12 9l-4-3M12 9l4-3M12 14l-4-3M12 14l4-3M12 19l-4-3M12 19l4-3" />
+      </svg>
+    );
+  return (
+    <svg {...p}>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  );
+}
+
+/** Navegação do app: abas fixas no rodapé. */
+export function BarraAbas({ aba, onAba }: { aba: Aba; onAba: (a: Aba) => void }) {
+  const t = useT();
+  const itens: [Aba, string][] = [
+    ["risco", t("Início", "Home")],
+    ["calendario", t("Calendário", "Calendar")],
+    ["depois", t("Rotação", "Rotation")],
+    ["mais", t("Mais", "More")],
+  ];
+  return (
+    <nav
+      aria-label={t("Seções do app", "App sections")}
+      className="fixed bottom-0 left-1/2 z-20 grid w-full max-w-[440px] -translate-x-1/2 grid-cols-4 gap-1 border-t border-borda bg-white/95 px-2 pb-[max(14px,env(safe-area-inset-bottom))] pt-2 backdrop-blur"
+    >
+      {itens.map(([id, rotulo]) => {
+        const ativa = aba === id;
+        return (
+          <button
+            key={id}
+            type="button"
+            aria-current={ativa ? "page" : undefined}
+            onClick={() => onAba(id)}
+            className={`flex min-h-14 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-2xl border-none text-[13px] font-extrabold ${
+              ativa ? "bg-[#E3F2E1] text-lavoura-escura" : "bg-transparent text-texto-2"
+            }`}
+          >
+            <IconeAba aba={id} />
+            {rotulo}
+          </button>
+        );
+      })}
+    </nav>
   );
 }
 

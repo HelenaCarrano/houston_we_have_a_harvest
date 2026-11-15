@@ -1,0 +1,118 @@
+{
+ "meta": {
+  "fonte": "Previsões publicadas do Open-Meteo (API previous runs, modelo padrão) × estações automáticas do INMET (cópia NOAA/NCEI GSOD)",
+  "periodo": [
+   "2024-01-01",
+   "2026-11-12"
+  ],
+  "estacoes": 0,
+  "limiteGeadaC": 3,
+  "chuvaForteMm": 50
+ },
+ "geadaPorAntecedencia": [
+  {
+   "dias": 1,
+   "n": 0,
+   "ambos": 0,
+   "soPrevisao": 0,
+   "soEstacao": 0,
+   "nenhum": 0,
+   "acerto": null,
+   "alarmeFalso": null,
+   "concordancia": null,
+   "viesMinimaC": null
+  },
+  {
+   "dias": 2,
+   "n": 0,
+   "ambos": 0,
+   "soPrevisao": 0,
+   "soEstacao": 0,
+   "nenhum": 0,
+   "acerto": null,
+   "alarmeFalso": null,
+   "concordancia": null,
+   "viesMinimaC": null
+  },
+  {
+   "dias": 3,
+   "n": 0,
+   "ambos": 0,
+   "soPrevisao": 0,
+   "soEstacao": 0,
+   "nenhum": 0,
+   "acerto": null,
+   "alarmeFalso": null,
+   "concordancia": null,
+   "viesMinimaC": null
+  },
+  {
+   "dias": 4,
+   "n": 0,
+   "ambos": 0,
+   "soPrevisao": 0,
+   "soEstacao": 0,
+   "nenhum": 0,
+   "acerto": null,
+   "alarmeFalso": null,
+   "concordancia": null,
+   "viesMinimaC": null
+  },
+  {
+   "dias": 5,
+   "n": 0,
+   "ambos": 0,
+   "soPrevisao": 0,
+   "soEstacao": 0,
+   "nenhum": 0,
+   "acerto": null,
+   "alarmeFalso": null,
+   "concordancia": null,
+   "viesMinimaC": null
+  },
+  {
+   "dias": 6,
+   "n": 0,
+   "ambos": 0,
+   "soPrevisao": 0,
+   "soEstacao": 0,
+   "nenhum": 0,
+   "acerto": null,
+   "alarmeFalso": null,
+   "concordancia": null,
+   "viesMinimaC": null
+  },
+  {
+   "dias": 7,
+   "n": 0,
+   "ambos": 0,
+   "soPrevisao": 0,
+   "soEstacao": 0,
+   "nenhum": 0,
+   "acerto": null,
+   "alarmeFalso": null,
+   "concordancia": null,
+   "viesMinimaC": null
+  }
+ ],
+ "regraDaSemana": {
+  "n": 0,
+  "ambos": 0,
+  "soPrevisao": 0,
+  "soEstacao": 0,
+  "nenhum": 0,
+  "acerto": null,
+  "alarmeFalso": null,
+  "concordancia": null
+ },
+ "geadaDaSemana": {
+  "n": 0,
+  "ambos": 0,
+  "soPrevisao": 0,
+  "soEstacao": 0,
+  "nenhum": 0,
+  "acerto": null,
+  "alarmeFalso": null,
+  "concordancia": null
+ }
+}

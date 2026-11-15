@@ -5,7 +5,6 @@ import type { EngineParams } from "@/lib/engine/index.ts";
 import type { FaseEnso, FiltroEnso } from "@/lib/engine/enso.ts";
 import { Segmented } from "@/components/ui/Segmented";
 import { Evidencias } from "@/components/gt/Evidencias";
-import { Previsao } from "@/components/gt/Previsao";
 import { Rodape } from "@/components/gt/Rodape";
 import { AMOSTRA_MINIMA, FILTROS_ENSO } from "@/components/gt/format";
 import { TRIMESTRE_MESES, fmtNum, useLang, useT } from "@/lib/i18n";
@@ -40,11 +39,11 @@ export function Detalhes({
   const ult = enso.ultimo;
   const ultFase = ult?.fase === "el-nino" ? "El Niño" : ult?.fase === "la-nina" ? "La Niña" : null;
   return (
-    <details id="detalhes" className="rounded-[18px] bg-white px-4" open={fase !== "todos" ? true : undefined}>
-      <summary className="flex min-h-[52px] cursor-pointer items-center text-[15px] font-bold">
+    <section id="detalhes" aria-labelledby="wh-detalhes" className="rounded-3xl bg-white px-4 pt-4">
+      <h2 id="wh-detalhes" className="m-0 text-lg font-black tracking-normal">
         {t("Detalhes técnicos (El Niño, fontes, método)", "Technical details (El Niño, sources, method)")}
-      </summary>
-      <div className="flex flex-col gap-4 pb-4">
+      </h2>
+      <div className="flex flex-col gap-4 pb-4 pt-1">
         <p className="m-0 text-[13px] leading-[1.5] text-texto-2">
           {t(
             "Filtro por anos de El Niño / La Niña, dados ano a ano, relevo, checagem com o IBGE, glossário e limitações.",
@@ -92,18 +91,9 @@ export function Detalhes({
           )}
         </section>
 
-        <Previsao
-          key={local.id}
-          nome={local.nome}
-          lat={local.lat}
-          lon={local.lon}
-          baixada={baixada}
-          limiteGeadaC={params.limiteGeadaC}
-          ajusteBaixadaC={params.ajusteBaixadaC}
-        />
         <Evidencias local={local} d={d} dEf={dEf} baixada={baixada} filtroTexto={filtroTexto} params={params} backtest={backtest} />
         <Rodape local={local} />
       </div>
-    </details>
+    </section>
   );
 }

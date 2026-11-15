@@ -190,7 +190,7 @@ export function TelaRotacoes({
   onFoco: (f: Foco) => void;
   restricoes: Restricao[];
   onRestricao: (r: Restricao) => void;
-  onVoltar: () => void;
+  onVoltar?: () => void;
 }) {
   const t = useT();
   const lang = useLang();

@@ -10,7 +10,7 @@
 
 ## English
 
-> **App language:** English by default (required by NASA Space Apps) and Portuguese with one tap on **Português** in the menu (☰, top right). Every screen, rule and message exists in both languages. The choice is remembered, and a link with `?lang=pt` opens the app directly in Portuguese (for farmers).
+> **App language:** English by default (required by NASA Space Apps); a phone set to Portuguese opens it in Portuguese. Either language is one tap away on the first screen and in the **More** tab. Every screen, rule and message exists in both languages. The choice is remembered, and `?lang=pt` or `?lang=en` in the link forces a language.
 
 ### What it is
 
@@ -46,7 +46,7 @@ npm run data:ibge  # re-download IBGE yield data, then: npm run backtest
 | **NASA POWER Daily API** (community=AG) | Daily T2M_MIN, T2M_MAX, PRECTOTCORR, GWETROOT, GWETTOP, 1981-01-01 to the latest day available, for Pato Branco (-26.2295, -52.6716), Cascavel (-24.9578, -53.4595) and Francisco Beltrão (-26.0811, -53.0558) | https://power.larc.nasa.gov/docs/services/api/temporal/daily/ |
 | **NASA SRTM 30 m** (SRTM v3, via OpenTopoData, dataset `srtm30m`) | Elevation at each municipality point and relief within 1.5 km (49 points every 500 m) | https://www.opentopodata.org/datasets/srtm/ |
 | **NOAA CPC · RONI** (Relative Oceanic Niño Index); the older ONI (ERSST v5) is kept only for comparison | El Niño / La Niña phase of each season (optional "See only El Niño or La Niña years" link inside "Understand the numbers") | https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/ |
-| **Open-Meteo** (CC BY 4.0, non-commercial use) | 16-day forecast for the "can I plant now?" check, read in the browser only when the user opens that section | https://open-meteo.com/ |
+| **Open-Meteo** (CC BY 4.0, non-commercial use) | 16-day forecast for the "can I plant this week?" check and the week view in the calendar, read in the browser (only the municipality coordinates are sent) | https://open-meteo.com/ |
 | **Deral via Revista Cultivar**, Apr 9 and May 19, 2026 | Field reports used only for the "2026 proof" card | https://revistacultivar.com.br/noticias/pr-safra-2025-26-estiagem-e-calor-afetam-feijao-e-milho · https://revistacultivar.com.br/noticias/pr-safra-2025-26-milho-e-feijao-sofrem-impacto-das-geadas |
 | **IBGE SIDRA · Municipal Agricultural Survey (PAM), table 839** | Second-crop corn yield and harvested area (Cascavel, Francisco Beltrão, Pato Branco) for the reality check | https://sidra.ibge.gov.br/tabela/839 |
 | **ZARC (Brazilian Ministry of Agriculture)** | Reference for official planting windows; **not yet integrated** | https://dados.agricultura.gov.br/dataset/6d3d141c-885e-41a4-ab7f-dc8ff323b96f |
@@ -60,7 +60,7 @@ Code in `src/lib/engine/` (pure functions with tests); parameters in `src/lib/en
 1. **Calendar:** soybean harvest = planting + 120 days; corn planting = harvest + 5 days; **corn critical stage** = 55 to 100 days after corn planting.
 2. **Likely frost:** a season counts if the 2 m minimum air temperature (T2M_MIN) was **≤ 3 °C** on any day of the critical stage; **strong frost** ≤ 1 °C. Why 3 °C: screen-height and grass-level temperatures differ by 3–6 °C, so 3 °C at 2 m ≈ frost on the grass ([Embrapa Trigo](https://www.alice.cnptia.embrapa.br/alice/bitstream/doc/1084446/1/ID442832017CBAGRO20MM398.pdf), [Embrapa agroclimatic bulletin](https://www.infoteca.cnptia.embrapa.br/infoteca/bitstream/doc/1139138/1/BolAgroClimatico-dez21.pdf), [Semina/UEL](https://ojs.uel.br/revistas/uel/index.php/semagrarias/article/download/30322/24555/166627)).
 3. **Drought:** a season counts when, in the critical stage, **either** signal holds: a dry spell of **15+ consecutive days with rain < 1 mm**, **or** mean root-zone soil wetness (GWETROOT) **below the 20th percentile** of the same series for the same calendar dates. The screen shows both signals separately and the years with **both** (the most severe). **Deviation from the methodology:** the document asked for "and"; we use "or" because the "and" rule did not flag the documented 2026 drought. Because the soil signal is relative, about 1 in 5 years always shows up as dry soil; the rule should be calibrated with yield statistics (IBGE), which is future work.
-4. **Lowland:** the frost limit rises by **+1 °C** (3 → 4 °C), because lowlands pool cold air. A hypothesis to calibrate. SRTM relief is shown but does not yet classify each plot as lowland.
+4. **Lowland:** the frost limit rises by **+1 °C** (3 → 4 °C), because lowlands pool cold air. A hypothesis to calibrate: the station test below measured about 0.4 °C. Each plot can now be classified by GPS in the app (point 10 m or more below the mean terrain within 1.5 km, Copernicus DEM 90 m), and the SRTM relief of the 3 demo towns is still shown.
 5. **Frequency:** event seasons ÷ evaluated seasons, shown as "X in 10" and "N of 45 seasons". **Level:** Low (up to 1 in 10), Medium (2–3), High (4 or more). **Confidence:** high (≥ 12 seasons), medium (7–11), low (< 7).
 6. **Rotations:** each rotation shows levels per criterion (frost, drought, erosion), with no hidden single score. In **"For your field"** the farmer chooses what matters most and what they cannot do; this changes only the **order** and the labels (a qualitative 1–3 sum), never the risk numbers. A rotation the farmer cannot do moves to the end with the reason; it is not removed. A "Copy summary" button makes a short text to share.
 7. **Wheat:** the risk of **frost at heading** (70–110 days after sowing on May 15, i.e. Jul 24 to Sep 2) is computed from the same NASA POWER series and the same limits as corn; it does **not depend on the soybean date**. The screen also shows the result for sowing on Apr 30, May 30 and Jun 15, because it depends strongly on that assumption (Pato Branco: 36, 33, 30 and 19 of 46 seasons for Apr 30, May 15, May 30 and Jun 15). Wheat drought and the El Niño filter are **not** applied to wheat, and wheat stays neutral in the tie-break of the rotation order.
@@ -94,7 +94,7 @@ For each rotation and planting date the app builds the 365-day line from one soy
 
 The app reads the 16-day Open-Meteo forecast in the browser (only the municipality's public coordinates are sent; if the service fails, the page keeps working). Rules in `src/lib/engine/previsao.ts`, with tests: minimum air temperature ≤ 3 °C (4 °C in lowlands) or rain ≥ 50 mm in the next 7 days = **"Do not plant this week"**; less than 10 mm of rain in 7 days, or the same events after the first week = **caution**. These are **hypotheses to validate with agronomy**; a forecast is not a guarantee and uncertainty grows after about 7 days.
 
-### Reality check with IBGE yield data (inconclusive)
+### Reality check with IBGE yield data (first version, 3 municipalities: inconclusive — see the larger test in Real-world tests)
 
 We tested whether the seasons the app flags had lower **second-crop corn yields**, using IBGE's Municipal Agricultural Survey (PAM, table 839, "Milho 2ª safra"; `scripts/fetch_ibge_pam.mjs`). Rules fixed **before** looking at the result (`scripts/backtest_ibge.mjs`, `npm run backtest`): main soybean date Oct 20; only years with at least 500 ha harvested; yield anomaly = (yield − municipal linear trend) ÷ trend, to remove the technology trend; difference of mean anomaly between flagged and not flagged years, with a permutation p-value inside each municipality.
 
@@ -102,6 +102,17 @@ We tested whether the seasons the app flags had lower **second-crop corn yields*
 - **What we conclude:** we could **not** confirm that flagged years produced less. The app's levels describe how often the weather event occurs in the critical stage; they are **not** a predicted yield loss.
 - **Why the test may miss it:** municipal yields are estimates (many round values; Cascavel reports the same harvested area, 58,000 ha, in 2021–2024); the NASA grid is ~50 km; real planting dates vary between farms; 61% of the years are flagged (little contrast); few years. Absence of evidence here is not evidence of absence.
 - Tests (`src/lib/backtest.test.ts`) re-compute the yield anomalies and the flags independently of the script.
+
+### Real-world tests
+
+<!-- testes:en -->
+We ran four tests against real measured data. Each test’s rules were written at the top of its script **before** running it; anything changed afterwards is marked. Results are shown in the app (More tab › Tests with real-world data) as they came out. Scripts: `scripts/validacao/`; to redo: `node scripts/validacao/fetch_estacoes.mjs`, `fetch_ibge_sul.mjs`, `validar_estacoes.mjs`, `validar_ibge_sul.mjs`, `validar_previsao.mjs`.
+
+- **1. Satellite × stations (frost).** 113 INMET automatic stations in southern Brazil (NOAA/NCEI Global Summary of the Day copy), 2016–2026, 307,517 days. NASA POWER’s minimum tracks the measured one (correlation 0.90, mean error 1.8 °C), but on cold days it runs 0.7 °C warmer. In the corn flowering window with soybeans on Oct 20, app and station agreed in 84% of 744 seasons (kappa 0.51): the app caught 56% of seasons with measured frost, and 33% of its flags did not show up at the station. Across all 19 planting dates: caught 76%, false alarms 15% (kappa 0.70). **Drought:** only 28 seasons had complete station rain; too few to conclude.
+- **2. Lowland × terrain.** For 103 stations, we compared how much colder the station is than NASA on cold nights (after altitude) with its terrain position (point − mean terrain within 1.5 km, Copernicus DEM 90 m). Each 10 m below the surroundings: 0.19 °C colder (correlation 0.31, p = 0.003). The 17 lowland stations (≥ 10 m below the surroundings) were 0.4 °C colder than the other 86. **Terrain matters, but the app’s +1 °C looks overstated** (measured: ~0.4 °C). The app now measures each plot’s terrain by GPS (More tab) and turns "lowland" on with the same rule.
+- **3. Flagged years × yield (IBGE).** 269 municipalities in PR and SC, 5,652 municipality-years (PAM table 839, second crop ≥ 500 ha, ≥ 12 years), anomaly against each municipality’s trend. Soybeans on Oct 20: in years flagged for **drought** corn yielded **-7.5%** (p < 0.001); frost or drought -7.7%; **frost** -1.2% (p = 0.30, no difference — at that date it is rare in Paraná). With soybeans on Nov 20 frost hits flowering more often and flagged years yielded -12.4%. Caveats: comparing municipalities within the same year, the difference disappears (drought -0.4%, p = 0.37); and drought hits the whole region at once, so municipalities are not independent. In an extra check, **added after seeing the result**, counting each year once (23 seasons), the direction holds (-11.5% in a fully flagged year) but could be chance (p = 0.18). Conclusion: years the app flags for drought tend to yield less, but this is not yet firmly established; the levels measure weather frequency, not predicted loss.
+- **4. Crop insurance (PSR/MAPA)** was left out: the ministry portal does not open from the development environment. The test is designed (flagged years × frost and drought claims on corn, by municipality) and will run once `dados_abertos_psr_2016a2024csv.csv` is downloaded from https://dados.agricultura.gov.br/dataset/sisser3.
+<!-- /testes:en -->
 
 ### Hypotheses and what is estimated
 
@@ -115,12 +126,13 @@ We tested whether the seasons the app flags had lower **second-crop corn yields*
 - NASA POWER is a **~50 km grid**: it does not represent the microclimate of a single field.
 - Temperature is **2 m air temperature**, not surface temperature. Frost on grass or leaves can occur with the 2 m air above 0 °C; hence the 3 °C limit.
 - Crop cycles are **examples**; cultivar, management and region change everything.
-- **Not a weather forecast.** It is historical frequency.
+- **Not a weather forecast.** It is historical frequency; only the "Can I plant this week?" card uses a forecast, and that card was tested against stations (see Real-world tests).
+- NASA POWER runs about 0.7 °C warmer than stations on cold days and misses some light frosts (Real-world tests, test 1).
 - Wheat drought is not computed, and the wheat frost result depends strongly on the assumed sowing date.
 - ENSO classification uses NOAA's official table but with a simplified rule, and samples per phase are short.
-- The risk levels are **not yet confirmed** against real yields: the IBGE test above was inconclusive.
+- Yield link: in 269 municipalities, years flagged for drought yielded about 7.5% less, but counting each year once the difference is not yet conclusive; frost with soybeans on Oct 20 showed no difference (Real-world tests, test 3).
 - For municipalities chosen by the user, SRTM relief and the 2026 proof are not available, and results rest on the same hypotheses (check ZARC); outside southern Brazil the app does not compute.
-- Not built yet: local soil data (for example SoilGrids), vegetation stress (NASA MODIS NDVI), an interactive map, ZARC integration and a stronger validation against yield statistics (IBGE test inconclusive so far).
+- Not built yet: local soil data (for example SoilGrids), vegetation stress (NASA MODIS NDVI), an interactive map, ZARC integration and the crop-insurance test (needs the MAPA PSR file).
 
 ### Technology
 
@@ -130,7 +142,7 @@ Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 
 
 ## Português
 
-> **Idioma do app:** inglês por padrão (exigência do NASA Space Apps) e português com um toque em **Português** no menu (☰, no canto superior direito). Todas as telas, regras e mensagens existem nos dois idiomas. A escolha fica guardada, e um link com `?lang=pt` abre o app direto em português (para os agricultores).
+> **Idioma do app:** inglês por padrão (exigência do NASA Space Apps); celular em português abre em português. A troca fica a um toque na primeira tela e na aba **Mais**. Todas as telas, regras e mensagens existem nos dois idiomas. A escolha fica guardada, e `?lang=pt` ou `?lang=en` no link força um idioma.
 
 ### O que é
 
@@ -177,7 +189,7 @@ Regras do documento do time **"GroundTruth — Metodologia e validação"**. Có
 1. **Cronograma:** colheita da soja = plantio + 120 dias; plantio do milho = colheita + 5 dias; **fase crítica do milho** (pendoamento e enchimento de grãos) = 55 a 100 dias após o plantio do milho. Na tela, em português, a fase crítica aparece como **"floração e enchimento"**, com as datas, e há um glossário de uma linha por palavra ("O que significam essas palavras?").
 2. **Geada provável:** um ano conta se a mínima do ar a 2 m (T2M_MIN) ficou **≤ 3 °C** em algum dia da fase crítica. **Geada forte:** ≤ 1 °C. Por que 3 °C: a diferença entre abrigo e relva é de 3–6 °C; 3 °C no abrigo ≈ −1 °C na relva ([Embrapa Trigo](https://www.alice.cnptia.embrapa.br/alice/bitstream/doc/1084446/1/ID442832017CBAGRO20MM398.pdf), [Embrapa, boletim agroclimático](https://www.infoteca.cnptia.embrapa.br/infoteca/bitstream/doc/1139138/1/BolAgroClimatico-dez21.pdf), [Semina/UEL](https://ojs.uel.br/revistas/uel/index.php/semagrarias/article/download/30322/24555/166627)).
 3. **Seca:** um ano conta quando, na fase crítica, vale **um dos dois** sinais: veranico de **15+ dias seguidos com chuva < 1 mm** **ou** umidade média do solo na raiz (GWETROOT) **abaixo do percentil 20** da própria série para as mesmas datas do ano. A tela mostra os dois sinais separados e os anos com **os dois juntos** (casos mais graves). **Desvio da Metodologia:** o documento pedia "e"; trocamos por "ou" porque a regra "e" não marcou a estiagem de 2026 registrada pelo Deral. Como o sinal de solo é relativo, cerca de 1 em cada 5 anos sempre aparece como solo seco; a regra deve ser calibrada com dados de produtividade (o teste com o IBGE PAM, abaixo, não foi conclusivo).
-4. **Baixada:** o limite de geada sobe **+1 °C** (de 3 para 4 °C), porque baixadas acumulam ar frio. Hipótese a calibrar. O relevo SRTM (altitude do ponto e desnível num raio de 1,5 km) é mostrado na tela, mas ainda não classifica cada talhão como baixada.
+4. **Baixada:** o limite de geada sobe **+1 °C** (de 3 para 4 °C), porque baixadas acumulam ar frio. Hipótese a calibrar. O teste com estações (abaixo) mediu cerca de 0,4 °C. Agora cada talhão pode ser classificado pelo GPS no app (ponto 10 m ou mais abaixo da média do terreno em 1,5 km, Copernicus DEM 90 m); o relevo SRTM das 3 cidades de demonstração continua na tela.
 5. **Frequência:** anos com evento ÷ anos avaliados, mostrada como "X/10 anos" e "N de 45 safras". **Nível:** Baixo (até 1 em 10), Médio (2 ou 3), Alto (4 ou mais).
 6. **Confiança:** alta (≥ 12 anos), média (7–11), baixa (< 7). A Metodologia também pede concordância com Deral/IBGE para "alta"; o teste com o IBGE (abaixo) não foi conclusivo.
 7. **Rotações:** cada rotação mostra níveis por critério (geada, seca, erosão), sem nota única escondida. O painel **Seu campo** pergunta o que pesa mais (renda, proteger solo e água, equilíbrio) e o que o agricultor não consegue fazer (trigo, braquiária, pouca água). Isso muda só a **ordem** e as etiquetas, por uma soma qualitativa de 1 a 3; a rotação inaplicável vai para o fim com o motivo, sem sumir. Há um botão para copiar o resumo. **Trigo:** o risco de **geada no espigamento** (70–110 dias após a semeadura em 15/05, isto é, 24/jul a 02/set) é calculado com a mesma série da NASA POWER e os mesmos limites do milho; vale para qualquer data da soja. A tela mostra também o resultado para semeadura em 30/04, 30/05 e 15/06, porque ele depende muito dessa hipótese (em Pato Branco: 36, 33, 30 e 19 de 46 safras). A seca do trigo e o filtro de El Niño **não** são aplicados ao trigo.
@@ -212,7 +224,7 @@ Para cada rotação e data de plantio o app monta a linha de 365 dias da soja at
 
 O app lê a previsão de 16 dias da Open-Meteo no navegador (só as coordenadas públicas do município são enviadas; se o serviço falhar, a página continua funcionando). Regras em `src/lib/engine/previsao.ts`, com testes: mínima do ar ≤ 3 °C (4 °C em baixada) ou chuva ≥ 50 mm nos próximos 7 dias = **"Não plante esta semana"**; menos de 10 mm de chuva em 7 dias, ou os mesmos eventos depois da primeira semana = **atenção**. São **hipóteses a validar com agronomia**; previsão não é garantia e a incerteza cresce depois de ~7 dias.
 
-### Teste com produtividade do IBGE (sem resultado conclusivo)
+### Teste com produtividade do IBGE (primeira versão, 3 municípios: sem resultado conclusivo — veja o teste maior em Testes com dados reais)
 
 Testamos se as safras marcadas pelo app tiveram **produtividade menor do milho 2ª safra**, com a Pesquisa Agrícola Municipal do IBGE (PAM, tabela 839, "Milho 2ª safra"; `scripts/fetch_ibge_pam.mjs`). Regras fixadas **antes** de ver o resultado (`scripts/backtest_ibge.mjs`, `npm run backtest`): data principal da soja 20/10; só anos com pelo menos 500 ha colhidos; anomalia = (rendimento − tendência linear do município) ÷ tendência, para tirar o ganho de tecnologia; diferença da anomalia média entre anos marcados e não marcados, com p-valor por permutação dentro de cada município.
 
@@ -220,6 +232,17 @@ Testamos se as safras marcadas pelo app tiveram **produtividade menor do milho 2
 - **Conclusão:** **não** conseguimos confirmar que os anos marcados produziram menos. Os níveis do app descrevem a frequência do evento climático na fase crítica; **não** são perda de produtividade prevista.
 - **Por que o teste pode não enxergar:** produtividades municipais são estimativas (muitos valores redondos; Cascavel informa a mesma área colhida, 58.000 ha, em 2021–2024); a grade da NASA tem ~50 km; a data real de plantio varia; 61% dos anos são marcados (pouco contraste); poucos anos. Ausência de evidência aqui não é evidência de ausência.
 - Os testes (`src/lib/backtest.test.ts`) recalculam as anomalias e as marcações sem usar o script.
+
+### Testes com dados reais
+
+<!-- testes:pt -->
+Rodamos quatro testes com dados medidos de verdade. As regras de cada um foram escritas no topo do script **antes** de rodar; o que mudou depois está marcado. Os resultados aparecem no app (aba Mais › Testes com dados reais) como saíram. Scripts: `scripts/validacao/`; para refazer: `node scripts/validacao/fetch_estacoes.mjs`, `fetch_ibge_sul.mjs`, `validar_estacoes.mjs`, `validar_ibge_sul.mjs`, `validar_previsao.mjs`.
+
+- **1. Satélite × estações (geada).** 113 estações automáticas do INMET no Sul (cópia NOAA/NCEI Global Summary of the Day), 2016–2026, 307.517 dias. A mínima da NASA POWER acompanha a medida (correlação 0,90, erro médio 1,8 °C), mas nos dias frios fica 0,7 °C mais quente. Na janela da flor do milho com soja em 20/10, app e estação concordaram em 84% de 744 safras (kappa 0,51): o app pegou 56% das safras com geada medida e 33% das marcações dele não apareceram na estação. Somando as 19 datas de plantio: pegou 76%, alarme falso 15% (kappa 0,70). **Seca:** só 28 safras tinham a chuva completa na estação; pouco para concluir.
+- **2. Baixada × relevo.** Para 103 estações, comparamos quanto a estação é mais fria que a NASA nas noites frias (descontada a altitude) com a posição no relevo (ponto − média do terreno em 1,5 km, Copernicus DEM 90 m). Cada 10 m abaixo do entorno: 0,19 °C mais frio (correlação 0,31, p = 0,003). As 17 estações em baixada (≥ 10 m abaixo do entorno) ficaram 0,4 °C mais frias que as outras 86. **O relevo pesa, mas o +1 °C do app parece exagerado** (medido: ~0,4 °C). O app agora mede o relevo do talhão pelo GPS (aba Mais) e liga "baixada" com a mesma regra.
+- **3. Anos marcados × produtividade (IBGE).** 269 municípios do PR e SC, 5.652 anos-município (PAM tabela 839, safrinha ≥ 500 ha, ≥ 12 anos), anomalia contra a tendência de cada município. Soja em 20/10: nos anos marcados com **seca** o milho rendeu **-7,5%** (p < 0,001); geada ou seca -7,7%; **geada** -1,2% (p = 0,30, sem diferença — nessa data ela é rara no PR). Com soja em 20/11 a geada pega a flor mais vezes e os anos marcados renderam -12,4%. Ressalvas: comparando municípios no mesmo ano a diferença some (seca -0,4%, p = 0,37); e a seca pega a região toda junto, então os municípios não são independentes. Numa verificação extra, **feita depois de ver o resultado**, contando cada ano uma vez (23 safras), a direção se mantém (-11,5% num ano todo marcado) mas pode ser acaso (p = 0,18). Conclusão: os anos que o app marca com seca tendem a render menos, mas ainda não dá para afirmar com segurança; os níveis medem frequência do clima, não perda prevista.
+- **4. Seguro rural (PSR/MAPA)** ficou de fora: o portal do MAPA não abre a partir do ambiente de desenvolvimento. O teste está desenhado (anos marcados × indenizações por geada e seca no milho, por município) e roda quando o arquivo `dados_abertos_psr_2016a2024csv.csv` for baixado de https://dados.agricultura.gov.br/dataset/sisser3.
+<!-- /testes:pt -->
 
 ### Hipóteses e o que é estimado
 
@@ -233,7 +256,9 @@ Testamos se as safras marcadas pelo app tiveram **produtividade menor do milho 2
 - O NASA POWER é uma **grade de ~50 km**: não representa o microclima de uma lavoura.
 - A temperatura é a **do ar a 2 m**, não da superfície. Geadas na relva/folha acontecem com o ar a 2 m acima de 0 °C; por isso o limite de 3 °C.
 - Os ciclos das culturas são **exemplos**; cultivar, manejo e região mudam tudo.
-- **Não é previsão do tempo.** É frequência histórica.
+- **Não é previsão do tempo.** É frequência histórica; só o cartão "Posso plantar esta semana?" usa previsão, e ele foi testado contra estações (veja Testes com dados reais).
+- O NASA POWER fica cerca de 0,7 °C mais quente que as estações nos dias frios e perde parte das geadas fracas (teste 1).
+- Produtividade: em 269 municípios, os anos marcados com seca renderam cerca de 7,5% menos, mas contando cada ano uma vez a diferença ainda não é conclusiva; geada com soja em 20/10 não fez diferença (teste 3).
 - A classificação de El Niño/La Niña usa a tabela oficial da NOAA (a tabela antiga digitada à mão foi removida), mas é uma regra simplificada e as amostras por fase são curtas.
 
 ### Tecnologia

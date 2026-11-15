@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import type { DataView, LocalView } from "@/lib/view-data";
 import {
-  Chave,
   IcCheck,
   IcColheita,
   IcExclamacao,
@@ -14,7 +13,7 @@ import {
   IcTempo,
 } from "@/components/wh/Arte";
 import { CabecalhoInterno } from "@/components/wh/Moldura";
-import { anoDaSafra, dataNaSafra, diaEixo, diasEntre, fraseDez, hojeMMDD, mesAbrev, somarDias } from "@/components/wh/modelo";
+import { anoDaSafra, dataNaSafra, diaEixo, diasEntre, fraseDez, hojeMMDD, linkGoogleAgenda, mesAbrev, somarDias } from "@/components/wh/modelo";
 import { fmtDia, useLang, useT } from "@/lib/i18n";
 
 export type LembreteId = "soja" | "colheita" | "milho" | "flor";
@@ -313,8 +312,6 @@ export function TelaCalendario({
   baixada,
   cicloMilho,
   hoje,
-  lembretes,
-  onLembrete,
   onAgenda,
   onVoltar,
 }: {
@@ -323,10 +320,8 @@ export function TelaCalendario({
   baixada: boolean;
   cicloMilho: number;
   hoje: Date;
-  lembretes: Record<LembreteId, boolean>;
-  onLembrete: (id: LembreteId) => void;
   onAgenda: () => void;
-  onVoltar: () => void;
+  onVoltar?: () => void;
 }) {
   const t = useT();
   const lang = useLang();
@@ -337,7 +332,7 @@ export function TelaCalendario({
   const em = (mmdd: string) => diasEntre(hoje, dataNaSafra(mmdd, ano));
   const geada = baixada ? d.geadaBaixada : d.geada;
 
-  const itens: { id: LembreteId; icone: React.ReactNode; fundo: string; titulo: string; sub: string; subCor?: string; quando: string }[] = [
+  const itens: { id: LembreteId; icone: React.ReactNode; fundo: string; titulo: string; sub: string; subCor?: string; quando: string; ate?: string }[] = [
     { id: "soja", icone: <IcSoja size={24} />, fundo: "#E3F2E1", titulo: t("Plantar a soja", "Plant soybeans"), sub: dia(d.dataSoja), quando: d.dataSoja },
     {
       id: "colheita",
@@ -363,6 +358,7 @@ export function TelaCalendario({
       sub: t(`${dia(d.faseInicio)} a ${dia(d.faseFim)} · fase sensível`, `${dia(d.faseInicio)} to ${dia(d.faseFim)} · sensitive stage`),
       subCor: "#9A3D0B",
       quando: d.faseInicio,
+      ate: d.faseFim,
     },
   ];
   const feitos = itens.filter((x) => em(x.quando) < 0).length;
@@ -443,16 +439,23 @@ export function TelaCalendario({
                     </span>
                   </span>
                   {!feito && (
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={lembretes[x.id]}
-                      aria-label={t(`Lembrete: ${x.titulo}`, `Reminder: ${x.titulo}`)}
-                      onClick={() => onLembrete(x.id)}
-                      className="flex min-h-11 cursor-pointer items-center border-none bg-transparent p-0"
+                    <a
+                      href={linkGoogleAgenda({
+                        titulo: x.titulo,
+                        inicio: dataNaSafra(x.quando, ano),
+                        fim: x.ate ? dataNaSafra(x.ate, ano) : undefined,
+                        descricao: t(
+                          `${local.nome} · soja em ${dia(d.dataSoja)}. Planejado com o weharvest (dados NASA POWER). Confirme com seu agrônomo.`,
+                          `${local.nome} · soybeans on ${dia(d.dataSoja)}. Planned with weharvest (NASA POWER data). Confirm with your agronomist.`,
+                        ),
+                      })}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={t(`Adicionar à agenda: ${x.titulo}`, `Add to calendar: ${x.titulo}`)}
+                      className="flex min-h-11 flex-none items-center gap-1 rounded-full bg-[#E3F2E1] px-3 text-sm font-extrabold text-lavoura-escura no-underline"
                     >
-                      <Chave ligada={lembretes[x.id]} />
-                    </button>
+                      + {t("Agenda", "Calendar")}
+                    </a>
                   )}
                 </li>
               );
@@ -468,12 +471,18 @@ export function TelaCalendario({
               <span className="flex-none rounded-full bg-[#DCE8F6] px-3 py-1.5 text-[13px] font-bold text-[#2F5A92]">{t("Em breve", "Coming soon")}</span>
             </li>
           </ul>
+          <p className="m-0 mt-2 text-[13px] leading-[1.45] text-texto-2">
+            {t(
+              "“+ Agenda” abre o Google Agenda com o lembrete pronto para salvar.",
+              "“+ Calendar” opens Google Calendar with the reminder ready to save.",
+            )}
+          </p>
           <button
             type="button"
             onClick={onAgenda}
-            className="mt-2 min-h-12 cursor-pointer rounded-full border-[1.5px] border-[#D6CFBE] bg-white text-base font-extrabold text-texto"
+            className="min-h-12 cursor-pointer rounded-full border-[1.5px] border-[#D6CFBE] bg-white text-[15px] font-extrabold text-texto"
           >
-            {t("Salvar lembretes na agenda do celular", "Save reminders to your phone calendar")}
+            {t("Baixar todos (iPhone e outras agendas)", "Download all (iPhone and other calendars)")}
           </button>
         </section>
 

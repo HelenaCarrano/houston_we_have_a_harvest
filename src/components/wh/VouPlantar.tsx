@@ -5,8 +5,6 @@ import type { DataView, LocalView } from "@/lib/view-data";
 import { nivelPorFreq, type Nivel } from "@/components/ui/NivelBadge";
 import {
   Broto,
-  Chave,
-  IcBaixada,
   IcColheita,
   IcEscudo,
   IcFlor,
@@ -18,8 +16,8 @@ import {
   IcSol,
   IcSolPequeno,
 } from "@/components/wh/Arte";
-import { AbasModo, LinhaEscolha } from "@/components/wh/Moldura";
-import { diaEMes, emDez, fraseDez, melhorDataGeada, mesAbrev, pior } from "@/components/wh/modelo";
+import { AbasModo } from "@/components/wh/Moldura";
+import { emDez, fraseDez, melhorDataGeada, mesAbrev, pior } from "@/components/wh/modelo";
 import { fmtDia, useLang, useT } from "@/lib/i18n";
 
 export const LINK_ZARC = "https://dados.agricultura.gov.br/dataset/6d3d141c-885e-41a4-ab7f-dc8ff323b96f";
@@ -53,6 +51,17 @@ function useRolarAte(idx: number) {
   return ref;
 }
 
+const PILULA_ESCOLHA =
+  "flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border-none bg-campo px-3.5 text-[15px] font-extrabold text-texto";
+
+function Abre() {
+  return (
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2E7D4A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
 export function VouPlantar({
   local,
   datas,
@@ -61,9 +70,11 @@ export function VouPlantar({
   baixada,
   onBaixada,
   onTrocarLocal,
+  onTrocarData,
   onModo,
   onVerCalendario,
-  detalhes,
+  semana,
+  rodape,
 }: {
   local: LocalView;
   /** Datas com o filtro de El Niño/La Niña já aplicado. */
@@ -73,9 +84,13 @@ export function VouPlantar({
   baixada: boolean;
   onBaixada: (b: boolean) => void;
   onTrocarLocal: () => void;
+  onTrocarData: () => void;
   onModo: (m: "vou" | "ja") => void;
   onVerCalendario: () => void;
-  detalhes: React.ReactNode;
+  /** Cartão "Posso plantar esta semana?". */
+  semana?: React.ReactNode;
+  /** Conteúdo extra no fim da tela (ex.: botão de compartilhar). */
+  rodape?: React.ReactNode;
 }) {
   const t = useT();
   const lang = useLang();
@@ -93,73 +108,36 @@ export function VouPlantar({
   const ok = idx <= ate;
   const secaSobe = d.seca.anosComEvento < alvo.seca.anosComEvento;
   const escala = Math.max(5, ...datas.map((x) => emDez(g(x)).n));
-  const refDatas = useRolarAte(idx);
   const refBarras = useRolarAte(idx);
   const ep = local.epocaGeada;
   const nomeLocal = local.personalizado || /\(/.test(local.nome) ? local.nome : `${local.nome}, PR`;
 
   return (
     <>
-      <section className="wh-in flex flex-col gap-3.5 rounded-3xl bg-white p-4 shadow-[0_6px_20px_rgba(20,35,26,.07)]">
+      <section className="wh-in flex flex-col gap-3 rounded-3xl bg-white p-3 shadow-[0_6px_20px_rgba(20,35,26,.07)]">
         <AbasModo modo="vou" onModo={onModo} />
-        <LinhaEscolha
-          icone={
-            <span className="flex size-[34px] flex-none items-center justify-center rounded-full bg-[#E3F2E1]">
-              <IcPin />
-            </span>
-          }
-          rotulo={t("Município", "Municipality")}
-          valor={nomeLocal}
-          acao={t("Trocar", "Change")}
-          onClick={onTrocarLocal}
-        />
-        <div className="flex flex-col gap-2">
-          <span id="wh-q-data" className="text-base font-extrabold">
-            {t("Quando você vai plantar a soja?", "When will you plant soybeans?")}
-          </span>
-          <div
-            ref={refDatas}
-            role="radiogroup"
-            aria-labelledby="wh-q-data"
-            className="wh-scroll grid snap-x grid-flow-col gap-1.5 overflow-x-auto"
-            style={{ gridAutoColumns: "calc((100% - 24px) / 5)" }}
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={onTrocarLocal} aria-label={t(`Município: ${nomeLocal}. Trocar`, `Municipality: ${nomeLocal}. Change`)} className={PILULA_ESCOLHA}>
+            <IcPin />
+            {local.nome}
+            <Abre />
+          </button>
+          <button type="button" onClick={onTrocarData} aria-label={t(`Soja em ${dia(d.dataSoja)}. Mudar data`, `Soybeans on ${dia(d.dataSoja)}. Change date`)} className={PILULA_ESCOLHA}>
+            <IcSoja size={20} />
+            {t("Soja", "Soy")} {dia(d.dataSoja)}
+            <Abre />
+          </button>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={baixada}
+            onClick={() => onBaixada(!baixada)}
+            className={`${PILULA_ESCOLHA} ${baixada ? "!bg-[#DCE8F6] text-[#2F5A92]" : ""}`}
           >
-            {datas.map((x, i) => {
-              const sel = i === idx;
-              const dm = diaEMes(x.dataSoja, lang);
-              return (
-                <button
-                  key={x.dataSoja}
-                  type="button"
-                  role="radio"
-                  aria-checked={sel}
-                  aria-label={dia(x.dataSoja)}
-                  onClick={() => onIdx(i)}
-                  className={`flex min-h-[58px] cursor-pointer snap-start flex-col items-center justify-center rounded-2xl border-none text-[17px] font-extrabold leading-[1.05] ${
-                    sel ? "bg-lavoura text-white shadow-[0_4px_12px_rgba(46,125,74,.35)]" : "bg-campo text-texto"
-                  }`}
-                >
-                  {dm.dia}
-                  <span className={`text-xs font-semibold ${sel ? "text-[#C9F7A8]" : "text-texto-2"}`}>{dm.mes}</span>
-                </button>
-              );
-            })}
-          </div>
+            {t("Baixada", "Lowland")}
+            <span className="font-bold">{baixada ? t("sim", "yes") : t("não", "no")}</span>
+          </button>
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={baixada}
-          onClick={() => onBaixada(!baixada)}
-          className="flex min-h-[52px] cursor-pointer items-center gap-3 rounded-2xl border-none bg-[#EAF2FB] px-3.5 text-left"
-        >
-          <IcBaixada />
-          <span className="flex flex-1 flex-col">
-            <span className="text-[15px] font-extrabold text-texto">{t("Lavoura em baixada", "Field in a lowland")}</span>
-            <span className="text-[13px] text-[#33507A]">{t("Ligue e veja o risco mudar", "Turn on and watch the risk change")}</span>
-          </span>
-          <Chave ligada={baixada} />
-        </button>
       </section>
 
       <section
@@ -271,6 +249,8 @@ export function VouPlantar({
         </a>
       </div>
 
+      {semana}
+
       <section className="wh-in flex items-start gap-3 rounded-3xl bg-[#E6F4E4] p-4" style={{ animationDelay: ".25s" }}>
         <Broto size={52} className="flex-none" />
         <div className="flex flex-1 flex-col gap-2.5 rounded-[18px_18px_18px_4px] bg-white px-3.5 py-3">
@@ -320,7 +300,7 @@ export function VouPlantar({
         <div
           ref={refBarras}
           className="wh-scroll grid grid-flow-col gap-2.5 overflow-x-auto"
-          style={{ gridAutoColumns: "calc((100% - 40px) / 5)" }}
+          style={{ gridAutoColumns: "calc((100% - 50px) / 6)" }}
         >
           {datas.map((x, i) => {
             const sel = i === idx;
@@ -412,7 +392,7 @@ export function VouPlantar({
         </div>
       </section>
 
-      {detalhes}
+      {rodape}
     </>
   );
 }
