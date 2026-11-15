@@ -54,6 +54,23 @@ const larg = (a: string, b: string) => `${(Math.max(diaNoEixo(b) - diaNoEixo(a),
 
 // ---------- componentes ----------
 
+/** Bloco recolhido: o conteúdo só é montado (e a previsão só é buscada) depois de aberto. */
+function MaisEvidencias({ titulo, itens, children }: { titulo: string; itens: string; children: React.ReactNode }) {
+  const [aberto, setAberto] = useState(false);
+  return (
+    <details
+      className="rounded-[22px] border border-gt-line bg-gt-card"
+      onToggle={(e) => setAberto(e.currentTarget.open)}
+    >
+      <summary className="flex min-h-11 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex-col gap-1 p-4 sm:p-6">
+        <span className="text-xl font-black">+ {titulo}</span>
+        <span className="font-mono text-[11px] text-gt-faint">{itens}</span>
+      </summary>
+      {aberto && <div className="flex flex-col gap-4 px-2 pb-2 sm:px-3 sm:pb-3">{children}</div>}
+    </details>
+  );
+}
+
 function Rotulo({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <p className={`font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint ${className}`}>{children}</p>
@@ -711,8 +728,15 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
             </div>
           </div>
 
-          <div>
-            <Rotulo>3 · {t("Anos a considerar (fase do El Niño)", "Years to consider (El Niño phase)")}</Rotulo>
+          <details className="group rounded-2xl border border-gt-line bg-gt-card2 p-3" open={fase !== "todos" ? true : undefined}>
+            <summary className="flex min-h-11 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex-wrap items-center justify-between gap-2">
+              <Rotulo>3 · {t("Filtro avançado: fase do El Niño", "Advanced filter: El Niño phase")}</Rotulo>
+              <span className="font-mono text-xs text-gt-muted">
+                {fase === "todos"
+                  ? t(`todos os ${d.geada.totalAnos} anos`, `all ${d.geada.totalAnos} years`)
+                  : t(`filtro ativo: ${nomeFase(fase)} (${anosDaFase.length})`, `filter on: ${nomeFase(fase)} (${anosDaFase.length})`)}
+              </span>
+            </summary>
             <div
               className="mt-2 flex flex-wrap gap-2"
               role="radiogroup"
@@ -788,7 +812,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               </a>
               .
             </Fonte>
-          </div>
+          </details>
 
           <label className="flex min-h-11 cursor-pointer items-center gap-3">
             <input
@@ -810,8 +834,6 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           </label>
         </Card>
 
-        <BlocoRelevo local={local} baixada={baixada} />
-
         <Card>
           <Rotulo>{t("Linha do tempo soja → milho safrinha", "Timeline: soybean → second-crop corn")}</Rotulo>
           <div className="mt-3">
@@ -819,8 +841,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           </div>
           <Fonte>
             {t(
-              `Hipóteses a validar com agronomia/ZARC: soja ${p.cicloSoja} dias, intervalo ${p.intervalo} dias, fase crítica do milho de ${p.faseCriticaInicio} a ${p.faseCriticaFim} dias após o plantio. Época de geada: mediana do primeiro e do último dia com mínima ≤ ${p.limiteGeadaC} °C, 1981–2025.`,
-              `Hypotheses to validate with agronomy/ZARC: soybean ${p.cicloSoja} days, gap ${p.intervalo} days, corn critical stage from ${p.faseCriticaInicio} to ${p.faseCriticaFim} days after planting. Frost season: median of the first and last day with minimum ≤ ${p.limiteGeadaC} °C, 1981–2025.`,
+              `Hipóteses a validar com agronomia/ZARC: soja ${p.cicloSoja} dias, intervalo ${p.intervalo} dias, fase crítica do milho de ${p.faseCriticaInicio} a ${p.faseCriticaFim} dias após o plantio.`,
+              `Hypotheses to validate with agronomy/ZARC: soybean ${p.cicloSoja} days, gap ${p.intervalo} days, corn critical stage from ${p.faseCriticaInicio} to ${p.faseCriticaFim} days after planting.`,
             )}
           </Fonte>
         </Card>
@@ -876,21 +898,29 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           )}
         </Card>
 
-        <Previsao
-          key={local.id}
-          nome={local.nome}
-          lat={local.lat}
-          lon={local.lon}
-          baixada={baixada}
-          limiteGeadaC={p.limiteGeadaC}
-          ajusteBaixadaC={p.ajusteBaixadaC}
-        />
-
-        <CampoDescoberto d={d} nomeLocal={local.nome} params={p} />
-
         <Rotacoes d={dEf} nomeLocal={local.nome} baixada={baixada} filtroRotulo={filtroTexto} />
 
         <Prova2026 local={local} d={d} limite={p.limiteGeadaC} />
+
+        <MaisEvidencias
+          titulo={t("Mais evidências", "More evidence")}
+          itens={t(
+            "relevo do terreno (SRTM) · previsão de 16 dias · campo descoberto ao longo do ano",
+            "terrain relief (SRTM) · 16-day forecast · bare field through the year",
+          )}
+        >
+          <BlocoRelevo local={local} baixada={baixada} />
+          <Previsao
+            key={local.id}
+            nome={local.nome}
+            lat={local.lat}
+            lon={local.lon}
+            baixada={baixada}
+            limiteGeadaC={p.limiteGeadaC}
+            ajusteBaixadaC={p.ajusteBaixadaC}
+          />
+          <CampoDescoberto d={d} nomeLocal={local.nome} params={p} />
+        </MaisEvidencias>
 
         <footer className="flex flex-col gap-2 border-t border-gt-line pt-5">
           <Rotulo>{t("Fontes e limitações", "Sources and limitations")}</Rotulo>
