@@ -58,7 +58,7 @@ Regras do documento do time **"GroundTruth — Metodologia e validação"**. Có
 4. **Baixada:** o limite de geada sobe **+1 °C** (de 3 para 4 °C), porque baixadas acumulam ar frio. Hipótese a calibrar. O relevo SRTM (altitude do ponto e desnível num raio de 1,5 km) é mostrado na tela, mas ainda não classifica cada talhão como baixada.
 5. **Frequência:** anos com evento ÷ anos avaliados, mostrada como "X/10 anos" e "N de 45 safras". **Nível:** Baixo (até 1 em 10), Médio (2 ou 3), Alto (4 ou mais).
 6. **Confiança:** alta (≥ 12 anos), média (7–11), baixa (< 7). A Metodologia também pede concordância com Deral/IBGE para "alta"; essa validação ainda não está no app.
-7. **Rotações:** cada rotação mostra níveis por critério (geada, seca, erosão), sem nota única escondida. As prioridades do agricultor (água, forragem, nitrogênio, erosão, matéria orgânica, mercado) mudam só a **ordem**, por uma soma qualitativa de 1 a 3. O risco do trigo não é calculado.
+7. **Rotações:** cada rotação mostra níveis por critério (geada, seca, erosão), sem nota única escondida. O painel **Seu campo** pergunta o que pesa mais (renda, proteger solo e água, equilíbrio) e o que o agricultor não consegue fazer (trigo, braquiária, pouca água). Isso muda só a **ordem** e as etiquetas, por uma soma qualitativa de 1 a 3; a rotação inaplicável vai para o fim com o motivo, sem sumir. Há um botão para copiar o resumo. O risco do trigo não é calculado.
 
 ### Teste com 2026 (Pato Branco, soja em 20/10)
 

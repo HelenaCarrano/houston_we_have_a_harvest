@@ -199,11 +199,94 @@ export const NOTA_NITROGENIO = {
 
 export const REGRA_ORDEM = {
   pt:
-    "Ordem: soma de quanto cada rotação atende às prioridades marcadas (1 = pouco, 3 = bem; qualitativo). " +
+    "Ordem: rotações que você consegue fazer primeiro; depois, soma de quanto cada uma atende ao que pesa mais para você (1 = pouco, 3 = bem; qualitativo). " +
     "Empate: menor risco climático primeiro. As prioridades não mudam os números de risco. " +
     "Nível de risco (Metodologia): Baixo até 1 em 10 anos, Médio 2 ou 3, Alto 4 ou mais.",
   en:
-    "Order: sum of how well each rotation meets the ticked priorities (1 = little, 3 = well; qualitative). " +
+    "Order: rotations you can do first; then the sum of how well each meets what matters most to you (1 = little, 3 = well; qualitative). " +
     "Ties: lower climate risk first. Priorities never change the risk numbers. " +
     "Risk level (methodology): Low up to 1 in 10 years, Medium 2 or 3, High 4 or more.",
 };
+
+// ---------------------------------------------------------------------------------------------
+// "Seu campo": o que pesa mais para o agricultor e o que ele NÃO consegue fazer.
+// Só muda a ORDEM e as etiquetas; os números de risco (geada, seca, dias sem cultura) nunca mudam.
+// Quais prioridades cada foco aplica é uma decisão QUALITATIVA, a validar com técnico.
+// ---------------------------------------------------------------------------------------------
+
+export type Foco = "renda" | "solo-agua" | "equilibrio";
+
+export const FOCOS: { id: Foco; pt: string; en: string; prioridades: Prioridade[] }[] = [
+  { id: "renda", pt: "Renda", en: "Income", prioridades: ["mercado"] },
+  {
+    id: "solo-agua",
+    pt: "Proteger o solo e a água",
+    en: "Protect soil and water",
+    prioridades: ["agua", "erosao", "materiaOrganica"],
+  },
+  {
+    id: "equilibrio",
+    pt: "Equilíbrio",
+    en: "Balance",
+    prioridades: ["agua", "erosao", "materiaOrganica", "mercado"],
+  },
+];
+
+export type Restricao = "semTrigo" | "semBraquiaria" | "poucaAgua";
+
+export const RESTRICOES: { id: Restricao; pt: string; en: string }[] = [
+  { id: "semTrigo", pt: "Plantar trigo (sem máquina ou comprador)", en: "Grow wheat (no machinery or buyer)" },
+  { id: "semBraquiaria", pt: "Manejar braquiária", en: "Manage brachiaria" },
+  { id: "poucaAgua", pt: "Pouca água disponível", en: "Little water available" },
+];
+
+/** Qual rotação cada restrição de "não consigo fazer" tira de cena (poucaAgua não tira nenhuma). */
+export const RESTRICAO_BLOQUEIA: Partial<Record<Restricao, Rotacao["id"]>> = {
+  semTrigo: "trigo",
+  semBraquiaria: "milho-braquiaria",
+};
+
+export const MOTIVO_BLOQUEIO: Record<"semTrigo" | "semBraquiaria", { pt: string; en: string }> = {
+  semTrigo: { pt: "sem máquina ou comprador de trigo", en: "no wheat machinery or buyer" },
+  semBraquiaria: { pt: "sem como manejar a braquiária", en: "no way to manage brachiaria" },
+};
+
+/** Prioridades efetivas: as do foco, mais "água" se o agricultor tem pouca água. */
+export function prioridadesDoCampo(foco: Foco, restricoes: Restricao[]): Prioridade[] {
+  const base = FOCOS.find((f) => f.id === foco)!.prioridades;
+  return restricoes.includes("poucaAgua") && !base.includes("agua") ? [...base, "agua"] : base;
+}
+
+export interface RotacaoOrdenada {
+  id: Rotacao["id"];
+  soma: number;
+  /** Restrições "não consigo" que tornam a rotação inaplicável. */
+  bloqueios: ("semTrigo" | "semBraquiaria")[];
+}
+
+/**
+ * Ordem: rotações aplicáveis primeiro; dentro de cada grupo, maior soma de prioridades;
+ * empate: menor risco climático. Nenhuma rotação é removida.
+ * `risco` = peso do risco climático por rotação (0 baixo, 1 médio, 2 alto).
+ */
+export function ordenarRotacoes(
+  rotacoes: Pick<Rotacao, "id" | "atende">[],
+  prioridades: Prioridade[],
+  restricoes: Restricao[],
+  risco: Record<Rotacao["id"], number>,
+): RotacaoOrdenada[] {
+  return rotacoes
+    .map((r) => ({
+      id: r.id,
+      soma: prioridades.reduce((s, p) => s + r.atende[p], 0),
+      bloqueios: (["semTrigo", "semBraquiaria"] as const).filter(
+        (k) => restricoes.includes(k) && RESTRICAO_BLOQUEIA[k] === r.id,
+      ),
+    }))
+    .sort(
+      (a, b) =>
+        Number(a.bloqueios.length > 0) - Number(b.bloqueios.length > 0) ||
+        b.soma - a.soma ||
+        risco[a.id] - risco[b.id],
+    );
+}
