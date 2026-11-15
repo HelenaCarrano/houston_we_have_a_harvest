@@ -9,6 +9,10 @@ import ensoData from "@/data/enso.json";
 import {
   PARAMS_PADRAO,
   riscoPorData,
+  riscoGeadaTrigo,
+  sensibilidadeTrigo,
+  janelaTrigo,
+  type SensibilidadeTrigo,
   restringirAnos,
   confianca,
   nivelRisco,
@@ -121,6 +125,23 @@ export interface LocalView {
   epocaGeada: { inicio: string; fim: string; anosComGeada: number; anosTotal: number } | null;
   prova2026: Prova2026;
   relevo: Relevo | null;
+  /** Geada na fase sensível do trigo (independe da data da soja). */
+  trigo: TrigoView;
+}
+
+export interface TrigoView {
+  geada: RiscoView;
+  geadaBaixada: RiscoView;
+  /** Resultado por data de semeadura (mostra o quanto depende da hipótese). */
+  sensibilidade: SensibilidadeTrigo[];
+  sensibilidadeBaixada: SensibilidadeTrigo[];
+  semeadura: string;
+  /** Limite de geada forte (°C, no abrigo) e ajuste da baixada, para os textos. */
+  limiteForteC: number;
+  ajusteBaixadaC: number;
+  janela: { inicio: string; fim: string };
+  /** Menor mínima do ar na janela do trigo em 2026 (semeadura em 15/05 por padrão); null se a janela ainda não terminou nos dados. */
+  minimaJanela2026: number | null;
 }
 
 export interface Relevo {
@@ -369,6 +390,21 @@ export function buildViewData(params: EngineParams = PARAMS_PADRAO): ViewData {
       epocaGeada: epocaGeada(dados, params.limiteGeadaC),
       prova2026: prova2026(dados, params.limiteGeadaC),
       relevo: relevoDe(id),
+      trigo: (() => {
+        const g = riscoGeadaTrigo(dados, params, false);
+        const gb = riscoGeadaTrigo(dados, params, true);
+        return {
+          geada: view(g),
+          geadaBaixada: view(gb),
+          sensibilidade: sensibilidadeTrigo(dados, params, false),
+          sensibilidadeBaixada: sensibilidadeTrigo(dados, params, true),
+          semeadura: params.semeaduraTrigo,
+          limiteForteC: params.limiteGeadaForteC,
+          ajusteBaixadaC: params.ajusteBaixadaC,
+          janela: janelaTrigo(params),
+          minimaJanela2026: g.porAno.find((a) => a.ano === 2026)?.valor ?? null,
+        } satisfies TrigoView;
+      })(),
     } satisfies LocalView;
   });
   return {

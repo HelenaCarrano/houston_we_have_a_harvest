@@ -33,6 +33,9 @@ export interface EngineParams {
   semeaduraTrigo: string;
   /** Dias do plantio à colheita do trigo (hipótese a validar). */
   cicloTrigo: number;
+  /** Fase sensível do trigo (emborrachamento ao florescimento): dias após a semeadura (hipótese a validar). */
+  espigamentoTrigoInicio: number;
+  espigamentoTrigoFim: number;
   /** Até este número de dias sem cultura o campo conta como coberto (tolerância do intervalo de semeadura). */
   toleranciaCobertoDias: number;
   /** Mais dias sem cultura que isto = erosão Alta (Metodologia: "descoberto mais de 60 dias"). */
@@ -56,6 +59,8 @@ export const PARAMS_PADRAO: EngineParams = {
   cicloMilho: 135,
   semeaduraTrigo: "05-15",
   cicloTrigo: 130,
+  espigamentoTrigoInicio: 70,
+  espigamentoTrigoFim: 110,
   toleranciaCobertoDias: 15,
   limiteErosaoAltaDias: 60,
   chuvaForteMm: 50,

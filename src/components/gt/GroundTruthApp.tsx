@@ -512,6 +512,24 @@ function Prova2026({ local, d, limite }: { local: LocalView; d: DataView; limite
                   {p.diasFrioMaioJunho2026}.
                 </li>
               )}
+              {local.trigo.minimaJanela2026 !== null && (
+                <li>
+                  <b>
+                    {t(
+                      `Janela do espigamento do trigo (${fmtDia(local.trigo.janela.inicio, lang)}–${fmtDia(local.trigo.janela.fim, lang)}/2026):`,
+                      `Wheat heading window (${fmtDia(local.trigo.janela.inicio, lang)}–${fmtDia(local.trigo.janela.fim, lang)}, 2026):`,
+                    )}
+                  </b>{" "}
+                  {t("menor mínima", "lowest minimum")} {fmtNum(local.trigo.minimaJanela2026, 1, lang)} °C →{" "}
+                  {local.trigo.minimaJanela2026 <= limite
+                    ? t(`geada ≤ ${limite} °C.`, `frost ≤ ${limite} °C.`)
+                    : t(`sem geada ≤ ${limite} °C. `, `no frost ≤ ${limite} °C. `)}
+                  {t(
+                    "Atenção: o relato do Deral sobre o trigo é de maio, com a lavoura ainda em fase vegetativa; esta janela é posterior e, portanto, não é testada por ele.",
+                    "Note: the Deral report on wheat is from May, with the crop still vegetative; this window comes later, so it is not tested by that report.",
+                  )}
+                </li>
+              )}
             </ul>
           </div>
           <div className="rounded-[18px] border border-gt-risk-line bg-gt-risk-bg p-4 text-gt-risk-text">
@@ -898,7 +916,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           )}
         </Card>
 
-        <Rotacoes d={dEf} nomeLocal={local.nome} baixada={baixada} filtroRotulo={filtroTexto} />
+        <Rotacoes d={dEf} trigo={local.trigo} nomeLocal={local.nome} baixada={baixada} filtroRotulo={filtroTexto} />
 
         <Prova2026 local={local} d={d} limite={p.limiteGeadaC} />
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { DataView } from "@/lib/view-data";
+import type { DataView, TrigoView } from "@/lib/view-data";
 import {
   ROTACOES,
   PRIORIDADES,
@@ -69,11 +69,14 @@ function Lista({ titulo, itens, cor }: { titulo: string; itens: string[]; cor: s
 
 export function Rotacoes({
   d,
+  trigo,
   nomeLocal,
   baixada,
   filtroRotulo = "",
 }: {
   d: DataView;
+  /** Geada no espigamento do trigo (não depende da data da soja). */
+  trigo: TrigoView;
   nomeLocal: string;
   baixada: boolean;
   /** Filtro de El Niño/La Niña ativo (vazio = todos os anos). */
@@ -92,6 +95,8 @@ export function Rotacoes({
   const geada = baixada ? d.geadaBaixada : d.geada;
   const nivelGeada = nivelPorFreq(geada.frequencia);
   const nivelSeca = nivelPorFreq(d.seca.frequencia);
+  const geadaTrigo = baixada ? trigo.geadaBaixada : trigo.geada;
+  const sensTrigo = baixada ? trigo.sensibilidadeBaixada : trigo.sensibilidade;
   const nivelClimaMilho: Nivel = PESO_NIVEL[nivelGeada] >= PESO_NIVEL[nivelSeca] ? nivelGeada : nivelSeca;
 
   // trigo: risco não calculado → neutro (1) no desempate
@@ -116,7 +121,12 @@ export function Rotacoes({
         ` Risco do milho nesta data: geada em ${geada.anosComEvento} e seca em ${d.seca.anosComEvento} de ${geada.totalAnos} safras.`,
         ` Corn risk on this date: frost in ${geada.anosComEvento} and drought in ${d.seca.anosComEvento} of ${geada.totalAnos} seasons.`,
       )
-    : "";
+    : melhor.r.id === "trigo"
+      ? t(
+          ` Geada no espigamento do trigo: ${geadaTrigo.anosComEvento} de ${geadaTrigo.totalAnos} safras (depende da data de semeadura).`,
+          ` Wheat frost at heading: ${geadaTrigo.anosComEvento} of ${geadaTrigo.totalAnos} seasons (depends on the sowing date).`,
+        )
+      : "";
   const descartadasTxt = descartadas
     .map((a) => {
       const k = a.bloqueios[0];
@@ -262,7 +272,10 @@ export function Rotacoes({
                     <SeloNivel nivel={nivelSeca} rotulo={t("Seca", "Drought")} />
                   </>
                 ) : (
-                  <SeloNivel nivel="Não calculado" rotulo={t("Clima", "Climate")} />
+                  <>
+                    <SeloNivel nivel={geadaTrigo.nivel} rotulo={t("Geada", "Frost")} />
+                    <SeloNivel nivel="Não calculado" rotulo={t("Seca", "Drought")} />
+                  </>
                 )}
                 <SeloNivel nivel={d.campo[r.id].nivelErosao} rotulo={t("Erosão", "Erosion")} />
               </div>
@@ -278,7 +291,35 @@ export function Rotacoes({
                     {t("Fonte: NASA POWER.", "Source: NASA POWER.")}
                   </>
                 ) : (
-                  x.riscoQualitativo
+                  <>
+                    {t("Trigo: geada no espigamento (", "Wheat: frost at heading (")}
+                    {dia(trigo.janela.inicio)}–{dia(trigo.janela.fim)}
+                    {t(`, semeadura em ${dia(trigo.semeadura)}) em `, `, sowing on ${dia(trigo.semeadura)}) in `)}
+                    <b>{geadaTrigo.anosComEvento}</b> {t("de", "of")} <b>{geadaTrigo.totalAnos}</b>{" "}
+                    {t("safras", "seasons")}
+                    {geadaTrigo.anosFortes && geadaTrigo.anosFortes.length > 0
+                      ? t(`; geada forte (≤ ${trigo.limiteForteC + (baixada ? trigo.ajusteBaixadaC : 0)} °C) em ${geadaTrigo.anosFortes.length}`, `; strong frost (≤ ${trigo.limiteForteC + (baixada ? trigo.ajusteBaixadaC : 0)} °C) in ${geadaTrigo.anosFortes.length}`)
+                      : ""}
+                    . {t("Seca do trigo não calculada. O mesmo resultado vale para qualquer data da soja. Fonte: NASA POWER.", "Wheat drought is not calculated. The same result holds for any soybean date. Source: NASA POWER.")}
+                    <span className="mt-1.5 block text-gt-muted">
+                      {t("Por data de semeadura: ", "By sowing date: ")}
+                      {sensTrigo.map((s, k) => (
+                        <span key={s.semeadura}>
+                          {k > 0 ? " · " : ""}
+                          {dia(s.semeadura)}: <b>{s.anosComEvento}</b>/{s.totalAnos}
+                        </span>
+                      ))}
+                      . {t(
+                        "O resultado depende muito da data de semeadura e da janela de 70–110 dias (hipóteses): confira a janela do ZARC. Semeadura mais tarde pode atrasar a colheita e a próxima soja.",
+                        "The result depends strongly on the sowing date and the 70–110-day window (hypotheses): check the ZARC window. Later sowing may delay harvest and the next soybean.",
+                      )}
+                    </span>
+                    {filtroRotulo && (
+                      <span className="mt-1.5 block text-gt-faint">
+                        {t("O filtro de El Niño/La Niña não é aplicado ao trigo.", "The El Niño/La Niña filter is not applied to wheat.")}
+                      </span>
+                    )}
+                  </>
                 )}
               </p>
 

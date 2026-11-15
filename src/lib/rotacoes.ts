@@ -95,8 +95,8 @@ export const ROTACOES: Rotacao[] = [
       justificativa:
         "Trocar o milho safrinha por um cereal de inverno onde a geada na fase crítica do milho é frequente (por exemplo, em baixadas).",
       evidencia: [
-        "Deral (mai/2026): com as mesmas geadas, o trigo não teve dano significativo.",
-        "O risco climático do trigo ainda não é calculado neste app.",
+        "Deral (mai/2026): com as mesmas geadas, o trigo (ainda vegetativo) não teve dano significativo.",
+        "Geada no espigamento do trigo calculada com a NASA POWER para uma semeadura fixa (hipótese); a seca do trigo não é calculada.",
       ],
       beneficios: [
         "Tolera melhor o frio na fase vegetativa.",
@@ -118,8 +118,8 @@ export const ROTACOES: Rotacao[] = [
       justificativa:
         "Replace second-crop corn with a winter cereal where frost in corn's critical stage is frequent (for example, in lowlands).",
       evidencia: [
-        "Deral (May 2026): with the same frosts, wheat had no significant damage.",
-        "Wheat's climate risk is not yet computed in this app.",
+        "Deral (May 2026): with the same frosts, wheat (still vegetative) had no significant damage.",
+        "Frost at wheat heading is computed from NASA POWER for a fixed sowing date (hypothesis); wheat drought is not computed.",
       ],
       beneficios: [
         "Tolerates cold better in the vegetative stage.",
@@ -200,11 +200,11 @@ export const NOTA_NITROGENIO = {
 export const REGRA_ORDEM = {
   pt:
     "Ordem: rotações que você consegue fazer primeiro; depois, soma de quanto cada uma atende ao que pesa mais para você (1 = pouco, 3 = bem; qualitativo). " +
-    "Empate: menor risco climático primeiro. As prioridades não mudam os números de risco. " +
+    "Empate: menor risco climático primeiro (o trigo fica neutro: seu risco depende da data de semeadura, que é hipótese). As prioridades não mudam os números de risco. " +
     "Nível de risco (Metodologia): Baixo até 1 em 10 anos, Médio 2 ou 3, Alto 4 ou mais.",
   en:
     "Order: rotations you can do first; then the sum of how well each meets what matters most to you (1 = little, 3 = well; qualitative). " +
-    "Ties: lower climate risk first. Priorities never change the risk numbers. " +
+    "Ties: lower climate risk first (wheat stays neutral: its risk depends on the sowing date, which is a hypothesis). Priorities never change the risk numbers. " +
     "Risk level (methodology): Low up to 1 in 10 years, Medium 2 or 3, High 4 or more.",
 };
 

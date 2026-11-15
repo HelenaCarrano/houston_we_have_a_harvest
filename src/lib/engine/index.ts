@@ -300,3 +300,66 @@ export function deCada10(frequencia: number): number {
 
 export const AVISO_BAIXADA =
   "Baixadas acumulam ar frio; o risco local tende a ser maior que o calculado para a região.";
+
+/**
+ * Geada na fase sensível do TRIGO (emborrachamento ao florescimento): em cada ano, verifica se
+ * T2M_MIN <= limite em algum dia de [semeadura + espigamentoTrigoInicio, semeadura + espigamentoTrigoFim].
+ * A semeadura é uma data fixa do ano (hipótese; o ZARC define a janela real), então o resultado
+ * NÃO depende da data de plantio da soja. O ano listado é o da semeadura (a fase cai no mesmo ano).
+ * Mesmos limites de geada do milho (3 °C / 1 °C no abrigo; baixada +1 °C) para a comparação ser justa.
+ */
+export function riscoGeadaTrigo(
+  dados: DadosDiarios,
+  params: EngineParams = PARAMS_PADRAO,
+  baixada = false,
+  semeadura: string = params.semeaduraTrigo,
+): ResultadoRisco {
+  const inicio = inicioSerie(dados);
+  const ajuste = baixada ? params.ajusteBaixadaC : 0;
+  const limite = params.limiteGeadaC + ajuste;
+  const limiteForte = params.limiteGeadaForteC + ajuste;
+  const [mes, dia] = semeadura.split("-").map(Number);
+  const porAno: AnoAvaliado[] = [];
+  for (const ano of anosDePlantio(dados)) {
+    const s = utc(ano, mes, dia);
+    const t = fatia(
+      dados.data.T2M_MIN,
+      inicio,
+      somaDias(s, params.espigamentoTrigoInicio),
+      somaDias(s, params.espigamentoTrigoFim),
+    );
+    if (!completa(t)) continue;
+    const min = Math.min(...t);
+    porAno.push({ ano, evento: min <= limite, forte: min <= limiteForte, valor: min });
+  }
+  return resumo(porAno, true);
+}
+
+/** Datas de semeadura do trigo usadas para mostrar o quanto o resultado depende dessa hipótese. */
+export const SEMEADURAS_TRIGO_SENSIBILIDADE = ["04-30", "05-15", "05-30", "06-15"] as const;
+
+export interface SensibilidadeTrigo {
+  semeadura: string;
+  anosComEvento: number;
+  totalAnos: number;
+}
+
+/** Geada no espigamento do trigo para várias datas de semeadura (mesma janela em dias). */
+export function sensibilidadeTrigo(
+  dados: DadosDiarios,
+  params: EngineParams = PARAMS_PADRAO,
+  baixada = false,
+): SensibilidadeTrigo[] {
+  return SEMEADURAS_TRIGO_SENSIBILIDADE.map((semeadura) => {
+    const r = riscoGeadaTrigo(dados, params, baixada, semeadura);
+    return { semeadura, anosComEvento: r.anosComEvento, totalAnos: r.totalAnos };
+  });
+}
+
+/** Início e fim ("MM-DD") da fase sensível do trigo, num ano comum, para mostrar na tela. */
+export function janelaTrigo(params: EngineParams = PARAMS_PADRAO): { inicio: string; fim: string } {
+  const [mes, dia] = params.semeaduraTrigo.split("-").map(Number);
+  const s = utc(2025, mes, dia);
+  const f = (d: Date) => d.toISOString().slice(5, 10);
+  return { inicio: f(somaDias(s, params.espigamentoTrigoInicio)), fim: f(somaDias(s, params.espigamentoTrigoFim)) };
+}
