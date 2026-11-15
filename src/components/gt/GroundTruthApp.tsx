@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { DataView, LocalView, RiscoView, ViewData } from "@/lib/view-data";
 import { Rotacoes, SeloNivel } from "@/components/gt/Rotacoes";
 import { ConfrontoIbge } from "@/components/gt/ConfrontoIbge";
@@ -32,6 +32,19 @@ const FILTROS_ENSO: { id: FiltroEnso; pt: string; en: string; fpt: string; fen: 
 const AMOSTRA_MINIMA = 12;
 
 // ---------- utilitários ----------
+
+/** Lê a preferência de idioma do navegador (só no cliente): "pt", "en", "sugerir-pt" (navegador em português, sem escolha) ou "nenhuma". */
+function lerPreferenciaDeIdioma(): "pt" | "en" | "sugerir-pt" | "nenhuma" {
+  try {
+    const q = new URLSearchParams(window.location.search).get("lang");
+    if (q === "pt" || q === "en") return q;
+    const guardado = localStorage.getItem("weharvest-lang");
+    if (guardado === "pt" || guardado === "en") return guardado;
+  } catch {
+    /* ignora: sem acesso ao armazenamento */
+  }
+  return navigator.language?.toLowerCase().startsWith("pt") ? "sugerir-pt" : "nenhuma";
+}
 
 /** "X/10" e frase honesta para frequências pequenas. */
 function deCada10(r: RiscoView, lang: Lang): { grande: string; frase: string } {
@@ -613,7 +626,20 @@ function Prova2026({ local, d, limite }: { local: LocalView; d: DataView; limite
 // ---------- app ----------
 
 export function GroundTruthApp({ data }: { data: ViewData }) {
-  const [lang, setLang] = useState<Lang>("en");
+  // Idioma: escolha na tela > ?lang=pt|en (link para compartilhar) > escolha anterior > inglês (padrão).
+  // Em navegador português, sem nenhuma escolha, o inglês continua e oferecemos o português.
+  const preferencia = useSyncExternalStore(() => () => {}, lerPreferenciaDeIdioma, () => "nenhuma");
+  const [escolhido, setEscolhido] = useState<Lang | null>(null);
+  const lang: Lang = escolhido ?? (preferencia === "pt" ? "pt" : "en");
+  const sugerirPt = escolhido === null && preferencia === "sugerir-pt";
+  const setLang = (l: Lang) => {
+    setEscolhido(l);
+    try {
+      localStorage.setItem("weharvest-lang", l);
+    } catch {
+      /* sem armazenamento: a escolha vale só nesta visita */
+    }
+  };
   const t = (pt: string, en: string) => (lang === "en" ? en : pt);
   const dia = (x: string) => fmtDia(x, lang);
 
@@ -658,6 +684,22 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
   return (
     <LangContext.Provider value={lang}>
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-5 pb-16 pt-6 sm:px-6">
+        {sugerirPt && lang === "en" && (
+          <div
+            role="region"
+            aria-label="Idioma"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-gt-frost-line bg-gt-frost-bg p-3 text-sm text-gt-frost-text"
+          >
+            <span>This app is in English. / Este app está em inglês.</span>
+            <button
+              onClick={() => setLang("pt")}
+              lang="pt"
+              className="min-h-11 rounded-full border border-gt-green bg-gt-green px-4 font-semibold text-gt-bg"
+            >
+              Ver em português
+            </button>
+          </div>
+        )}
         <header className="flex flex-col gap-2">
           <div className="flex items-start justify-between gap-3">
             <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-green">
@@ -875,6 +917,34 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           </label>
         </Card>
 
+        <Card className="flex flex-col gap-4 border-gt-green">
+          <Rotulo>
+            {t(`Resposta para ${local.nome} · soja em ${dia(dEf.dataSoja)}`, `Answer for ${local.nome} · soybean on ${dia(dEf.dataSoja)}`)}
+            {baixada ? ` · ${t("baixada", "lowland")}` : ""}
+            {filtroTexto ? ` · ${filtroTexto}` : ""}
+          </Rotulo>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(
+              [
+                { id: "geada", r: geada, pt: "Geada no milho safrinha", en: "Frost on second-crop corn" },
+                { id: "seca", r: dEf.seca, pt: "Seca no milho safrinha", en: "Drought on second-crop corn" },
+              ] as const
+            ).map((x) => (
+              <div key={x.id} className="rounded-[18px] border border-gt-line bg-gt-card2 p-4">
+                <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-gt-faint">{t(x.pt, x.en)}</p>
+                <p className="mt-1 text-2xl font-black leading-tight">{deCada10(x.r, lang).frase}</p>
+                <p className="mt-1 text-sm text-gt-muted">
+                  {x.r.anosComEvento} {t("de", "of")} {x.r.totalAnos} {t("safras", "seasons")}
+                </p>
+                <div className="mt-2">
+                  <SeloNivel nivel={x.r.nivel} rotulo={t("Risco", "Risk")} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <Recomendacao datas={datasEf} idx={idx} baixada={baixada} />
+        </Card>
+
         <Card>
           <Rotulo>{t("Linha do tempo soja → milho safrinha", "Timeline: soybean → second-crop corn")}</Rotulo>
           <div className="mt-3">
@@ -926,8 +996,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
         </div>
 
         <Card className="flex flex-col gap-5">
-          <Rotulo>{t(`Recomendação para ${local.nome}`, `Recommendation for ${local.nome}`)}</Rotulo>
-          <Recomendacao datas={datasEf} idx={idx} baixada={baixada} />
+          <Rotulo>{t(`Todas as datas de plantio · ${local.nome}`, `All planting dates · ${local.nome}`)}</Rotulo>
           <GraficoDatas datas={datasEf} idx={idx} onSelect={setIdx} baixada={baixada} />
           {fase !== "todos" && (
             <Fonte>
