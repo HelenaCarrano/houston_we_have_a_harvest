@@ -51,10 +51,13 @@ export function CabecalhoInterno({
   subtitulo,
   etiqueta,
   onVoltar,
+  onMenu,
 }: {
   titulo: string;
   subtitulo: string;
   etiqueta?: string;
+  /** Menu "Mais" no canto superior direito (telas das abas). */
+  onMenu?: () => void;
   /** Sem `onVoltar` (telas das abas), mostra a marca no lugar do botão de voltar. */
   onVoltar?: () => void;
 }) {
@@ -73,7 +76,13 @@ export function CabecalhoInterno({
           </span>
         )}
         {etiqueta && <span className="font-mono text-xs tracking-[0.14em] text-broto">{etiqueta}</span>}
-        {onVoltar && <span className="w-11" />}
+        {onMenu ? (
+          <button type="button" aria-label={t("Mais: sua lavoura, idioma e detalhes", "More: your field, language and details")} onClick={onMenu} className={BTN_REDONDO}>
+            <IcMenu />
+          </button>
+        ) : (
+          onVoltar && <span className="w-11" />
+        )}
       </div>
       <h1 className="m-0 text-[27px] font-black leading-[1.1] tracking-[-0.02em] text-claro">{titulo}</h1>
       <p className={`m-0 ${etiqueta ? "text-sm" : "text-[15px]"} text-claro-2`}>{subtitulo}</p>
@@ -164,7 +173,7 @@ export function InstalarApp() {
   );
 }
 
-export type Aba = "risco" | "calendario" | "depois" | "mais";
+export type Aba = "risco" | "calendario" | "depois" | "safra" | "mais";
 
 function IconeAba({ aba }: { aba: Aba }) {
   const p = { width: 24, height: 24, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2.2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
@@ -187,6 +196,13 @@ function IconeAba({ aba }: { aba: Aba }) {
         <path d="M12 21V6M12 9l-4-3M12 9l4-3M12 14l-4-3M12 14l4-3M12 19l-4-3M12 19l4-3" />
       </svg>
     );
+  if (aba === "safra")
+    return (
+      <svg {...p}>
+        <path d="M6 3h9l4 4v14H6z" />
+        <path d="M14 3v5h5M9 13h7M9 17h7" />
+      </svg>
+    );
   return (
     <svg {...p}>
       <path d="M4 7h16M4 12h16M4 17h16" />
@@ -201,7 +217,7 @@ export function BarraAbas({ aba, onAba }: { aba: Aba; onAba: (a: Aba) => void })
     ["risco", t("Início", "Home")],
     ["calendario", t("Calendário", "Calendar")],
     ["depois", t("Rotação", "Rotation")],
-    ["mais", t("Mais", "More")],
+    ["safra", t("Safra", "Season")],
   ];
   return (
     <nav

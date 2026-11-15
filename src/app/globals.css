@@ -107,3 +107,10 @@ h1, h2, h3 { letter-spacing: -0.02em; }
   outline: 2px solid var(--color-lavoura);
   outline-offset: 2px;
 }
+
+/* Relatório da aba Safra: ao imprimir (ou salvar em PDF) sai só o #relatorio. */
+@media print {
+  body * { visibility: hidden !important; }
+  #relatorio, #relatorio * { visibility: visible !important; }
+  #relatorio { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; animation: none !important; }
+}

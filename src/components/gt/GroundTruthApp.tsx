@@ -13,6 +13,7 @@ import { VouPlantar } from "@/components/wh/VouPlantar";
 import { JaPlantei } from "@/components/wh/JaPlantei";
 import { PlantarSemana } from "@/components/wh/PlantarSemana";
 import { SeletorDia } from "@/components/wh/SeletorDia";
+import { TelaSafra } from "@/components/wh/TelaSafra";
 import { TelaCalendario, type LembreteId } from "@/components/wh/TelaCalendario";
 import { TelaRotacoes } from "@/components/wh/TelaRotacoes";
 import { Detalhes } from "@/components/wh/Detalhes";
@@ -363,6 +364,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               cicloMilho={p.cicloMilho}
               hoje={hoje}
               onAgenda={salvarAgenda}
+              onMenu={() => setAba("mais")}
             />
           </div>
         )}
@@ -380,6 +382,21 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               onFoco={setFoco}
               restricoes={restricoes}
               onRestricao={(k) => setRestricoes((xs) => (xs.includes(k) ? xs.filter((x) => x !== k) : [...xs, k]))}
+              onMenu={() => setAba("mais")}
+            />
+          </div>
+        )}
+
+        {aba === "safra" && hoje && (
+          <div className="pb-24">
+            <TelaSafra
+              local={local}
+              d={dEf}
+              baixada={baixada}
+              cicloMilho={p.cicloMilho}
+              hoje={hoje}
+              modelo={modelo}
+              onMenu={() => setAba("mais")}
             />
           </div>
         )}
@@ -389,6 +406,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
             <CabecalhoInterno
               titulo={t("Mais", "More")}
               subtitulo={t("Sua lavoura, idioma e detalhes técnicos", "Your field, language and technical details")}
+              onVoltar={() => setAba("risco")}
             />
             <main className="-mt-6 flex flex-col gap-3.5 px-4 pb-28">
               <section className={cartao}>

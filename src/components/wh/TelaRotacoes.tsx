@@ -179,6 +179,7 @@ export function TelaRotacoes({
   restricoes,
   onRestricao,
   onVoltar,
+  onMenu,
 }: {
   nomeLocal: string;
   d: DataView;
@@ -191,6 +192,7 @@ export function TelaRotacoes({
   restricoes: Restricao[];
   onRestricao: (r: Restricao) => void;
   onVoltar?: () => void;
+  onMenu?: () => void;
 }) {
   const t = useT();
   const lang = useLang();
@@ -225,6 +227,7 @@ export function TelaRotacoes({
         titulo={t("O que plantar depois da soja?", "What to plant after soybeans?")}
         subtitulo={t(`${nomeLocal} · soja em ${dia(d.dataSoja)}`, `${nomeLocal} · soybeans on ${dia(d.dataSoja)}`)}
         onVoltar={onVoltar}
+        onMenu={onMenu}
       />
       <main className="-mt-6 flex flex-col gap-3.5 px-4 pb-10">
         <section className="flex flex-col gap-2.5 rounded-3xl bg-white p-4 shadow-[0_6px_20px_rgba(20,35,26,.07)]">
