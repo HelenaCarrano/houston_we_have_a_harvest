@@ -3,8 +3,8 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Lang } from "@/lib/i18n";
 
-/** Lê a preferência de idioma do navegador (só no cliente): "pt", "en", "sugerir-pt" (navegador em português, sem escolha) ou "nenhuma". */
-function lerPreferenciaDeIdioma(): "pt" | "en" | "sugerir-pt" | "nenhuma" {
+/** Lê a escolha de idioma (só no cliente): ?lang=pt|en, depois a escolha guardada. */
+function lerPreferenciaDeIdioma(): Lang | "nenhuma" {
   try {
     const q = new URLSearchParams(window.location.search).get("lang");
     if (q === "pt" || q === "en") return q;
@@ -13,15 +13,14 @@ function lerPreferenciaDeIdioma(): "pt" | "en" | "sugerir-pt" | "nenhuma" {
   } catch {
     /* ignora: sem acesso ao armazenamento */
   }
-  return navigator.language?.toLowerCase().startsWith("pt") ? "sugerir-pt" : "nenhuma";
+  return "nenhuma";
 }
 
-/** Idioma: escolha na tela > ?lang=pt|en > escolha anterior > inglês. Em navegador português sem escolha, o inglês continua e oferecemos o português. */
-export function useIdioma(): { lang: Lang; setLang: (l: Lang) => void; sugerirPt: boolean } {
-  const preferencia = useSyncExternalStore(() => () => {}, lerPreferenciaDeIdioma, () => "nenhuma");
+/** Idioma: escolha no menu > ?lang=pt|en > escolha anterior > inglês (padrão exigido pelo NASA Space Apps). */
+export function useIdioma(): { lang: Lang; setLang: (l: Lang) => void } {
+  const preferencia = useSyncExternalStore(() => () => {}, lerPreferenciaDeIdioma, () => "nenhuma" as const);
   const [escolhido, setEscolhido] = useState<Lang | null>(null);
   const lang: Lang = escolhido ?? (preferencia === "pt" ? "pt" : "en");
-  const sugerirPt = escolhido === null && preferencia === "sugerir-pt";
   const setLang = (l: Lang) => {
     setEscolhido(l);
     try {
@@ -33,5 +32,5 @@ export function useIdioma(): { lang: Lang; setLang: (l: Lang) => void; sugerirPt
   useEffect(() => {
     document.documentElement.lang = lang === "en" ? "en" : "pt-BR";
   }, [lang]);
-  return { lang, setLang, sugerirPt };
+  return { lang, setLang };
 }

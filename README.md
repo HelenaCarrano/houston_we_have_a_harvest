@@ -10,7 +10,7 @@
 
 ## English
 
-> **App language:** English by default (required by NASA Space Apps) and Portuguese with one click on the **EN | PT** switch at the top. Every screen, rule and message exists in both languages. In a Portuguese browser the app stays in English but offers a one-tap "Ver em português"; the choice is remembered, and a link with `?lang=pt` opens it directly in Portuguese (for farmers).
+> **App language:** English by default (required by NASA Space Apps) and Portuguese with one tap on **Português** in the menu (☰, top right). Every screen, rule and message exists in both languages. The choice is remembered, and a link with `?lang=pt` opens the app directly in Portuguese (for farmers).
 
 ### What it is
 
@@ -130,7 +130,7 @@ Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 
 
 ## Português
 
-> **Idioma do app:** inglês por padrão (exigência do NASA Space Apps) e português com um clique no botão **EN | PT** do topo. Todas as telas, regras e mensagens existem nos dois idiomas. Em navegador em português o app continua em inglês, mas oferece "Ver em português" com um toque; a escolha fica guardada, e um link com `?lang=pt` abre direto em português (para os agricultores).
+> **Idioma do app:** inglês por padrão (exigência do NASA Space Apps) e português com um toque em **Português** no menu (☰, no canto superior direito). Todas as telas, regras e mensagens existem nos dois idiomas. A escolha fica guardada, e um link com `?lang=pt` abre o app direto em português (para os agricultores).
 
 ### O que é
 

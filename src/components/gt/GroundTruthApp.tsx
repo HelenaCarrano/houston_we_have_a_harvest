@@ -1,25 +1,32 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { DataView, LocalView, ViewData } from "@/lib/view-data";
-import { Rotacoes } from "@/components/gt/Rotacoes";
-import { Previsao } from "@/components/gt/Previsao";
-import { Resposta } from "@/components/gt/Resposta";
-import { PainelLavoura } from "@/components/gt/PainelLavoura";
-import { BarraContexto } from "@/components/gt/BarraContexto";
-import { TopBar } from "@/components/gt/TopBar";
-import { Rodape } from "@/components/gt/Rodape";
-import { Evidencias } from "@/components/gt/Evidencias";
+import type { Foco, Restricao } from "@/lib/rotacoes";
+import type { FaseEnso, FiltroEnso } from "@/lib/engine/enso.ts";
+import { EscolherLugar } from "@/components/gt/EscolherLugar";
 import { FILTROS_ENSO } from "@/components/gt/format";
-import { Button } from "@/components/ui/Button";
-import { Callout } from "@/components/ui/Callout";
+import { BarraAcoes, CabecalhoInicio, Folha } from "@/components/wh/Moldura";
+import { VouPlantar } from "@/components/wh/VouPlantar";
+import { JaPlantei } from "@/components/wh/JaPlantei";
+import { TelaCalendario, type LembreteId } from "@/components/wh/TelaCalendario";
+import { TelaRotacoes } from "@/components/wh/TelaRotacoes";
+import { Detalhes } from "@/components/wh/Detalhes";
+import { anoDaSafra, avaliarRotacoes, baixarIcs, dataNaSafra, diaEMes, diasEntre, montarResumo, type EventoAgenda } from "@/components/wh/modelo";
 import { LangContext, fmtDia } from "@/lib/i18n";
 import { useIdioma } from "@/lib/useIdioma";
-import type { FaseEnso, FiltroEnso } from "@/lib/engine/enso.ts";
-import { Languages } from "lucide-react";
+
+type Tela = "inicio" | "calendario" | "rotacoes";
+type FolhaAberta = null | "menu" | "municipio" | "data";
+
+const semInscricao = () => () => {};
+function isoDeHoje(): string {
+  const x = new Date();
+  return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+}
 
 export function GroundTruthApp({ data }: { data: ViewData }) {
-  const { lang, setLang, sugerirPt } = useIdioma();
+  const { lang, setLang } = useIdioma();
   const t = (pt: string, en: string) => (lang === "en" ? en : pt);
 
   const [localId, setLocalId] = useState(data.locais[0].id);
@@ -30,111 +37,273 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
   const [idx, setIdx] = useState(Math.max(local.datas.findIndex((d) => d.dataSoja === "10-20"), 0));
   const [baixada, setBaixada] = useState(false);
   const [fase, setFase] = useState<FiltroEnso>("todos");
-  const d = local.datas[idx]; // todos os anos
+  const [foco, setFoco] = useState<Foco>("equilibrio");
+  const [restricoes, setRestricoes] = useState<Restricao[]>([]);
+  const [modo, setModo] = useState<"vou" | "ja">("vou");
+  const [tela, setTela] = useState<Tela>("inicio");
+  const [folha, setFolha] = useState<FolhaAberta>(null);
+  const [lembretes, setLembretes] = useState<Record<LembreteId, boolean>>({ soja: true, colheita: true, milho: true, flor: true });
+  // Data de hoje só no navegador (a página é gerada no build).
+  const hojeIso = useSyncExternalStore(semInscricao, isoDeHoje, () => null);
+  const hoje = useMemo(() => (hojeIso ? new Date(`${hojeIso}T12:00:00`) : null), [hojeIso]);
+
   const p = data.params;
-  // Resultados considerando só os anos da fase escolhida do ENSO ("todos" = sem filtro).
+  const d = local.datas[idx]; // todos os anos
   const dEf: DataView = { ...d, ...d.enso[fase] };
   const datasEf: DataView[] = local.datas.map((x) => ({ ...x, ...x.enso[fase] }));
-  const nomeFase = (f: FiltroEnso) => {
-    const x = FILTROS_ENSO.find((q) => q.id === f)!;
-    return t(x.pt, x.en);
+  const filtro = FILTROS_ENSO.find((q) => q.id === fase)!;
+  const filtroTexto = fase === "todos" ? "" : `${t(filtro.pt, filtro.en)} (${d.anosPorFase[fase as FaseEnso].length})`;
+
+  const modelo = avaliarRotacoes({ d: dEf, trigo: local.trigo, baixada, foco, restricoes, lang });
+  const resumo = montarResumo({ nomeLocal: local.nome, d: dEf, baixada, modelo, lang });
+
+  // Navegação entre telas com o botão "voltar" do celular.
+  const irPara = useCallback((x: Tela) => {
+    setTela(x);
+    setFolha(null);
+    if (x !== "inicio") window.history.pushState({ tela: x }, "");
+    window.scrollTo({ top: 0 });
+  }, []);
+  useEffect(() => {
+    const aoVoltar = (e: PopStateEvent) => setTela((e.state?.tela as Tela) ?? "inicio");
+    window.addEventListener("popstate", aoVoltar);
+    return () => window.removeEventListener("popstate", aoVoltar);
+  }, []);
+  const voltar = () => {
+    if (window.history.state?.tela) window.history.back();
+    else setTela("inicio");
   };
-  const anosDaFase = fase === "todos" ? [] : d.anosPorFase[fase as FaseEnso];
-  const filtroTexto = fase === "todos" ? "" : `${nomeFase(fase)} (${anosDaFase.length})`;
+  const fecharFolha = useCallback(() => setFolha(null), []);
+
+  const escolherLocal = (id: string) => {
+    setLocalId(id);
+    setFolha(null);
+  };
+
+  const salvarAgenda = () => {
+    if (!hoje) return;
+    const ano = anoDaSafra(hoje);
+    const dt = (mmdd: string) => dataNaSafra(mmdd, ano);
+    const nota = t(
+      "Planejado com o weharvest (dados NASA POWER). Confirme com seu agrônomo.",
+      "Planned with weharvest (NASA POWER data). Confirm with your agronomist.",
+    );
+    const todos: (EventoAgenda & { id: LembreteId })[] = [
+      { id: "soja", titulo: t("Plantar a soja", "Plant soybeans"), inicio: dt(d.dataSoja), descricao: nota },
+      { id: "colheita", titulo: t("Colher a soja (aprox.)", "Harvest soybeans (approx.)"), inicio: dt(d.colheitaSoja), descricao: nota },
+      { id: "milho", titulo: t("Plantar o milho safrinha", "Plant second-crop corn"), inicio: dt(d.plantioMilho), descricao: nota },
+      {
+        id: "flor",
+        titulo: t("Flor do milho: fase sensível a geada e seca", "Corn flowering: stage sensitive to frost and drought"),
+        inicio: dt(d.faseInicio),
+        fim: dt(d.faseFim),
+        descricao: nota,
+      },
+    ];
+    const eventos = todos.filter((e) => lembretes[e.id] && diasEntre(hoje, e.fim ?? e.inicio) >= 0);
+    baixarIcs(eventos.length ? eventos : todos, `weharvest-safra-${ano}-${String(ano + 1).slice(2)}.ics`);
+  };
+
+  const detalhes = (
+    <Detalhes
+      local={local}
+      d={d}
+      dEf={dEf}
+      baixada={baixada}
+      fase={fase}
+      onFase={setFase}
+      filtroTexto={filtroTexto}
+      params={p}
+      backtest={data.backtest}
+      enso={data.enso}
+    />
+  );
+
+  const itemMenu =
+    "flex min-h-[52px] w-full cursor-pointer items-center justify-between rounded-2xl border-none bg-white px-4 text-left text-base font-extrabold text-texto";
 
   return (
     <LangContext.Provider value={lang}>
-      <TopBar lang={lang} setLang={setLang} />
-      <BarraContexto
-        nome={local.nome}
-        data={fmtDia(d.dataSoja, lang)}
-        baixada={baixada}
-        filtro={filtroTexto}
-      />
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-        {sugerirPt && lang === "en" && (
-          <div role="region" aria-label="Idioma" className="mt-4">
-            <Callout tom="info" icone={Languages}>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <span>This app is in English. / Este app está em inglês.</span>
-                <Button onClick={() => setLang("pt")} lang="pt">
-                  Ver em português
-                </Button>
-              </div>
-            </Callout>
-          </div>
+      <div className="mx-auto flex min-h-screen w-full max-w-[440px] flex-col bg-palha">
+        {tela === "inicio" && (
+          <>
+            {modo === "vou" ? (
+              <CabecalhoInicio
+                saudacao={t("Olá, produtor!", "Hello, farmer!")}
+                titulo={t("Vamos proteger o seu milho safrinha?", "Shall we protect your second-crop corn?")}
+                onMenu={() => setFolha("menu")}
+              />
+            ) : (
+              <CabecalhoInicio
+                ceu={false}
+                saudacao={t("Soja na terra!", "Soybeans in the ground!")}
+                titulo={t("Agora vamos cuidar do milho que vem depois", "Now let’s look after the corn that comes next")}
+                onMenu={() => setFolha("menu")}
+              />
+            )}
+            <main className={`relative flex flex-col gap-3.5 px-4 pb-[120px] ${modo === "vou" ? "-mt-[18px]" : "-mt-[22px]"}`}>
+              {modo === "vou" ? (
+                <VouPlantar
+                  local={local}
+                  datas={datasEf}
+                  idx={idx}
+                  onIdx={setIdx}
+                  baixada={baixada}
+                  onBaixada={setBaixada}
+                  onTrocarLocal={() => setFolha("municipio")}
+                  onModo={setModo}
+                  onVerCalendario={() => irPara("calendario")}
+                  detalhes={detalhes}
+                />
+              ) : (
+                hoje && <JaPlantei
+                  d={dEf}
+                  baixada={baixada}
+                  cicloSoja={p.cicloSoja}
+                  hoje={hoje}
+                  onModo={setModo}
+                  onMudarData={() => setFolha("data")}
+                  onRotacoes={() => irPara("rotacoes")}
+                />
+              )}
+            </main>
+            <BarraAcoes hrefWhatsApp={"https://wa.me/?text=" + encodeURIComponent(resumo)} onAgenda={salvarAgenda} />
+          </>
         )}
 
-        <div className="pb-4 pt-6">
-          <h1 className="text-[26px] font-extrabold leading-tight tracking-tight sm:text-4xl">
-            {t(
-              "Quando plantar a soja para proteger o milho safrinha?",
-              "When should I plant soybeans to protect my second-crop corn?",
-            )}
-          </h1>
-          <p className="mt-2 max-w-2xl text-ink-muted">
-            {t(
-              `Veja em quantos dos últimos ${d.geada.totalAnos} anos o milho safrinha pegou geada ou seca, conforme a data da soja. Dados diários da NASA desde 1981.`,
-              `See in how many of the last ${d.geada.totalAnos} years second-crop corn met frost or drought, depending on the soybean date. NASA daily data since 1981.`,
-            )}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[380px_minmax(0,1fr)] lg:items-start lg:gap-8">
-          <PainelLavoura
-            locais={locais}
-            localId={local.id}
-            onLocal={setLocalId}
-            onAdicionarLocal={(l) => setExtras((xs) => (xs.some((x) => x.id === l.id) ? xs : [...xs, l]))}
-            datas={datasEf}
-            idx={idx}
-            onIdx={setIdx}
+        {tela === "calendario" && hoje && (
+          <TelaCalendario
+            local={local}
+            d={dEf}
             baixada={baixada}
-            onBaixada={setBaixada}
-            fase={fase}
-            onFase={setFase}
-            d={d}
-            ensoInfo={data.enso}
+            cicloMilho={p.cicloMilho}
+            hoje={hoje}
+            lembretes={lembretes}
+            onLembrete={(id) => setLembretes((x) => ({ ...x, [id]: !x[id] }))}
+            onAgenda={salvarAgenda}
+            onVoltar={voltar}
+          />
+        )}
+
+        {tela === "rotacoes" && (
+          <TelaRotacoes
+            nomeLocal={local.nome}
+            d={dEf}
+            datas={datasEf}
+            trigo={local.trigo}
+            baixada={baixada}
+            modelo={modelo}
+            foco={foco}
+            onFoco={setFoco}
+            restricoes={restricoes}
+            onRestricao={(k) => setRestricoes((xs) => (xs.includes(k) ? xs.filter((x) => x !== k) : [...xs, k]))}
+            onVoltar={voltar}
+          />
+        )}
+      </div>
+
+      {folha === "menu" && (
+        <Folha titulo="Menu" onFechar={fecharFolha}>
+          <div role="group" aria-label={t("Idioma", "Language")} className="grid grid-cols-2 gap-1 rounded-full bg-campo p-1">
+            {(["pt", "en"] as const).map((l) => (
+              <button
+                key={l}
+                type="button"
+                lang={l}
+                aria-pressed={lang === l}
+                onClick={() => setLang(l)}
+                className={`min-h-[46px] cursor-pointer rounded-full border-none text-[15px] font-extrabold ${lang === l ? "bg-texto text-white" : "bg-transparent text-texto"}`}
+              >
+                {l === "pt" ? "Português" : "English"}
+              </button>
+            ))}
+          </div>
+          <button type="button" className={itemMenu} onClick={() => setFolha("municipio")}>
+            {t("Trocar município", "Change municipality")} <span className="text-lavoura">›</span>
+          </button>
+          <button type="button" className={itemMenu} onClick={() => irPara("calendario")}>
+            {t("Calendário da safra", "Season calendar")} <span className="text-lavoura">›</span>
+          </button>
+          <button type="button" className={itemMenu} onClick={() => irPara("rotacoes")}>
+            {t("O que plantar depois", "What to plant next")} <span className="text-lavoura">›</span>
+          </button>
+          <button
+            type="button"
+            className={itemMenu}
+            onClick={() => {
+              setFolha(null);
+              setTela("inicio");
+              setModo("vou");
+              setTimeout(() => {
+                const el = document.getElementById("detalhes") as HTMLDetailsElement | null;
+                if (el) {
+                  el.open = true;
+                  el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }, 60);
+            }}
+          >
+            {t("Detalhes técnicos e fontes", "Technical details and sources")} <span className="text-lavoura">›</span>
+          </button>
+          <p className="m-0 px-1 pt-1 font-mono text-[11px] tracking-[0.14em] text-texto-2">HOUSTON, WE HAVE A HARVEST · NASA SPACE APPS 2026</p>
+        </Folha>
+      )}
+
+      {folha === "municipio" && (
+        <Folha titulo={t("Onde fica sua lavoura?", "Where is your field?")} onFechar={fecharFolha}>
+          <div role="radiogroup" aria-label={t("Município", "Municipality")} className="flex flex-wrap gap-2">
+            {locais.map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                role="radio"
+                aria-checked={l.id === local.id}
+                onClick={() => escolherLocal(l.id)}
+                className={`min-h-12 cursor-pointer rounded-full border-none px-4 text-[15px] font-extrabold ${l.id === local.id ? "bg-lavoura text-white" : "bg-white text-texto"}`}
+              >
+                {l.nome}
+              </button>
+            ))}
+          </div>
+          <EscolherLugar
             params={p}
             indiceEnso={data.indiceEnso}
-            local={local}
+            onLocal={(l) => {
+              setExtras((xs) => (xs.some((x) => x.id === l.id) ? xs : [...xs, l]));
+              escolherLocal(l.id);
+            }}
           />
+        </Folha>
+      )}
 
-          <div className="flex min-w-0 flex-col gap-6 lg:gap-8">
-            <Resposta
-              local={local}
-              d={d}
-              dEf={dEf}
-              datasEf={datasEf}
-              idx={idx}
-              onIdx={setIdx}
-              baixada={baixada}
-              filtroTexto={filtroTexto}
-            />
-            <Previsao
-              key={local.id}
-              nome={local.nome}
-              lat={local.lat}
-              lon={local.lon}
-              baixada={baixada}
-              limiteGeadaC={p.limiteGeadaC}
-              ajusteBaixadaC={p.ajusteBaixadaC}
-            />
-            <Rotacoes d={dEf} trigo={local.trigo} nomeLocal={local.nome} baixada={baixada} filtroRotulo={filtroTexto} />
-            <Evidencias
-              local={local}
-              d={d}
-              dEf={dEf}
-              baixada={baixada}
-              filtroTexto={filtroTexto}
-              params={p}
-              backtest={data.backtest}
-            />
+      {folha === "data" && (
+        <Folha titulo={t("Quando você plantou a soja?", "When did you plant soybeans?")} onFechar={fecharFolha}>
+          <div role="radiogroup" aria-label={t("Data de plantio da soja", "Soybean planting date")} className="grid grid-cols-4 gap-1.5">
+            {local.datas.map((x, i) => {
+              const dm = diaEMes(x.dataSoja, lang);
+              return (
+                <button
+                  key={x.dataSoja}
+                  type="button"
+                  role="radio"
+                  aria-checked={i === idx}
+                  aria-label={fmtDia(x.dataSoja, lang)}
+                  onClick={() => {
+                    setIdx(i);
+                    setFolha(null);
+                  }}
+                  className={`flex min-h-[58px] cursor-pointer flex-col items-center justify-center rounded-2xl border-none text-[17px] font-extrabold leading-[1.05] ${
+                    i === idx ? "bg-lavoura text-white" : "bg-white text-texto"
+                  }`}
+                >
+                  {dm.dia}
+                  <span className={`text-xs font-semibold ${i === idx ? "text-[#C9F7A8]" : "text-texto-2"}`}>{dm.mes}</span>
+                </button>
+              );
+            })}
           </div>
-        </div>
-
-        <Rodape local={local} />
-      </div>
+        </Folha>
+      )}
     </LangContext.Provider>
   );
 }

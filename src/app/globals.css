@@ -1,35 +1,62 @@
 @import "tailwindcss";
 
+/* Identidade "weharvest v3" (artefato "weharvest – nova identidade").
+   Céu #0A1424 · Lavoura #2E7D4A · Broto #9BE36B · Milho #C9A23A · Palha #F5F2EA
+   Geada #3E6EA8 · Atenção #B7791F · Risco alto #B4480E */
 @theme inline {
   --font-sans: var(--font-archivo), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* marca */
+  --color-ceu: #0A1424;
+  --color-ceu-2: #15233A;
+  --color-ceu-line: #2B4263;
+  --color-lavoura: #2E7D4A;
+  --color-lavoura-escura: #1F5A34;
+  --color-broto: #9BE36B;
+  --color-milho: #C9A23A;
+  --color-palha: #F5F2EA;
+  --color-geada: #3E6EA8;
+  --color-atencao: #B7791F;
+  --color-risco: #B4480E;
+  --color-texto: #14231A;
+  --color-texto-2: #4A5A50;
+  --color-claro: #F2F5EE;
+  --color-claro-2: #C7D2DE;
+  --color-campo: #F3F0E7;
+  --color-borda: #E3DDCF;
+  --color-divisor: #F1EDE3;
+  --color-whatsapp: #25A55F;
+
+  /* tokens usados pelos blocos de "Detalhes técnicos" (mesma paleta) */
   --color-paper: #F5F2EA;
   --color-surface: #FFFFFF;
-  --color-surface-2: #ECE7DB;
-  --color-line: #DDD6C8;
-  --color-line-strong: #B9B09E;
-  --color-ink: #1C2117;
-  --color-ink-muted: #4A5243;
-  --color-ink-faint: #5F6657;
-  --color-brand: #2C6A38;
-  --color-brand-strong: #21522B;
-  --color-brand-soft: #E2EEDD;
-  --color-frost: #2563A6;
-  --color-frost-soft: #E2EDF8;
-  --color-frost-ink: #1D4F86;
-  --color-drought: #A0521A;
-  --color-drought-soft: #F7E9DB;
-  --color-drought-ink: #83420F;
-  --color-low: #1E6B3F;
-  --color-low-soft: #E1F1E6;
-  --color-mid: #7A5200;
-  --color-mid-soft: #FFF1C7;
-  --color-mid-line: #E8C766;
-  --color-high: #A3231B;
-  --color-high-soft: #FBE2DF;
-  --color-high-strong: #B3261E;
-  --color-soy: #3F7F33;
-  --color-corn: #E2B33C;
-  --color-wheat: #B98A2E;
+  --color-surface-2: #F3F0E7;
+  --color-line: #E3DDCF;
+  --color-line-strong: #D6CFBE;
+  --color-ink: #14231A;
+  --color-ink-muted: #4A5A50;
+  --color-ink-faint: #4A5A50;
+  --color-brand: #2E7D4A;
+  --color-brand-strong: #1F5A34;
+  --color-brand-soft: #E3F2E1;
+  --color-frost: #3E6EA8;
+  --color-frost-soft: #EAF2FB;
+  --color-frost-ink: #2F5A92;
+  --color-drought: #9A6A12;
+  --color-drought-soft: #FFF4DC;
+  --color-drought-ink: #7A520F;
+  --color-low: #2E7D4A;
+  --color-low-soft: #DDF0DC;
+  --color-mid: #7A520F;
+  --color-mid-soft: #FBEBC8;
+  --color-mid-line: #F2C46A;
+  --color-high: #9A3D0B;
+  --color-high-soft: #FBDCCB;
+  --color-high-strong: #B4480E;
+  --color-soy: #2E7D4A;
+  --color-corn: #F2C94C;
+  --color-wheat: #C9A23A;
 }
 
 body {
@@ -38,18 +65,33 @@ body {
 
 h1, h2, h3 { letter-spacing: -0.02em; }
 
-html { scroll-padding-top: 72px; }
+@keyframes wh-fly { from { transform: translateX(-40px); } to { transform: translateX(420px); } }
+@keyframes wh-tw { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes wh-ring { from { stroke-dashoffset: var(--wh-len, 196); } to { stroke-dashoffset: 0; } }
+@keyframes wh-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes wh-bar { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes wh-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes wh-sheet { from { transform: translateY(100%); } to { transform: none; } }
+.wh-fly { animation: wh-fly 14s linear infinite; }
+.wh-tw { animation: wh-tw 3s ease-in-out infinite; }
+.wh-ring { animation: wh-ring 1.4s cubic-bezier(.2,.8,.2,1) both .2s; }
+.wh-bob { animation: wh-bob 3s ease-in-out infinite; }
+.wh-bar { transform-origin: 50% 100%; animation: wh-bar .9s cubic-bezier(.2,.8,.2,1) both; }
+.wh-in { animation: wh-rise .5s ease-out both; }
+.wh-sheet { animation: wh-sheet .25s ease-out both; }
+
+.wh-scroll { scrollbar-width: none; }
+.wh-scroll::-webkit-scrollbar { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+    animation: none !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-brand);
+  outline: 2px solid var(--color-lavoura);
   outline-offset: 2px;
 }
