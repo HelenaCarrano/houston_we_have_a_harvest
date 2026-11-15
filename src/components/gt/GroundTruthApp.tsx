@@ -154,7 +154,7 @@ function LinhaDoTempo({ d, local }: { d: DataView; local: LocalView }) {
           <b>{dia(d.plantioMilho)}</b>
         </li>
         <li>
-          <span className="text-gt-orange">{t("Fase crítica", "Critical stage")} </span>
+          <span className="text-gt-orange">{t("Floração e enchimento", "Critical stage")} </span>
           <b>
             {dia(d.faseInicio)}–{dia(d.faseFim)}
           </b>
@@ -394,11 +394,11 @@ function GraficoDatas({
       <p className="mt-2 flex flex-wrap gap-x-4 font-mono text-[11px] text-gt-faint">
         <span>
           <span className="mr-1 inline-block size-2.5 rounded-sm bg-gt-frost" />{" "}
-          {t("geada na fase crítica", "frost in the critical stage")}
+          {t("geada na floração e enchimento", "frost in the critical stage")}
         </span>
         <span>
           <span className="mr-1 inline-block size-2.5 rounded-sm bg-gt-orange" />{" "}
-          {t("seca na fase crítica", "drought in the critical stage")}
+          {t("seca na floração e enchimento", "drought in the critical stage")}
         </span>
       </p>
     </div>
@@ -425,7 +425,7 @@ function Recomendacao({ datas, idx, baixada }: { datas: DataView[]; idx: number;
     >
       <p className="text-lg leading-snug sm:text-xl">
         {t("Plantando a soja até", "Planting soybeans by")} <b className="font-black">{fmtDia(alvo.dataSoja, lang)}</b>
-        {t(", o risco de geada na fase crítica cai para ", ", frost risk in the critical stage drops to ")}
+        {t(", o risco de geada na floração e enchimento do milho cai para ", ", frost risk in the critical stage drops to ")}
         <b className="font-black">{deCada10(g(alvo), lang).frase}</b>{" "}
         {t(
           `(${g(alvo).anosComEvento} de ${g(alvo).totalAnos} safras).`,
@@ -597,7 +597,7 @@ function Prova2026({ local, d, limite }: { local: LocalView; d: DataView; limite
             </p>
             <ul className="mt-2 grid gap-1 text-sm sm:grid-cols-3">
               <li>
-                {t(`Geada na fase crítica (≤ ${limite} °C):`, `Frost in the critical stage (≤ ${limite} °C):`)}{" "}
+                {t(`Geada na floração e enchimento (≤ ${limite} °C):`, `Frost in the critical stage (≤ ${limite} °C):`)}{" "}
                 <b>{simNao(app2026.geada)}</b>
               </li>
               <li>
@@ -605,7 +605,7 @@ function Prova2026({ local, d, limite }: { local: LocalView; d: DataView; limite
                 <b>{simNao(app2026.geadaBaixada)}</b>
               </li>
               <li>
-                {t("Seca na fase crítica:", "Drought in the critical stage:")} <b>{simNao(app2026.seca)}</b>
+                {t("Seca na floração e enchimento:", "Drought in the critical stage:")} <b>{simNao(app2026.seca)}</b>
               </li>
             </ul>
           </div>
@@ -733,7 +733,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           </h1>
           <p className="max-w-3xl text-base text-gt-muted sm:text-lg">
             {t(
-              `A data da soja define quando o milho safrinha chega à fase crítica (pendoamento e enchimento de grãos). Contamos, em ${d.geada.totalAnos} anos de dados diários da NASA desde 1981, quantas vezes essa fase pegou geada ou seca.`,
+              `A data da soja define quando o milho safrinha chega à fase em que mais sofre com frio e falta de água (floração e enchimento de grãos). Contamos, em ${d.geada.totalAnos} anos de dados diários da NASA desde 1981, quantas vezes essa fase pegou geada ou seca.`,
               `The soybean planting date decides when the second-crop corn (safrinha) reaches its critical stage (tasseling and grain fill). Using ${d.geada.totalAnos} years of NASA daily data since 1981, we count how often that stage met frost or drought.`,
             )}
           </p>
@@ -856,6 +856,18 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               </div>
             ))}
           </div>
+          <p className="text-sm text-gt-muted">
+            <b className="text-gt-text">{t("Fase do milho contada:", "Corn stage counted:")}</b>{" "}
+            {t(
+              `floração e enchimento de grãos, de ${dia(dEf.faseInicio)} a ${dia(dEf.faseFim)} (milho plantado em ${dia(dEf.plantioMilho)}).`,
+              `flowering and grain fill, ${dia(dEf.faseInicio)} to ${dia(dEf.faseFim)} (corn planted on ${dia(dEf.plantioMilho)}).`,
+            )}{" "}
+            <b className="text-gt-text">{t("Risco:", "Risk:")}</b>{" "}
+            {t(
+              "Baixo = até 1 ano em 10 · Médio = 2 ou 3 · Alto = 4 ou mais.",
+              "Low = up to 1 year in 10 · Medium = 2 or 3 · High = 4 or more.",
+            )}
+          </p>
           <div className="rounded-xl border border-gt-line bg-gt-card2 p-3 text-sm">
             <p>
               <b>{t("Anos considerados:", "Years counted:")}</b>{" "}
@@ -933,7 +945,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
                 </summary>
                 <Fonte>
               {t(
-                "Fase de cada safra = RONI da NOAA (índice oficial do ENSO) no trimestre do meio da fase crítica do milho; ≥ +0,5 = El Niño, ≤ −0,5 = La Niña. Regra simplificada (a NOAA exige 5 trimestres seguidos para declarar um episódio). O ONI antigo classificaria cerca de 15% dos trimestres de outra forma. Limites de seca continuam calculados com todos os anos.",
+                "Fase de cada safra = RONI da NOAA (índice oficial do ENSO) no trimestre do meio da floração e enchimento do milho; ≥ +0,5 = El Niño, ≤ −0,5 = La Niña. Regra simplificada (a NOAA exige 5 trimestres seguidos para declarar um episódio). O ONI antigo classificaria cerca de 15% dos trimestres de outra forma. Limites de seca continuam calculados com todos os anos.",
                 "Phase of each season = NOAA's RONI (official ENSO index) in the 3-month season at the middle of the corn critical stage; ≥ +0.5 = El Niño, ≤ −0.5 = La Niña. Simplified rule (NOAA requires 5 consecutive seasons to declare an episode). The older ONI would classify about 15% of seasons differently. Drought limits are still computed with all years.",
               )}{" "}
               {t("Dados baixados em", "Data downloaded on")} {fmtData(data.enso.baixadoEm.slice(0, 10), lang)}.{" "}
@@ -946,6 +958,58 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
             </details>
           </div>
           <Recomendacao datas={datasEf} idx={idx} baixada={baixada} />
+          <details className="rounded-xl border border-gt-line bg-gt-card2 p-3 text-sm">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center font-semibold text-gt-green underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+              {t("O que significam essas palavras?", "What do these words mean?")}
+            </summary>
+            <dl className="mt-1 space-y-2 text-gt-muted">
+              {(
+                [
+                  [
+                    "Safrinha",
+                    "Second-crop corn (safrinha)",
+                    "É o milho plantado logo depois da colheita da soja, na mesma terra.",
+                    "Corn planted right after the soybean harvest, on the same field.",
+                  ],
+                  [
+                    "Geada",
+                    "Frost",
+                    "Contamos como geada quando a temperatura mínima do ar (a 2 m do chão) chega a 3 °C ou menos. Perto disso a planta já pode congelar. Geada forte: 1 °C ou menos.",
+                    "We count frost when the minimum air temperature (2 m above ground) reaches 3 °C or less. Near that, the plant itself can already freeze. Strong frost: 1 °C or less.",
+                  ],
+                  [
+                    "Seca e veranico",
+                    "Drought and dry spell (veranico)",
+                    "Veranico é um período de dias secos no meio da época de chuva. Contamos como seca 15 dias seguidos quase sem chuva, ou solo bem mais seco que o normal para a época.",
+                    "A veranico is a run of dry days in the middle of the rainy season. We count drought as 15 days in a row with almost no rain, or soil much drier than normal for the time of year.",
+                  ],
+                  [
+                    "Floração e enchimento",
+                    "Critical stage (flowering and grain fill)",
+                    "É a fase em que o milho mais sofre com frio e falta de água, mais ou menos de 55 a 100 dias depois que o milho é plantado.",
+                    "The stage when corn suffers most from cold and lack of water, about 55 to 100 days after the corn is planted.",
+                  ],
+                  [
+                    "Baixada",
+                    "Lowland",
+                    "Terreno baixo, onde o ar frio se acumula nas noites calmas. Marque a caixa se a sua lavoura é assim.",
+                    "Low ground where cold air pools on calm nights. Tick the box if your field is like that.",
+                  ],
+                  [
+                    "ZARC",
+                    "ZARC",
+                    "Zoneamento Agrícola de Risco Climático, do Ministério da Agricultura. Define as datas de plantio permitidas para crédito e seguro. Confira a do seu município.",
+                    "Brazil's agricultural climate-risk zoning (Ministry of Agriculture). It sets the planting dates allowed for credit and crop insurance. Check your municipality's.",
+                  ],
+                ] as const
+              ).map(([ptTermo, enTermo, ptTexto, enTexto]) => (
+                <div key={ptTermo}>
+                  <dt className="font-semibold text-gt-text">{t(ptTermo, enTermo)}</dt>
+                  <dd>{t(ptTexto, enTexto)}</dd>
+                </div>
+              ))}
+            </dl>
+          </details>
         </Card>
 
         <Card>
@@ -955,7 +1019,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           </div>
           <Fonte>
             {t(
-              `Hipóteses a validar com agronomia/ZARC: soja ${p.cicloSoja} dias, intervalo ${p.intervalo} dias, fase crítica do milho de ${p.faseCriticaInicio} a ${p.faseCriticaFim} dias após o plantio.`,
+              `Hipóteses a validar com agronomia/ZARC: soja ${p.cicloSoja} dias, intervalo ${p.intervalo} dias, floração e enchimento do milho de ${p.faseCriticaInicio} a ${p.faseCriticaFim} dias após o plantio.`,
               `Hypotheses to validate with agronomy/ZARC: soybean ${p.cicloSoja} days, gap ${p.intervalo} days, corn critical stage from ${p.faseCriticaInicio} to ${p.faseCriticaFim} days after planting.`,
             )}
           </Fonte>
@@ -965,14 +1029,14 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           <CardRisco
             titulo={
               baixada
-                ? t("Geada na fase crítica · baixada", "Frost in the critical stage · lowland")
-                : t("Geada na fase crítica", "Frost in the critical stage")
+                ? t("Geada na floração e enchimento · baixada", "Frost in the critical stage · lowland")
+                : t("Geada na floração e enchimento", "Frost in the critical stage")
             }
             tipo="geada"
             r={geada}
             filtro={filtroTexto}
             regra={t(
-              `Ano com geada = mínima do ar a 2 m ≤ ${limiteAtual} °C em algum dia entre ${dia(d.faseInicio)} e ${dia(d.faseFim)}. ${p.limiteGeadaC} °C no abrigo ≈ geada na relva (Embrapa).`,
+              `Ano com geada = em algum dia entre ${dia(d.faseInicio)} e ${dia(d.faseFim)} a temperatura mínima do ar chegou a ${limiteAtual} °C ou menos (medida a 2 m do chão; com ${p.limiteGeadaC} °C no ar, a planta já pode congelar, segundo a Embrapa).`,
               `Frost year = 2 m air minimum ≤ ${limiteAtual} °C on any day between ${dia(d.faseInicio)} and ${dia(d.faseFim)}. ${p.limiteGeadaC} °C at screen height ≈ frost at grass level (Embrapa).`,
             )}
             extra={
@@ -987,12 +1051,12 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
             }
           />
           <CardRisco
-            titulo={t("Seca na fase crítica", "Drought in the critical stage")}
+            titulo={t("Seca na floração e enchimento", "Drought in the critical stage")}
             tipo="seca"
             r={dEf.seca}
             filtro={filtroTexto}
             regra={t(
-              `Ano seco = ${p.sequenciaSecaDias}+ dias seguidos com chuva < ${p.chuvaDiaSecoMm} mm OU umidade do solo na raiz entre as ${p.percentilUmidadeSolo}% mais baixas para as mesmas datas, entre ${dia(d.faseInicio)} e ${dia(d.faseFim)}. Como o solo é comparado com a própria história, cerca de 1 em cada 5 anos sempre aparece como solo seco.`,
+              `Ano seco = ${p.sequenciaSecaDias} dias ou mais seguidos com menos de ${p.chuvaDiaSecoMm} mm de chuva por dia, OU solo na raiz entre os ${p.percentilUmidadeSolo}% mais secos da história para essas datas, entre ${dia(d.faseInicio)} e ${dia(d.faseFim)}. Como o solo é comparado com a própria história, cerca de 1 em cada 5 anos sempre aparece como solo seco.`,
               `Drought year = ${p.sequenciaSecaDias}+ consecutive days with rain < ${p.chuvaDiaSecoMm} mm OR root-zone soil moisture among the ${p.percentilUmidadeSolo}% lowest for the same dates, between ${dia(d.faseInicio)} and ${dia(d.faseFim)}. Because soil is compared with its own history, about 1 in 5 years always shows up as dry soil.`,
             )}
           />

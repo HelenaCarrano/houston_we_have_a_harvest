@@ -31,7 +31,7 @@ export function ConfrontoIbge({ b }: { b: BacktestView }) {
       <p className="mt-3 rounded-xl border border-gt-risk-line bg-gt-risk-bg p-3 text-sm text-gt-risk-text">
         <b>{t("Resultado: sem diferença detectável. ", "Result: no detectable difference. ")}</b>
         {t(
-          "Não conseguimos confirmar que os anos marcados tiveram produtividade menor. Os níveis do app descrevem com que frequência o evento climático ocorre na fase crítica, não uma perda de produtividade prevista.",
+          "Não conseguimos confirmar que os anos marcados tiveram produtividade menor. Os níveis do app descrevem com que frequência o evento climático ocorre na floração e enchimento do milho, não uma perda de produtividade prevista.",
           "We could not confirm that flagged years had lower yields. The app's levels describe how often the weather event occurs in the critical stage, not a predicted yield loss.",
         )}
       </p>

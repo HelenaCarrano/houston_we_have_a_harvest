@@ -53,13 +53,13 @@ export const ROTACOES: Rotacao[] = [
       soloDescoberto: "Da colheita do milho (inverno) até a soja: solo pode ficar com pouca palha.",
       justificativa: "É o sistema mais comum na região: duas safras de grãos por ano na mesma área.",
       evidencia: [
-        "Risco de geada e seca na fase crítica calculado com os dados diários da NASA POWER desde 1981.",
+        "Risco de geada e seca na floração e enchimento do milho calculado com os dados diários da NASA POWER desde 1981.",
         "Deral (mai/2026): geadas queimaram folhas do milho safrinha em baixadas.",
       ],
       beneficios: ["Maior potencial de renda com grãos.", "Mercado e logística já conhecidos."],
       riscos: [
         "Geada no pendoamento e enchimento quando a soja é plantada tarde.",
-        "Veranico com solo seco na fase crítica.",
+        "Veranico com solo seco na floração e enchimento.",
         "Pouca cobertura do solo depois da colheita.",
       ],
       lacunas: ["Cultivar e ciclo reais do milho", "Adubação", "Preço do milho na época", "Janela do ZARC"],
@@ -93,7 +93,7 @@ export const ROTACOES: Rotacao[] = [
         "Não calculado no app (fase sensível do trigo é o espigamento, 70–110 dias). Deral (mai/2026): o trigo não teve dano significativo com as geadas que atingiram o milho.",
       soloDescoberto: "Coberto no inverno, com o trigo; sem cultura da colheita da soja até a semeadura do trigo e entre o trigo e a próxima soja.",
       justificativa:
-        "Trocar o milho safrinha por um cereal de inverno onde a geada na fase crítica do milho é frequente (por exemplo, em baixadas).",
+        "Trocar o milho safrinha por um cereal de inverno onde a geada na floração e enchimento do milho é frequente (por exemplo, em baixadas).",
       evidencia: [
         "Deral (mai/2026): com as mesmas geadas, o trigo (ainda vegetativo) não teve dano significativo.",
         "Geada no espigamento do trigo calculada com a NASA POWER para uma semeadura fixa (hipótese); a seca do trigo não é calculada.",

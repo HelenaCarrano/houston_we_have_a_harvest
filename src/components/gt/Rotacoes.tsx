@@ -287,7 +287,7 @@ export function Rotacoes({
                     <b>{geada.anosComEvento}</b>
                     {t(" e seca em ", " and drought in ")}
                     <b>{d.seca.anosComEvento}</b> {t("de", "of")} <b>{geada.totalAnos}</b>{" "}
-                    {t("safras na fase crítica", "seasons in the critical stage")} ({dia(d.faseInicio)}–{dia(d.faseFim)}).{" "}
+                    {t("safras na floração e enchimento", "seasons in the critical stage")} ({dia(d.faseInicio)}–{dia(d.faseFim)}).{" "}
                     {t("Fonte: NASA POWER.", "Source: NASA POWER.")}
                   </>
                 ) : (
