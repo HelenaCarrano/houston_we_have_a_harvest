@@ -146,12 +146,12 @@ export function TestesReais() {
       <Bloco
         titulo={t("TESTE 5 · PREVISÃO × MEDIDO", "TEST 5 · FORECAST × MEASURED")}
         pergunta={t("O “Posso plantar esta semana?” acerta?", "Does “Can I plant this week?” get it right?")}
-        tom={temPrevisao && (sem.acerto ?? 0) >= 70 && (sem.alarmeFalso ?? 100) <= 40 ? "bom" : "misto"}
+        tom={!temPrevisao ? "misto" : (sem.acerto ?? 0) >= 70 && (sem.alarmeFalso ?? 100) <= 40 ? "bom" : (sem.acerto ?? 0) >= 40 ? "misto" : "ruim"}
         veredito={
           temPrevisao
             ? t(
-                `Das semanas com geada ou chuva forte medidas na estação, o aviso pegou ${pctx(sem.acerto)}; ${pctx(sem.alarmeFalso)} dos avisos foram alarme falso (${n0(sem.n)} semanas).`,
-                `Of the weeks with frost or heavy rain measured at the station, the warning caught ${pctx(sem.acerto)}; ${pctx(sem.alarmeFalso)} of warnings were false alarms (${n0(sem.n)} weeks).`,
+                `Para a semana inteira, pouco: das semanas com geada ou chuva forte medidas na estação, o aviso pegou ${pctx(sem.acerto)}; ${pctx(sem.alarmeFalso)} dos avisos foram alarme falso (${n0(sem.n)} semanas). Chuva forte num ponto é quase impossível de prever; por isso o cartão agora diz “sem alerta na previsão” em vez de “pode plantar”.`,
+                `For the whole week, not much: of the weeks with frost or heavy rain measured at the station, the warning caught ${pctx(sem.acerto)}; ${pctx(sem.alarmeFalso)} of warnings were false alarms (${n0(sem.n)} weeks). Heavy rain at a single point is nearly impossible to forecast, so the card now says “no alert in the forecast” instead of “good to plant”.`,
               )
             : t("Teste ainda sem dados suficientes.", "Not enough data for this test yet.")
         }

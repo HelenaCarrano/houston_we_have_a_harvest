@@ -38,7 +38,19 @@ export async function buscarTexto(url, chave, { tentativas = 4, pausa = 0, vazio
   }
 }
 
-export const buscarJson = async (url, chave, op) => JSON.parse(await buscarTexto(url, chave, op));
+/** Como buscarTexto, mas exige JSON válido: resposta quebrada (ex.: tempo esgotado no servidor) é apagada e buscada de novo. */
+export async function buscarJson(url, chave, op) {
+  for (let i = 1; ; i++) {
+    const txt = await buscarTexto(url, chave, op);
+    try {
+      return JSON.parse(txt);
+    } catch (e) {
+      fs.rmSync(path.join(CACHE, chave), { force: true });
+      if (i >= 4) throw new Error(`${url}: resposta não é JSON (${e.message})`);
+      await sleep(5000 * i);
+    }
+  }
+}
 
 export function salvarJson(arq, obj) {
   fs.mkdirSync(path.dirname(arq), { recursive: true });
