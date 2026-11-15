@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import type { DataView } from "@/lib/view-data";
 import { diaLongo, emDez, fraseDez } from "@/components/wh/modelo";
 import { fmtDia, useLang, useT } from "@/lib/i18n";
+import { Folha } from "@/components/wh/Moldura";
 
 /** Cor de cada data pela geada (anos em 10): verde = pouca, laranja = muita. */
 export function corGeada(n: number): string {
@@ -33,6 +35,7 @@ export function SeletorDia({
 }) {
   const t = useT();
   const lang = useLang();
+  const [aberto, setAberto] = useState(false);
   const g = (x: DataView) => (baixada ? x.geadaBaixada : x.geada);
   const d = datas[idx];
   const n = datas.length;
@@ -62,7 +65,7 @@ export function SeletorDia({
           <span className="text-[22px] font-black leading-tight">{diaLongo(d.dataSoja, lang)}</span>
           <span className="flex items-center gap-1.5 text-[13px] font-bold text-texto-2">
             <span className="size-2.5 rounded-full" style={{ background: corGeada(emDez(g(d)).n) }} />
-            {t(`geada em ${fraseDez(g(d), lang)}`, `frost in ${fraseDez(g(d), lang)}`)}
+            {t(`risco de geada: ${fraseDez(g(d), lang)}`, `frost risk: ${fraseDez(g(d), lang)}`)}
           </span>
         </div>
         <button
@@ -75,6 +78,22 @@ export function SeletorDia({
           <Seta dir="dir" />
         </button>
       </div>
+      <button
+        type="button"
+        onClick={() => setAberto(true)}
+        className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-lavoura bg-white px-3 text-[15px] font-extrabold text-lavoura"
+      >
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="5" width="18" height="16" rx="3" />
+          <path d="M8 3v4M16 3v4M3 10h18" />
+        </svg>
+        {t("Abrir calendário", "Open calendar")}
+      </button>
+      {aberto && (
+        <Folha titulo={t("Escolha o dia de plantio da soja", "Pick the soybean planting day")} onFechar={() => setAberto(false)}>
+          <Calendario datas={datas} idx={idx} g={g} onEscolher={(i) => { onIdx(i); setAberto(false); }} />
+        </Folha>
+      )}
       <div className="relative px-3.5 pt-1">
         <div className="flex h-3 overflow-hidden rounded-full" aria-hidden="true">
           {datas.map((x) => (
@@ -89,7 +108,7 @@ export function SeletorDia({
           value={idx}
           onChange={(e) => onIdx(Number(e.target.value))}
           aria-labelledby="wh-q-data"
-          aria-valuetext={`${fmtDia(d.dataSoja, lang)} · ${t(`geada em ${fraseDez(g(d), lang)}`, `frost in ${fraseDez(g(d), lang)}`)}`}
+          aria-valuetext={`${fmtDia(d.dataSoja, lang)} · ${t(`risco de geada: ${fraseDez(g(d), lang)}`, `frost risk: ${fraseDez(g(d), lang)}`)}`}
           className="wh-range absolute inset-x-0 -top-2 h-11 w-full"
         />
         <div className="relative mt-2 h-4 text-[13px] font-bold text-texto-2" aria-hidden="true">
@@ -101,8 +120,81 @@ export function SeletorDia({
         </div>
       </div>
       <span className="text-[13px] text-texto-2">
-        {t("Arraste ou use as setas. Verde = menos geada no milho.", "Drag or use the arrows. Green = less frost on the corn.")}
+        {t("Esta é a data da SOJA. O risco mostrado é o da geada no milho que vem depois. Verde = menos geada.", "This is the SOYBEAN date. The risk shown is frost on the corn that follows. Green = less frost.")}
       </span>
+    </div>
+  );
+}
+
+const diaDoAno = (mmdd: string) => Date.UTC(2026, Number(mmdd.slice(0, 2)) - 1, Number(mmdd.slice(3, 5))) / 86_400_000;
+
+/** Calendário de set a dez: cada dia leva a cor da data de simulação mais próxima (a cada ~5 dias); tocar escolhe essa data. */
+function Calendario({ datas, idx, g, onEscolher }: { datas: DataView[]; idx: number; g: (x: DataView) => Parameters<typeof emDez>[0]; onEscolher: (i: number) => void }) {
+  const t = useT();
+  const lang = useLang();
+  const MESES = lang === "en" ? ["September", "October", "November", "December"] : ["Setembro", "Outubro", "Novembro", "Dezembro"];
+  const SEM = lang === "en" ? ["S", "M", "T", "W", "T", "F", "S"] : ["D", "S", "T", "Q", "Q", "S", "S"];
+  const maisProxima = (mmdd: string) => {
+    const k = diaDoAno(mmdd);
+    let melhor = 0;
+    datas.forEach((x, i) => {
+      if (Math.abs(diaDoAno(x.dataSoja) - k) < Math.abs(diaDoAno(datas[melhor].dataSoja) - k)) melhor = i;
+    });
+    return melhor;
+  };
+  const primeira = datas[0].dataSoja;
+  const ultima = datas[datas.length - 1].dataSoja;
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] font-bold text-texto-2">
+        {[
+          ["#7CC46A", t("menos geada", "less frost")],
+          ["#F2C46A", t("atenção", "caution")],
+          ["#E9A17A", t("mais geada", "more frost")],
+        ].map(([c, r]) => (
+          <span key={r} className="flex items-center gap-1.5">
+            <span className="size-3 rounded-full" style={{ background: c }} />
+            {r}
+          </span>
+        ))}
+      </div>
+      {[8, 9, 10, 11].map((m) => {
+        const dias = new Date(Date.UTC(2026, m + 1, 0)).getUTCDate();
+        const ini = new Date(Date.UTC(2026, m, 1)).getUTCDay();
+        return (
+          <section key={m} aria-label={MESES[m - 8]}>
+            <h3 className="m-0 mb-1.5 text-base font-black">{MESES[m - 8]}</h3>
+            <div className="grid grid-cols-7 gap-1 text-center">
+              {SEM.map((d, i) => (
+                <span key={i} className="text-xs font-bold text-texto-2">{d}</span>
+              ))}
+              {Array.from({ length: ini }, (_, i) => <span key={`v${i}`} />)}
+              {Array.from({ length: dias }, (_, i) => {
+                const mmdd = `${String(m + 1).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`;
+                if (mmdd < primeira || mmdd > ultima) return <span key={mmdd} className="flex h-11 items-center justify-center text-sm text-texto-2/40">{i + 1}</span>;
+                const k = maisProxima(mmdd);
+                const sel = k === idx;
+                return (
+                  <button
+                    key={mmdd}
+                    type="button"
+                    onClick={() => onEscolher(k)}
+                    aria-label={`${diaLongo(mmdd, lang)} · ${t(`risco de geada: ${fraseDez(g(datas[k]), lang)}`, `frost risk: ${fraseDez(g(datas[k]), lang)}`)}`}
+                    aria-pressed={sel}
+                    className={`h-11 cursor-pointer rounded-xl text-[15px] font-extrabold text-texto ${sel ? "border-[3px] border-texto" : "border-none"}`}
+                    style={{ background: corGeada(emDez(g(datas[k])).n) }}
+                  >
+                    {i + 1}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+      <p className="m-0 text-[13px] leading-[1.4] text-texto-2">
+        {t("O risco é calculado a cada ~5 dias; o dia que você tocar usa a data calculada mais próxima.", "Risk is computed every ~5 days; the day you tap uses the nearest computed date.")}
+      </p>
     </div>
   );
 }

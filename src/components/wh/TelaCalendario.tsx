@@ -393,8 +393,8 @@ export function TelaCalendario({
               ) : geada.anosComEvento > 0 ? (
                 <>
                   {t(
-                    "A flor do milho termina antes do pico do frio, mas geadas mais cedo pegaram a flor em ",
-                    "Corn flowering ends before the peak of the cold, but earlier frosts hit the flowers in ",
+                    "A flor do milho termina antes do pico do frio, mas geadas mais cedo davam um risco de ",
+                    "Corn flowering ends before the peak of the cold, but earlier frosts gave a risk of ",
                   )}
                   <strong>{fraseDez(geada, lang)}</strong>.
                 </>

@@ -153,7 +153,7 @@ export function JaPlantei({
         <span className="text-base leading-[1.4] text-[#6B2C08]">
           {baixo
             ? t("Com esta data, a geada na flor do milho é rara: ", "With this date, frost at corn flowering is rare: ")
-            : t("Com esta data, a flor do milho pega geada em ", "With this date, the corn flowers meet frost in ")}
+            : t("Com esta data, o risco de geada na flor do milho é de ", "With this date, the frost risk at corn flowering is ")}
           <strong>{fraseDez(geada, lang)}</strong>
           {baixo ? t(". Mesmo assim:", ". Even so:") : t(". Ainda dá pra diminuir:", ". You can still lower it:")}
         </span>

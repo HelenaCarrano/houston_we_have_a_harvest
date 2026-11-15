@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { avaliarPrevisao, PARAMS_PREVISAO, type PrevisaoDiaria } from "@/lib/engine/previsao.ts";
 import { IcTempo } from "@/components/wh/Arte";
 import { fmtNum, useLang, useT } from "@/lib/i18n";
-import previsaoRes from "@/data/validacao_previsao.json";
 
 type Estado = { tipo: "carregando" } | { tipo: "erro" } | { tipo: "ok"; dados: PrevisaoDiaria & { weather_code?: number[] } };
 
@@ -13,13 +12,6 @@ const COR: Record<string, { fundo: string; borda: string; texto: string; pt: str
   atencao: { fundo: "#FFF4DC", borda: "#F2C46A", texto: "#5C3D07", pt: "Atenção", en: "Caution" },
   // Não dizemos "pode plantar": no teste com estações (teste 5) a previsão da semana avisou poucas das geadas e chuvas fortes.
   "sem-alerta": { fundo: "#E3F2E1", borda: "#7CC46A", texto: "#1F5A34", pt: "Sem alerta na previsão", en: "No alert in the forecast" },
-};
-
-/** Resultado do teste 5 (scripts/validacao/validar_previsao.mjs). */
-const TESTE = previsaoRes as unknown as {
-  meta: { estacoes: number };
-  regraDaSemana: { acerto: number | null; n: number };
-  geadaPorAntecedencia: { dias: number; acerto: number | null }[];
 };
 
 /** "Posso plantar a soja esta semana?": previsão de 16 dias (Open-Meteo) com as regras do motor (src/lib/engine/previsao.ts). */
@@ -135,18 +127,10 @@ export function PlantarSemana({
               );
             })}
           </ul>
-          {TESTE.meta.estacoes > 0 && TESTE.regraDaSemana.acerto !== null && (
-            <p className="m-0 rounded-xl bg-[#FFF4DC] px-3 py-2.5 text-sm leading-[1.4] text-[#5C3D07]">
-              {t(
-                `Confie mais nos próximos 2 a 3 dias. No teste com ${TESTE.meta.estacoes} estações, a previsão de 1 dia pegou ${fmtNum(TESTE.geadaPorAntecedencia[0].acerto ?? 0, 0, lang)}% das geadas, mas o aviso da semana inteira pegou só ${fmtNum(TESTE.regraDaSemana.acerto, 0, lang)}% das semanas com geada ou chuva forte. Veja de novo perto do dia.`,
-                `Trust the next 2–3 days most. In the test with ${TESTE.meta.estacoes} stations, the 1-day forecast caught ${fmtNum(TESTE.geadaPorAntecedencia[0].acerto ?? 0, 0, lang)}% of frosts, but the whole-week warning caught only ${fmtNum(TESTE.regraDaSemana.acerto, 0, lang)}% of weeks with frost or heavy rain. Check again close to the day.`,
-              )}
-            </p>
-          )}
-          <p className="m-0 text-xs leading-[1.45] text-texto-2">
+          <p className="m-0 text-sm leading-[1.4] text-texto-2">
             {t(
-              `Temperatura mínima e chuva de cada dia. Regras a validar com agronomia: geada (mínima ≤ ${limite} °C) ou chuva ≥ ${PARAMS_PREVISAO.chuvaForteMm} mm em 7 dias = esperar. Previsão não é garantia. Fonte: Open-Meteo (CC BY 4.0).`,
-              `Daily low and rain. Rules to validate with agronomy: frost (low ≤ ${limite} °C) or rain ≥ ${PARAMS_PREVISAO.chuvaForteMm} mm within 7 days = wait. A forecast is not a guarantee. Source: Open-Meteo (CC BY 4.0).`,
+              "Confie mais nos próximos 2 a 3 dias; veja de novo perto do dia. Previsão não é garantia. Fonte: Open-Meteo.",
+              "Trust the next 2–3 days most; check again close to the day. A forecast is not a guarantee. Source: Open-Meteo.",
             )}
           </p>
         </>

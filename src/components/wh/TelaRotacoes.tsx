@@ -206,17 +206,17 @@ export function TelaRotacoes({
   const texto = (a: RotacaoAvaliada) =>
     a.r.id === "milho"
       ? t(
-          `Rende mais quando dá certo, mas com soja em ${dia(d.dataSoja)} a flor pega geada em ${fGeada}.`,
-          `Pays the most when it works, but with soybeans on ${dia(d.dataSoja)} the flowers meet frost in ${fGeada}.`,
+          `Rende mais quando dá certo, mas com soja em ${dia(d.dataSoja)} o risco de geada na flor é de ${fGeada}.`,
+          `Pays the most when it works, but with soybeans on ${dia(d.dataSoja)} the frost risk at flowering is ${fGeada}.`,
         )
       : a.r.id === "milho-braquiaria"
         ? t(
-            `Capim cobre o chão depois do milho. A flor do milho pega geada em ${fGeada}.`,
-            `Grass covers the ground after the corn. The corn flowers meet frost in ${fGeada}.`,
+            `Capim cobre o chão depois do milho. O risco de geada na flor do milho é de ${fGeada}.`,
+            `Grass covers the ground after the corn. The frost risk at corn flowering is ${fGeada}.`,
           )
         : t(
-            `Geada na espiga do trigo em ${fraseDez(modelo.geadaTrigo, lang)} (semeado em ${dia(trigo.semeadura)}), para qualquer data da soja.`,
-            `Frost at wheat heading in ${fraseDez(modelo.geadaTrigo, lang)} (sown on ${dia(trigo.semeadura)}), for any soybean date.`,
+            `Risco de geada na espiga do trigo: ${fraseDez(modelo.geadaTrigo, lang)} (semeado em ${dia(trigo.semeadura)}), para qualquer data da soja.`,
+            `Frost risk at wheat heading: ${fraseDez(modelo.geadaTrigo, lang)} (sown on ${dia(trigo.semeadura)}), for any soybean date.`,
           );
 
   return (
@@ -302,8 +302,8 @@ export function TelaRotacoes({
               <strong>{nomeMelhor}</strong>.
               {ate < idx &&
                 t(
-                  ` Plantando a soja em ${dia(alvo.dataSoja)}, a geada no milho cai para ${fraseDez(gAlvo, lang)}.`,
-                  ` Planting soybeans on ${dia(alvo.dataSoja)}, frost on the corn drops to ${fraseDez(gAlvo, lang)}.`,
+                  ` Plantando a soja em ${dia(alvo.dataSoja)}, o risco de geada no milho cai para ${fraseDez(gAlvo, lang)}.`,
+                  ` Planting soybeans on ${dia(alvo.dataSoja)}, the frost risk on the corn drops to ${fraseDez(gAlvo, lang)}.`,
                 )}
             </span>
           </div>

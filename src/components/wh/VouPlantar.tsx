@@ -198,7 +198,7 @@ export function VouPlantar({
           </div>
         </div>
         <p className="relative m-0 max-w-[300px] text-center text-[17px] font-extrabold leading-[1.3]">
-          {t(`Com soja em ${dia(d.dataSoja)}, a geada pegou a flor do milho em `, `With soybeans on ${dia(d.dataSoja)}, frost hit the corn flowers in `)}
+          {t(`Com soja em ${dia(d.dataSoja)}, o risco de geada na flor do milho é de `, `With soybeans on ${dia(d.dataSoja)}, the frost risk at corn flowering is `)}
           <span className="text-[#2F5A92]">{fraseDez(geada, lang)}</span>
           {baixada ? t(" (baixada)", " (lowland)") : ""}
         </p>
@@ -225,7 +225,7 @@ export function VouPlantar({
             </span>
           </div>
           <span className="text-[15px] font-extrabold leading-[1.2]">{t("Seca na flor do milho", "Drought at corn flowering")}</span>
-          <div className="flex gap-[3px]" role="img" aria-label={t(`Seca: ${fraseDez(d.seca, lang)}`, `Drought: ${fraseDez(d.seca, lang)}`)}>
+          <div className="flex gap-[3px]" role="img" aria-label={t(`Risco de seca: ${fraseDez(d.seca, lang)}`, `Drought risk: ${fraseDez(d.seca, lang)}`)}>
             {Array.from({ length: 10 }, (_, i) => (
               <span key={i} className="h-2 flex-1 rounded" style={{ background: i < ns.n ? "#E0A33A" : "#F2E2BC" }} />
             ))}
@@ -259,15 +259,15 @@ export function VouPlantar({
             <span className="text-base font-bold leading-[1.35]">
               {t("Boa data! Com soja em ", "Good date! With soybeans on ")}
               <strong>{dia(d.dataSoja)}</strong>
-              {t(", a geada no milho fica em ", ", frost on the corn stays at ")}
+              {t(", o risco de geada no milho fica em ", ", the frost risk on the corn stays at ")}
               <strong>{fraseDez(geada, lang)}</strong>
-              {t(", o menor valor entre as datas.", ", the lowest of all dates.")}
+              {t(", o menor entre as datas.", ", the lowest of all dates.")}
             </span>
           ) : (
             <span className="text-base font-bold leading-[1.35]">
               {t("Plante a soja em ", "Plant soybeans on ")}
               <strong>{dia(alvo.dataSoja)}</strong>
-              {t(" e a geada no milho cai para ", " and frost on the corn drops to ")}
+              {t(" e o risco de geada no milho cai para ", " and the frost risk on the corn drops to ")}
               <strong>{fraseDez(g(alvo), lang)}</strong>.
             </span>
           )}
@@ -275,8 +275,8 @@ export function VouPlantar({
             <span className="flex items-start gap-1.5 rounded-xl bg-[#FFF4DC] px-2.5 py-2 text-sm leading-[1.35] text-[#7A520F]">
               <IcSolPequeno />
               {t(
-                `Mas nessa data a seca sobe para ${fraseDez(alvo.seca, lang)}. Veja os dois antes de decidir.`,
-                `But on that date drought rises to ${fraseDez(alvo.seca, lang)}. Weigh both before deciding.`,
+                `Mas nessa data o risco de seca sobe para ${fraseDez(alvo.seca, lang)}. Veja os dois antes de decidir.`,
+                `But on that date the drought risk rises to ${fraseDez(alvo.seca, lang)}. Weigh both before deciding.`,
               )}
             </span>
           )}

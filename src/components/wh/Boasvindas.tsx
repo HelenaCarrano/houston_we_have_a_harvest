@@ -270,7 +270,7 @@ export function Boasvindas({
             idx={idx}
             onIdx={onIdx}
             baixada={baixada}
-            titulo={modo === "ja" ? t("Quando você plantou?", "When did you plant?") : t("Quando pensa em plantar?", "When are you thinking of planting?")}
+            titulo={modo === "ja" ? t("Quando você plantou a soja?", "When did you plant soybeans?") : t("Quando pensa em plantar a soja?", "When do you plan to plant soybeans?")}
           />
           <button
             type="button"

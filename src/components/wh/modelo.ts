@@ -93,12 +93,12 @@ export function emDez(r: RiscoView): { n: number; texto: string } {
   return { n: x, texto: String(x) };
 }
 
-/** "4 de cada 10 anos" / "4 in every 10 years". */
-export function fraseDez(r: RiscoView, lang: Lang): string {
-  const e = emDez(r);
-  if (r.anosComEvento === 0) return lang === "en" ? "no year in 10" : "nenhum ano em 10";
-  if (e.texto === "<1") return lang === "en" ? "fewer than 1 in every 10 years" : "menos de 1 de cada 10 anos";
-  return lang === "en" ? `${e.n} in every 10 years` : `${e.n} de cada 10 anos`;
+/** Risco em porcentagem dos anos do histórico: "30%" (ou "<1%" quando aconteceu, mas é raro). */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function fraseDez(r: RiscoView, _lang?: Lang): string {
+  const n = Math.round(r.frequencia * 100);
+  if (r.anosComEvento > 0 && n === 0) return "<1%";
+  return `${n}%`;
 }
 
 export const PESO_NIVEL: Record<Nivel, number> = { Baixo: 0, Médio: 1, Alto: 2 };
@@ -209,8 +209,8 @@ export function montarResumo(args: {
   const linhas = [
     `weharvest · ${nomeLocal} · ${t("soja em", "soybean on")} ${fmtDia(d.dataSoja, lang)}${baixada ? " · " + t("baixada", "lowland") : ""}`,
     t(
-      `Geada na flor do milho: ${fraseDez(geada, lang)} (${geada.anosComEvento} de ${geada.totalAnos} safras). Seca: ${fraseDez(d.seca, lang)} (${d.seca.anosComEvento} de ${d.seca.totalAnos}).`,
-      `Frost at corn flowering: ${fraseDez(geada, lang)} (${geada.anosComEvento} of ${geada.totalAnos} seasons). Drought: ${fraseDez(d.seca, lang)} (${d.seca.anosComEvento} of ${d.seca.totalAnos}).`,
+      `Risco de geada na flor do milho: ${fraseDez(geada, lang)} (${geada.anosComEvento} de ${geada.totalAnos} safras). Risco de seca: ${fraseDez(d.seca, lang)} (${d.seca.anosComEvento} de ${d.seca.totalAnos}).`,
+      `Frost risk at corn flowering: ${fraseDez(geada, lang)} (${geada.anosComEvento} of ${geada.totalAnos} seasons). Drought risk: ${fraseDez(d.seca, lang)} (${d.seca.anosComEvento} of ${d.seca.totalAnos}).`,
     ),
     `${t("Para o seu campo", "For your field")}: ${txt(modelo.melhor.r).nome}. ${modelo.motivo}${modelo.climaMilho}`,
     ...modelo.avaliadas.map((a, i) => {

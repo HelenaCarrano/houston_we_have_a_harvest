@@ -201,11 +201,11 @@ export const REGRA_ORDEM = {
   pt:
     "Ordem: rotações que você consegue fazer primeiro; depois, soma de quanto cada uma atende ao que pesa mais para você (1 = pouco, 3 = bem; qualitativo). " +
     "Empate: menor risco climático primeiro (o trigo fica neutro: seu risco depende da data de semeadura, que é hipótese). As prioridades não mudam os números de risco. " +
-    "Nível de risco (Metodologia): Baixo até 1 em 10 anos, Médio 2 ou 3, Alto 4 ou mais.",
+    "Nível de risco (Metodologia): Baixo até 10% dos anos, Médio 20 a 30%, Alto 40% ou mais.",
   en:
     "Order: rotations you can do first; then the sum of how well each meets what matters most to you (1 = little, 3 = well; qualitative). " +
     "Ties: lower climate risk first (wheat stays neutral: its risk depends on the sowing date, which is a hypothesis). Priorities never change the risk numbers. " +
-    "Risk level (methodology): Low up to 1 in 10 years, Medium 2 or 3, High 4 or more.",
+    "Risk level (methodology): Low up to 10% of years, Medium 20–30%, High 40% or more.",
 };
 
 // ---------------------------------------------------------------------------------------------
