@@ -51,6 +51,8 @@ function useRolarAte(idx: number) {
   return ref;
 }
 
+const PESO: Record<Nivel, number> = { Baixo: 0, Médio: 1, Alto: 2 };
+
 const PILULA_ESCOLHA =
   "flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border-none bg-campo px-3.5 text-[15px] font-extrabold text-texto";
 
@@ -101,6 +103,9 @@ export function VouPlantar({
   const ns = emDez(d.seca);
   const nivel = pior(nivelPorFreq(geada.frequencia), nivelPorFreq(d.seca.frequencia));
   const pil = PILULA[nivel];
+  const nG = nivelPorFreq(geada.frequencia);
+  const nS = nivelPorFreq(d.seca.frequencia);
+  const causa = nivel === "Baixo" ? null : nG === nS ? t("geada e seca", "frost and drought") : PESO[nS] > PESO[nG] ? t("seca", "drought") : t("geada", "frost");
   const anel = Math.max(geada.anosComEvento > 0 ? 12 : 0, geada.frequencia * 490);
   const ate = melhorDataGeada(datas, baixada);
   const alvo = datas[ate];
@@ -152,9 +157,10 @@ export function VouPlantar({
             <path d="M300 14v8M296 18h8" />
           </g>
         </svg>
-        <div className="relative flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[13px] font-extrabold" style={{ background: pil.fundo, color: pil.cor }}>
+        <div className="relative flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0 rounded-full px-3.5 py-1.5 text-center text-[13px] font-extrabold" style={{ background: pil.fundo, color: pil.cor }}>
           <span className="size-2 rounded-full" style={{ background: pil.ponto }} />
           {t(pil.pt, pil.en)}
+          {causa && <span className="font-bold">· {t(`por causa da ${causa}`, `due to ${causa}`)}</span>}
         </div>
         <div className="relative size-[210px]">
           <svg aria-hidden="true" width="210" height="210" viewBox="0 0 200 200">
@@ -273,7 +279,10 @@ export function VouPlantar({
           {!ok && (
             <button
               type="button"
-              onClick={() => onIdx(ate)}
+              onClick={() => {
+                onIdx(ate);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
               className="min-h-11 cursor-pointer self-start rounded-full border-none bg-lavoura px-[18px] text-sm font-extrabold text-white"
             >
               {t(`Ver ${dia(alvo.dataSoja)}`, `See ${dia(alvo.dataSoja)}`)}

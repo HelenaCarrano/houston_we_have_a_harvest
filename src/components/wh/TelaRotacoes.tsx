@@ -14,8 +14,9 @@ import {
   type Avaliacao,
 } from "@/components/wh/Arte";
 import { CabecalhoInterno } from "@/components/wh/Moldura";
-import { fraseDez, type ModeloRotacoes, type RotacaoAvaliada } from "@/components/wh/modelo";
+import { avaliacaoDoNivel, fraseDez, type ModeloRotacoes, type RotacaoAvaliada } from "@/components/wh/modelo";
 import { fmtDia, useLang, useT } from "@/lib/i18n";
+import { nivelPorFreq } from "@/components/ui/NivelBadge";
 
 const ROTULO_AVAL: Record<Avaliacao, { pt: string; en: string }> = {
   bom: { pt: "bom", en: "good" },
@@ -72,10 +73,13 @@ function CartaoRotacao({
   a,
   i,
   texto,
+  seca,
 }: {
   a: RotacaoAvaliada;
   i: number;
   texto: string;
+  /** Seca na flor do milho (vale para as opções com milho; para o trigo não é calculada). */
+  seca: Avaliacao;
 }) {
   const t = useT();
   const lang = useLang();
@@ -114,13 +118,14 @@ function CartaoRotacao({
         {(
           [
             [t("Geada", "Frost"), a.geada],
+            [t("Seca", "Drought"), a.r.id === "trigo" ? null : seca],
             [t("Cuidado com o solo", "Soil care"), a.solo],
             [t("Renda", "Income"), a.renda],
-          ] as [string, Avaliacao][]
+          ] as [string, Avaliacao | null][]
         ).map(([r, v]) => (
           <div key={r} className="flex items-center justify-between">
             <span className="text-base">{r}</span>
-            <Selo a={v} />
+            {v ? <Selo a={v} /> : <span className="text-sm text-texto-2">{t("não calculada", "not computed")}</span>}
           </div>
         ))}
       </div>
@@ -197,17 +202,18 @@ export function TelaRotacoes({
   const dia = (x: string) => fmtDia(x, lang);
   const geada = baixada ? d.geadaBaixada : d.geada;
   const fGeada = fraseDez(geada, lang);
+  const secaMilho = avaliacaoDoNivel(nivelPorFreq(d.seca.frequencia));
 
   const texto = (a: RotacaoAvaliada) =>
     a.r.id === "milho"
       ? t(
-          `Rende mais quando dá certo, mas com soja em ${dia(d.dataSoja)} o risco de geada na flor é de ${fGeada}.`,
-          `Pays the most when it works, but with soybeans on ${dia(d.dataSoja)} the frost risk at flowering is ${fGeada}.`,
+          `Rende mais quando dá certo, mas com soja em ${dia(d.dataSoja)} o risco na flor é de ${fGeada} de geada e ${fraseDez(d.seca, lang)} de seca.`,
+          `Pays the most when it works, but with soybeans on ${dia(d.dataSoja)} the risk at flowering is ${fGeada} frost and ${fraseDez(d.seca, lang)} drought.`,
         )
       : a.r.id === "milho-braquiaria"
         ? t(
-            `Capim cobre o chão depois do milho. O risco de geada na flor do milho é de ${fGeada}.`,
-            `Grass covers the ground after the corn. The frost risk at corn flowering is ${fGeada}.`,
+            `Capim cobre o chão depois do milho. Na flor do milho: ${fGeada} de geada e ${fraseDez(d.seca, lang)} de seca.`,
+            `Grass covers the ground after the corn. At corn flowering: ${fGeada} frost and ${fraseDez(d.seca, lang)} drought.`,
           )
         : t(
             `Risco de geada na espiga do trigo: ${fraseDez(modelo.geadaTrigo, lang)} (semeado em ${dia(trigo.semeadura)}), para qualquer data da soja.`,
@@ -268,7 +274,7 @@ export function TelaRotacoes({
         </section>
 
         {modelo.avaliadas.map((a, i) => (
-          <CartaoRotacao key={a.r.id} a={a} i={i} texto={texto(a)} />
+          <CartaoRotacao key={a.r.id} a={a} i={i} texto={texto(a)} seca={secaMilho} />
         ))}
 
         <details className="rounded-[18px] bg-white px-4">
