@@ -79,6 +79,9 @@ h1, h2, h3 { letter-spacing: -0.02em; }
 .wh-bar { transform-origin: 50% 100%; animation: wh-bar .9s cubic-bezier(.2,.8,.2,1) both; }
 .wh-in { animation: wh-rise .5s ease-out both; }
 .wh-sheet { animation: wh-sheet .25s ease-out both; }
+/* No computador a folha vira janela no meio da tela: aparece sem subir do rodapé. */
+@keyframes wh-pop { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@media (min-width: 64rem) { .wh-sheet { animation-name: wh-pop; } }
 
 /* Régua de datas: trilho transparente sobre a faixa colorida, bolinha grande para o dedo. */
 .wh-range { appearance: none; -webkit-appearance: none; background: transparent; margin: 0; cursor: pointer; }

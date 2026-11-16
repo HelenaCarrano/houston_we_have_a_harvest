@@ -7,14 +7,13 @@ import type { FaseEnso, FiltroEnso } from "@/lib/engine/enso.ts";
 import { EscolherLugar, carregarLocal } from "@/components/gt/EscolherLugar";
 import { FILTROS_ENSO } from "@/components/gt/format";
 import { Chave, IcBaixada, IcPin, IcSoja, Logo } from "@/components/wh/Arte";
-import { BarraAbas, BotoesCompartilhar, CabecalhoInicio, CabecalhoInterno, Folha, InstalarApp, LinhaEscolha, MAIN_LARGO, type Aba } from "@/components/wh/Moldura";
+import { BarraAbas, BotoesCompartilhar, CabecalhoInicio, CabecalhoInterno, Coluna, Folha, Grupo, InstalarApp, LinhaEscolha, MAIN_LARGO, type Aba } from "@/components/wh/Moldura";
 import { Boasvindas, type EtapaIntro } from "@/components/wh/Boasvindas";
 import { VouPlantar } from "@/components/wh/VouPlantar";
 import { JaPlantei } from "@/components/wh/JaPlantei";
 import { PlantarSemana } from "@/components/wh/PlantarSemana";
 import { SeletorDia } from "@/components/wh/SeletorDia";
 import { TelaSafra } from "@/components/wh/TelaSafra";
-import { PainelComputador } from "@/components/wh/PainelComputador";
 import { TelaCalendario } from "@/components/wh/TelaCalendario";
 import { useCaderno } from "@/components/wh/caderno";
 import { TelaRotacoes } from "@/components/wh/TelaRotacoes";
@@ -317,7 +316,6 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
                 />
               ) : (
                 hoje && (
-                  <>
                     <JaPlantei
                       d={dEf}
                       baixada={baixada}
@@ -326,9 +324,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
                       onModo={setModo}
                       onMudarData={() => setFolha("data")}
                       onRotacoes={() => setAba("depois")}
+                      rodape={<BotoesCompartilhar hrefWhatsApp={hrefWhatsApp} onAgenda={() => setAba("calendario")} />}
                     />
-                    <BotoesCompartilhar hrefWhatsApp={hrefWhatsApp} onAgenda={() => setAba("calendario")} />
-                  </>
                 )
               )}
             </main>
@@ -393,6 +390,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               onVoltar={() => setAba("risco")}
             />
             <main className={`-mt-6 flex flex-col gap-3.5 px-4 pb-28 ${MAIN_LARGO}`}>
+              <Coluna>
+              <Grupo ordem={1}>
               <section className={cartao}>
                 <h2 className="m-0 text-lg font-black tracking-normal">{t("Sua lavoura", "Your field")}</h2>
                 <LinhaEscolha
@@ -430,27 +429,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
                 </button>
                 <RelevoTalhao limiteM={RELEVO.regraBaixadaTpiM} baixada={baixada} onBaixada={setBaixada} evidencia={evidenciaRelevo} />
               </section>
-
-              <section className={cartao}>
-                <h2 className="m-0 text-lg font-black tracking-normal">{t("Idioma", "Language")}</h2>
-                <div role="group" aria-label={t("Idioma", "Language")} className="grid grid-cols-2 gap-1 rounded-full bg-campo p-1">
-                  {(["en", "pt"] as const).map((l) => (
-                    <button
-                      key={l}
-                      type="button"
-                      lang={l}
-                      aria-pressed={lang === l}
-                      onClick={() => setLang(l)}
-                      className={`min-h-[46px] cursor-pointer rounded-full border-none text-[15px] font-extrabold ${lang === l ? "bg-texto text-white" : "bg-transparent text-texto"}`}
-                    >
-                      {l === "pt" ? "Português" : "English"}
-                    </button>
-                  ))}
-                </div>
-              </section>
-
-              <InstalarApp />
-
+              </Grupo>
+              <Grupo ordem={4}>
               <details className="group rounded-3xl bg-white px-[18px] shadow-[0_6px_20px_rgba(20,35,26,.05)]">
                 <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between text-lg font-black">
                   {t("Para técnicos: testes e método", "For agronomists: tests and method")}
@@ -473,7 +453,32 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               />
                 </div>
               </details>
+              </Grupo>
+              </Coluna>
 
+              <Coluna lado>
+              <Grupo ordem={2}>
+              <section className={cartao}>
+                <h2 className="m-0 text-lg font-black tracking-normal">{t("Idioma", "Language")}</h2>
+                <div role="group" aria-label={t("Idioma", "Language")} className="grid grid-cols-2 gap-1 rounded-full bg-campo p-1">
+                  {(["en", "pt"] as const).map((l) => (
+                    <button
+                      key={l}
+                      type="button"
+                      lang={l}
+                      aria-pressed={lang === l}
+                      onClick={() => setLang(l)}
+                      className={`min-h-[46px] cursor-pointer rounded-full border-none text-[15px] font-extrabold ${lang === l ? "bg-texto text-white" : "bg-transparent text-texto"}`}
+                    >
+                      {l === "pt" ? "Português" : "English"}
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <InstalarApp />
+              </Grupo>
+              <Grupo ordem={5}>
               <button
                 type="button"
                 onClick={() => irEtapa("intro")}
@@ -482,6 +487,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
                 {t("Ver a introdução de novo", "See the introduction again")}
               </button>
               <p className="m-0 px-1 text-center font-mono text-[11px] tracking-[0.14em] text-texto-2">HOUSTON, WE HAVE A HARVEST · NASA SPACE APPS 2026</p>
+              </Grupo>
+              </Coluna>
             </main>
           </>
         )}
@@ -493,14 +500,17 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
 
   return (
     <LangContext.Provider value={lang}>
-      {etapa !== "app" && <PainelComputador link={URL_APP} />}
-      <div
-        className={`relative z-10 mx-auto flex min-h-screen w-full max-w-[440px] flex-col bg-palha ${
-          etapa === "app" ? "lg:ml-[232px] lg:mr-0 lg:w-auto lg:max-w-none" : "lg:shadow-[0_0_48px_rgba(10,20,36,.18)]"
-        }`}
-      >
-        {conteudo}
-      </div>
+      {etapa === "app" ? (
+        // Computador: barra lateral fixa (BarraAbas) + área do conteúdo ocupando o resto da largura.
+        <div className="mx-auto flex min-h-screen w-full max-w-[440px] flex-col bg-palha lg:ml-[232px] lg:mr-0 lg:w-auto lg:max-w-none">{conteudo}</div>
+      ) : (
+        // Introdução e carregamento: no computador, um cartão no meio da tela sobre o céu escuro.
+        <div className="lg:flex lg:min-h-screen lg:items-center lg:justify-center lg:bg-ceu lg:p-10">
+          <div className="mx-auto flex min-h-screen w-full max-w-[440px] flex-col bg-palha lg:mx-0 lg:min-h-[min(860px,calc(100vh-5rem))] lg:max-w-[480px] lg:overflow-hidden lg:rounded-[32px] lg:shadow-[0_24px_60px_rgba(0,0,0,.35)] lg:ring-1 lg:ring-ceu-line lg:[&_.min-h-screen]:min-h-[min(860px,calc(100vh-5rem))]">
+            {conteudo}
+          </div>
+        </div>
+      )}
 
       {folha === "municipio" && (
         <Folha titulo={t("Onde fica sua lavoura?", "Where is your field?")} onFechar={fecharFolha}>

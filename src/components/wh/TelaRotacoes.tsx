@@ -13,7 +13,7 @@ import {
   SetaRotacao,
   type Avaliacao,
 } from "@/components/wh/Arte";
-import { CabecalhoInterno, MAIN_LARGO } from "@/components/wh/Moldura";
+import { CabecalhoInterno, MAIN_GRADE3 } from "@/components/wh/Moldura";
 import { avaliacaoDoNivel, fraseDez, type ModeloRotacoes, type RotacaoAvaliada } from "@/components/wh/modelo";
 import { fmtDia, useLang, useT } from "@/lib/i18n";
 import { nivelPorFreq } from "@/components/ui/NivelBadge";
@@ -134,7 +134,7 @@ function CartaoRotacao({
         type="button"
         aria-expanded={aberto}
         onClick={() => setAberto((v) => !v)}
-        className={`min-h-12 cursor-pointer rounded-full text-base font-extrabold ${
+        className={`min-h-12 cursor-pointer rounded-full text-base font-extrabold lg:mt-auto ${
           primeiro ? "border-none bg-lavoura text-white" : "border-[1.5px] border-[#D6CFBE] bg-white text-texto"
         }`}
       >
@@ -228,12 +228,12 @@ export function TelaRotacoes({
         onVoltar={onVoltar}
         onMenu={onMenu}
       />
-      <main className={`-mt-6 flex flex-col gap-3.5 px-4 pb-10 ${MAIN_LARGO}`}>
-        <section className="flex flex-col gap-2.5 rounded-3xl bg-white p-4 shadow-[0_6px_20px_rgba(20,35,26,.07)]">
+      <main className={`-mt-6 flex flex-col gap-3.5 px-4 pb-10 ${MAIN_GRADE3}`}>
+        <section className="flex flex-col gap-2.5 rounded-3xl bg-white p-4 shadow-[0_6px_20px_rgba(20,35,26,.07)] lg:col-span-3 lg:grid lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center lg:gap-x-6 lg:gap-y-3 lg:px-6">
           <span id="wh-foco" className="text-base font-extrabold">
             {t("O que pesa mais pra você?", "What matters most to you?")}
           </span>
-          <div role="radiogroup" aria-labelledby="wh-foco" className="grid grid-cols-3 gap-1.5">
+          <div role="radiogroup" aria-labelledby="wh-foco" className="grid grid-cols-3 gap-1.5 lg:w-[280px]">
             {FOCOS.map((f) => (
               <button
                 key={f.id}
@@ -249,7 +249,7 @@ export function TelaRotacoes({
               </button>
             ))}
           </div>
-          <span id="wh-restr" className="mt-1.5 text-[15px] font-extrabold">
+          <span id="wh-restr" className="mt-1.5 text-[15px] font-extrabold lg:mt-0">
             {t("Algo não serve pra você?", "Anything that doesn’t work for you?")}
           </span>
           <div role="group" aria-labelledby="wh-restr" className="flex flex-wrap gap-1.5">
@@ -277,14 +277,14 @@ export function TelaRotacoes({
           <CartaoRotacao key={a.r.id} a={a} i={i} texto={texto(a)} seca={secaMilho} />
         ))}
 
-        <details className="rounded-[18px] bg-white px-4">
+        <details className="rounded-[18px] bg-white px-4 lg:col-span-3">
           <summary className="flex min-h-[52px] cursor-pointer items-center text-base font-bold">{t("Como escolhemos a ordem", "How we pick the order")}</summary>
           <div className="flex flex-col gap-3 pb-4">
             <p className="m-0 text-sm leading-[1.5] text-texto-2">{t(REGRA_ORDEM.pt, REGRA_ORDEM.en)}</p>
             <p className="m-0 text-sm leading-[1.5] text-texto-2">{t(NOTA_NITROGENIO.pt, NOTA_NITROGENIO.en)}</p>
           </div>
         </details>
-        <p className="m-0 px-1 text-sm leading-[1.5] text-texto-2">
+        <p className="m-0 px-1 text-sm leading-[1.5] text-texto-2 lg:col-span-3">
           {t(
             "Os números mostram com que frequência o clima atrapalhou no passado. Não garantem a próxima safra. Converse com seu agrônomo antes de decidir.",
             "The numbers show how often the weather got in the way in the past. They do not guarantee the next season. Talk to your agronomist before deciding.",

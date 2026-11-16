@@ -3,7 +3,7 @@
 import type { DataView } from "@/lib/view-data";
 import { nivelPorFreq } from "@/components/ui/NivelBadge";
 import { IcAlerta, IcEscudoPequeno, IcMilho, IcRelogio, IcSino, IcSoja, IcTrigo } from "@/components/wh/Arte";
-import { AbasModo, LinhaEscolha } from "@/components/wh/Moldura";
+import { AbasModo, Coluna, Grupo, LinhaEscolha } from "@/components/wh/Moldura";
 import { LINK_ZARC } from "@/components/wh/VouPlantar";
 import { anoDaSafra, dataNaSafra, diaLongo, diasEntre, fraseDez } from "@/components/wh/modelo";
 import { fmtDia, useLang, useT } from "@/lib/i18n";
@@ -26,7 +26,7 @@ function Passo({
   children?: React.ReactNode;
 }) {
   return (
-    <li className={`flex gap-3.5 py-3.5 ${ultimo ? "" : "border-b border-divisor"}`}>
+    <li className={`flex gap-3.5 py-3.5 ${ultimo ? "" : "border-b border-divisor lg:border-b-0"}`}>
       <span className="relative flex size-12 flex-none items-center justify-center rounded-full" style={{ background: fundo }}>
         {icone}
         <span className="absolute -left-1 -top-1 flex size-[22px] items-center justify-center rounded-full bg-texto text-xs font-black text-white">
@@ -52,6 +52,7 @@ export function JaPlantei({
   onModo,
   onMudarData,
   onRotacoes,
+  rodape,
 }: {
   d: DataView;
   baixada: boolean;
@@ -60,6 +61,8 @@ export function JaPlantei({
   onModo: (m: "vou" | "ja") => void;
   onMudarData: () => void;
   onRotacoes: () => void;
+  /** Botões de compartilhar, no fim (celular) ou na coluna lateral (computador). */
+  rodape?: React.ReactNode;
 }) {
   const t = useT();
   const lang = useLang();
@@ -75,7 +78,9 @@ export function JaPlantei({
 
   return (
     <>
-      <section className="wh-in flex flex-col gap-3.5 rounded-3xl bg-white p-4 shadow-[0_6px_20px_rgba(20,35,26,.07)]">
+      <Coluna>
+      <Grupo ordem={1}>
+      <section className="wh-in flex flex-col gap-3.5 rounded-3xl bg-white p-4 shadow-[0_6px_20px_rgba(20,35,26,.07)] lg:flex-row lg:items-center lg:p-3 lg:[&>*:last-child]:flex-1 lg:[&>[role=tablist]]:w-[230px] lg:[&>[role=tablist]]:flex-none">
         <AbasModo modo="ja" onModo={onModo} />
         <LinhaEscolha
           alto={56}
@@ -90,7 +95,75 @@ export function JaPlantei({
           onClick={onMudarData}
         />
       </section>
+      </Grupo>
+      <Grupo ordem={3}>
+      <section className="wh-in flex items-center gap-3 rounded-[22px] bg-[#FDF0E7] p-4" style={{ animationDelay: ".15s" }}>
+        <IcAlerta />
+        <span className="text-base leading-[1.4] text-[#6B2C08]">
+          {baixo
+            ? t("Com esta data, a geada na flor do milho é rara: ", "With this date, frost at corn flowering is rare: ")
+            : t("Com esta data, o risco de geada na flor do milho é de ", "With this date, the frost risk at corn flowering is ")}
+          <strong>{fraseDez(geada, lang)}</strong>
+          {baixo ? t(". Mesmo assim:", ". Even so:") : t(". Ainda dá pra diminuir:", ". You can still lower it:")}
+        </span>
+      </section>
 
+      <ol
+        className="wh-in m-0 flex list-none flex-col rounded-3xl bg-white px-4 py-1.5 shadow-[0_6px_20px_rgba(20,35,26,.05)] lg:grid lg:grid-cols-2 lg:gap-x-8 lg:px-6 lg:py-3"
+        style={{ animationDelay: ".2s" }}
+      >
+        <Passo
+          n={1}
+          fundo="#FBEFD2"
+          icone={<IcMilho size={26} />}
+          titulo={t("Escolha um milho mais precoce", "Choose an earlier corn hybrid")}
+          texto={t("Ele floresce antes e foge do frio de maio e junho.", "It flowers sooner and escapes the May–June cold.")}
+        />
+        <Passo
+          n={2}
+          fundo="#E3F2E1"
+          icone={<IcRelogio />}
+          titulo={t("Plante o milho logo após colher", "Plant the corn right after harvest")}
+          texto={t("Cada semana de atraso empurra a flor para mais perto da geada.", "Each week of delay pushes flowering closer to frost.")}
+        >
+          <span className={ETIQUETA}>{t(`Meta: até ${dia(d.plantioMilho)}`, `Goal: by ${dia(d.plantioMilho)}`)}</span>
+        </Passo>
+        <Passo
+          n={3}
+          fundo="#E3F2E1"
+          icone={<IcEscudoPequeno />}
+          titulo={t("Faça o seguro do milho", "Insure the corn")}
+          texto={t(
+            `Confira se plantar até ${dia(d.plantioMilho)} fica dentro do calendário oficial (ZARC) do seu município.`,
+            `Check that planting by ${dia(d.plantioMilho)} is within your municipality’s official calendar (ZARC).`,
+          )}
+        >
+          <a href={LINK_ZARC} target="_blank" rel="noreferrer" className={`${ETIQUETA} no-underline`}>
+            {t("Ver o calendário oficial ›", "See the official calendar ›")}
+          </a>
+        </Passo>
+        <Passo
+          n={4}
+          fundo="#F4EBD2"
+          icone={<IcTrigo />}
+          titulo={t("Ou troque o milho por trigo", "Or swap the corn for wheat")}
+          texto={t("Compare o risco de geada de cada opção.", "Compare the frost risk of each option.")}
+          ultimo
+        >
+          <button
+            type="button"
+            onClick={onRotacoes}
+            className="mt-1 min-h-11 cursor-pointer self-start border-none bg-transparent p-0 text-left text-[15px] font-extrabold text-lavoura"
+          >
+            {t("Ver o que plantar depois ›", "See what to plant next ›")}
+          </button>
+        </Passo>
+      </ol>
+      </Grupo>
+      </Coluna>
+
+      <Coluna lado>
+      <Grupo ordem={2}>
       <section
         className="wh-in flex items-center gap-4 rounded-[28px] bg-[linear-gradient(180deg,#E3F2E1_0%,#F4FAF2_100%)] px-[18px] py-5"
         style={{ animationDelay: ".1s" }}
@@ -147,70 +220,8 @@ export function JaPlantei({
           </span>
         </div>
       </section>
-
-      <section className="wh-in flex items-center gap-3 rounded-[22px] bg-[#FDF0E7] p-4" style={{ animationDelay: ".15s" }}>
-        <IcAlerta />
-        <span className="text-base leading-[1.4] text-[#6B2C08]">
-          {baixo
-            ? t("Com esta data, a geada na flor do milho é rara: ", "With this date, frost at corn flowering is rare: ")
-            : t("Com esta data, o risco de geada na flor do milho é de ", "With this date, the frost risk at corn flowering is ")}
-          <strong>{fraseDez(geada, lang)}</strong>
-          {baixo ? t(". Mesmo assim:", ". Even so:") : t(". Ainda dá pra diminuir:", ". You can still lower it:")}
-        </span>
-      </section>
-
-      <ol
-        className="wh-in m-0 flex list-none flex-col rounded-3xl bg-white px-4 py-1.5 shadow-[0_6px_20px_rgba(20,35,26,.05)]"
-        style={{ animationDelay: ".2s" }}
-      >
-        <Passo
-          n={1}
-          fundo="#FBEFD2"
-          icone={<IcMilho size={26} />}
-          titulo={t("Escolha um milho mais precoce", "Choose an earlier corn hybrid")}
-          texto={t("Ele floresce antes e foge do frio de maio e junho.", "It flowers sooner and escapes the May–June cold.")}
-        />
-        <Passo
-          n={2}
-          fundo="#E3F2E1"
-          icone={<IcRelogio />}
-          titulo={t("Plante o milho logo após colher", "Plant the corn right after harvest")}
-          texto={t("Cada semana de atraso empurra a flor para mais perto da geada.", "Each week of delay pushes flowering closer to frost.")}
-        >
-          <span className={ETIQUETA}>{t(`Meta: até ${dia(d.plantioMilho)}`, `Goal: by ${dia(d.plantioMilho)}`)}</span>
-        </Passo>
-        <Passo
-          n={3}
-          fundo="#E3F2E1"
-          icone={<IcEscudoPequeno />}
-          titulo={t("Faça o seguro do milho", "Insure the corn")}
-          texto={t(
-            `Confira se plantar até ${dia(d.plantioMilho)} fica dentro do calendário oficial (ZARC) do seu município.`,
-            `Check that planting by ${dia(d.plantioMilho)} is within your municipality’s official calendar (ZARC).`,
-          )}
-        >
-          <a href={LINK_ZARC} target="_blank" rel="noreferrer" className={`${ETIQUETA} no-underline`}>
-            {t("Ver o calendário oficial ›", "See the official calendar ›")}
-          </a>
-        </Passo>
-        <Passo
-          n={4}
-          fundo="#F4EBD2"
-          icone={<IcTrigo />}
-          titulo={t("Ou troque o milho por trigo", "Or swap the corn for wheat")}
-          texto={t("Compare o risco de geada de cada opção.", "Compare the frost risk of each option.")}
-          ultimo
-        >
-          <button
-            type="button"
-            onClick={onRotacoes}
-            className="mt-1 min-h-11 cursor-pointer self-start border-none bg-transparent p-0 text-left text-[15px] font-extrabold text-lavoura"
-          >
-            {t("Ver o que plantar depois ›", "See what to plant next ›")}
-          </button>
-        </Passo>
-      </ol>
-
+      </Grupo>
+      <Grupo ordem={4}>
       <section className="wh-in flex items-center gap-3.5 rounded-3xl bg-ceu p-[18px]" style={{ animationDelay: ".25s" }}>
         <IcSino />
         <div className="flex flex-1 flex-col gap-0.5">
@@ -221,6 +232,9 @@ export function JaPlantei({
           {t("Em breve", "Coming soon")}
         </span>
       </section>
+      {rodape}
+      </Grupo>
+      </Coluna>
     </>
   );
 }

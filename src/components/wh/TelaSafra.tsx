@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { DataView, LocalView } from "@/lib/view-data";
-import { CabecalhoInterno, MAIN_LARGO } from "@/components/wh/Moldura";
+import { CabecalhoInterno, Coluna, MAIN_LARGO } from "@/components/wh/Moldura";
 import { IcWhatsApp } from "@/components/wh/Arte";
 import { anoDaSafra, baixarIcs, fraseDez, type ModeloRotacoes } from "@/components/wh/modelo";
 import { baixarTexto, COR_EVENTO, eventosDaSafra, montarCsv, paraAgenda } from "@/components/wh/safra";
@@ -108,6 +108,7 @@ export function TelaSafra({
         onMenu={onMenu}
       />
       <main className={`-mt-6 flex flex-col gap-3.5 px-4 pb-10 ${MAIN_LARGO}`}>
+        <Coluna lado>
         <section className="wh-in flex flex-col gap-3 rounded-3xl bg-white p-[18px] shadow-[0_6px_20px_rgba(20,35,26,.07)]">
           <div className="flex items-center justify-between gap-2">
             <h2 className="m-0 text-lg font-black tracking-normal">{t("O que entra no relatório", "What goes in the report")}</h2>
@@ -183,7 +184,9 @@ export function TelaSafra({
             </a>
           </div>
         </section>
+        </Coluna>
 
+        <Coluna>
         <section id="relatorio" className="wh-in rounded-3xl bg-white p-[18px] shadow-[0_6px_20px_rgba(20,35,26,.05)]" style={{ animationDelay: ".2s" }}>
           <div className="flex flex-col gap-3 text-texto">
             <div className="border-b-2 border-texto pb-2">
@@ -244,6 +247,7 @@ export function TelaSafra({
             <p className="m-0 text-[13px] text-texto-2">{nota}</p>
           </div>
         </section>
+        </Coluna>
       </main>
     </>
   );

@@ -21,7 +21,7 @@ export function CabecalhoInicio({
 }) {
   const t = useT();
   return (
-    <header className={`relative overflow-hidden bg-ceu px-5 pt-5 lg:px-10 lg:pt-8 ${ceu ? "pb-[34px]" : "pb-10"}`}>
+    <header className={`relative overflow-hidden bg-ceu px-5 pt-5 lg:pb-12 lg:pt-6 ${CABECALHO_LARGO} ${ceu ? "pb-[34px]" : "pb-10"}`}>
       {ceu && <CeuAnimado />}
       <div className="relative flex items-center justify-between lg:hidden">
         <div className="flex items-center gap-2.5">
@@ -32,10 +32,10 @@ export function CabecalhoInicio({
           <IcMenu />
         </button>
       </div>
-      <div className={`relative flex items-end justify-between ${ceu ? "mt-[18px]" : "mt-4"}`}>
+      <div className={`relative flex items-end justify-between lg:mt-0 ${ceu ? "mt-[18px]" : "mt-4"}`}>
         <div className="flex flex-col gap-1">
           <span className={`${ceu ? "text-sm" : "text-[15px]"} font-bold text-broto`}>{saudacao}</span>
-          <h1 className={`m-0 ${ceu ? "max-w-[250px]" : "max-w-[260px]"} text-[23px] font-black leading-[1.1] tracking-normal text-claro`}>
+          <h1 className={`m-0 ${ceu ? "max-w-[250px]" : "max-w-[260px]"} text-[23px] font-black leading-[1.1] tracking-normal text-claro lg:max-w-none lg:text-[34px]`}>
             {titulo}
           </h1>
         </div>
@@ -63,28 +63,28 @@ export function CabecalhoInterno({
 }) {
   const t = useT();
   return (
-    <header className="flex flex-col gap-3.5 bg-ceu px-5 pb-10 pt-5 lg:px-10 lg:pt-8">
-      <div className="flex min-h-11 items-center justify-between">
+    <header className={`flex flex-col gap-3.5 bg-ceu px-5 pb-10 pt-5 lg:gap-2 lg:pb-12 lg:pt-8 ${CABECALHO_LARGO}`}>
+      <div className="flex min-h-11 items-center justify-between lg:hidden">
         {onVoltar ? (
           <button type="button" aria-label={t("Voltar", "Back")} onClick={onVoltar} className={BTN_REDONDO}>
             <IcVoltar />
           </button>
         ) : (
-          <span className="flex items-center gap-2 lg:invisible">
+          <span className="flex items-center gap-2">
             <Logo size={30} />
             <span className="text-[17px] font-black tracking-[-0.03em] text-claro">weharvest</span>
           </span>
         )}
         {etiqueta && <span className="font-mono text-xs tracking-[0.14em] text-broto">{etiqueta}</span>}
         {onMenu ? (
-          <button type="button" aria-label={t("Mais: sua lavoura, idioma e detalhes", "More: your field, language and details")} onClick={onMenu} className={`${BTN_REDONDO} lg:invisible`}>
+          <button type="button" aria-label={t("Mais: sua lavoura, idioma e detalhes", "More: your field, language and details")} onClick={onMenu} className={BTN_REDONDO}>
             <IcMenu />
           </button>
         ) : (
           onVoltar && <span className="w-11" />
         )}
       </div>
-      <h1 className="m-0 text-[27px] font-black leading-[1.1] tracking-[-0.02em] text-claro">{titulo}</h1>
+      <h1 className="m-0 text-[27px] font-black leading-[1.1] tracking-[-0.02em] text-claro lg:text-[34px]">{titulo}</h1>
       <p className={`m-0 ${etiqueta ? "text-sm" : "text-[15px]"} text-claro-2`}>{subtitulo}</p>
     </header>
   );
@@ -210,8 +210,37 @@ function IconeAba({ aba }: { aba: Aba }) {
   );
 }
 
-/** No computador, o conteúdo das telas do app ocupa a largura em duas colunas. */
-export const MAIN_LARGO = "lg:block lg:columns-2 lg:gap-6 lg:px-10 lg:pb-12 lg:[&>*]:mb-6 lg:[&>*]:break-inside-avoid";
+/**
+ * No computador, o `<main>` das telas vira uma grade: coluna principal larga + coluna lateral.
+ * No celular nada muda (continua uma coluna só).
+ */
+const GRADE_BASE = "lg:grid lg:gap-6 lg:mx-auto lg:w-full lg:max-w-[1180px] lg:px-10 lg:pb-12";
+export const MAIN_LARGO = `${GRADE_BASE} lg:grid-cols-[minmax(0,1fr)_minmax(300px,340px)] lg:items-start`;
+
+/** Variante em grade de 3 colunas iguais (cartões do mesmo tipo, lado a lado). */
+export const MAIN_GRADE3 = `${GRADE_BASE} lg:grid-cols-3`;
+
+/** Recuo lateral dos cabeçalhos no computador, alinhado com o conteúdo de `MAIN_LARGO`. */
+const CABECALHO_LARGO = "lg:px-[max(2.5rem,calc((100%-1100px)/2))]";
+
+/**
+ * Coluna da grade do computador. No celular ela "some" (display: contents) e os cartões
+ * seguem na ordem de sempre; use `Grupo` com `ordem` quando a ordem do celular intercala as colunas.
+ */
+export function Coluna({ lado = false, children }: { lado?: boolean; children: React.ReactNode }) {
+  return (
+    <div className={`contents lg:row-start-1 lg:flex lg:min-w-0 lg:flex-col lg:gap-5 ${lado ? "lg:col-start-2" : "lg:col-start-1"}`}>{children}</div>
+  );
+}
+
+/** Bloco de cartões com posição fixa na ordem do celular (`ordem` 1, 2, 3…). */
+export function Grupo({ ordem, children }: { ordem: number; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-3.5 lg:gap-5" style={{ order: ordem }}>
+      {children}
+    </div>
+  );
+}
 
 /** Navegação do app: abas fixas no rodapé (celular) ou barra lateral (computador). */
 export function BarraAbas({ aba, onAba }: { aba: Aba; onAba: (a: Aba) => void }) {
@@ -271,14 +300,14 @@ export function Folha({ titulo, onFechar, children }: { titulo: string; onFechar
     };
   }, [onFechar]);
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-ceu/50" onClick={onFechar}>
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-ceu/50 lg:items-center lg:p-8" onClick={onFechar}>
       <div
         ref={ref}
         role="dialog"
         aria-modal="true"
         aria-label={titulo}
         onClick={(e) => e.stopPropagation()}
-        className="wh-sheet flex max-h-[85vh] w-full max-w-[440px] flex-col gap-3 overflow-y-auto rounded-t-[28px] bg-palha px-4 pb-8 pt-4"
+        className="wh-sheet flex max-h-[85vh] w-full max-w-[440px] flex-col gap-3 overflow-y-auto rounded-t-[28px] bg-palha px-4 pb-8 pt-4 lg:max-w-[520px] lg:rounded-[28px] lg:px-6 lg:pb-6 lg:pt-5 lg:shadow-[0_24px_60px_rgba(10,20,36,.35)]"
       >
         <div className="flex items-center justify-between">
           <h2 className="m-0 text-xl font-black">{titulo}</h2>

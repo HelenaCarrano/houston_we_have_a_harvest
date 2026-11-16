@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import type { DataView, LocalView } from "@/lib/view-data";
 import { IcCheck, IcColheita, IcExclamacao, IcFlor, IcMilho, IcSoja } from "@/components/wh/Arte";
-import { CabecalhoInterno, MAIN_LARGO } from "@/components/wh/Moldura";
+import { CabecalhoInterno, Coluna, MAIN_LARGO } from "@/components/wh/Moldura";
 import { CalendarioMes, mesNaSafra, usePrevisao } from "@/components/wh/CalendarioMes";
 import { isoDe, type AcoesCaderno, type Caderno, type LembreteId } from "@/components/wh/caderno";
 import { encontroFlorGeada, eventosDaSafra, paraAgenda, type TipoEvento } from "@/components/wh/safra";
@@ -104,6 +104,7 @@ export function TelaCalendario({
         onMenu={onMenu}
       />
       <main className={`-mt-6 flex flex-col gap-3.5 px-4 pb-10 ${MAIN_LARGO}`}>
+        <Coluna>
         <section ref={refCal} className="wh-in flex scroll-mt-4 flex-col gap-3.5 rounded-[28px] bg-white p-4 shadow-[0_6px_20px_rgba(20,35,26,.07)]">
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-col gap-0.5">
@@ -176,7 +177,9 @@ export function TelaCalendario({
             </p>
           )}
         </section>
+        </Coluna>
 
+        <Coluna lado>
         <section className="wh-in flex flex-col gap-1.5 rounded-3xl bg-white p-[18px] shadow-[0_6px_20px_rgba(20,35,26,.05)]" style={{ animationDelay: ".1s" }}>
           <div className="mb-1.5 flex items-center justify-between">
             <h2 className="m-0 text-lg font-black tracking-normal">{t("Lembretes", "Reminders")}</h2>
@@ -278,6 +281,7 @@ export function TelaCalendario({
             {t("Salvar tudo na agenda do celular", "Save all to your phone calendar")}
           </button>
         </section>
+        </Coluna>
       </main>
     </>
   );

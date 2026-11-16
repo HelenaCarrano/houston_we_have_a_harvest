@@ -16,7 +16,7 @@ import {
   IcSol,
   IcSolPequeno,
 } from "@/components/wh/Arte";
-import { AbasModo } from "@/components/wh/Moldura";
+import { AbasModo, Coluna, Grupo } from "@/components/wh/Moldura";
 import { emDez, fraseDez, melhorDataGeada, mesAbrev, pior } from "@/components/wh/modelo";
 import { fmtDia, useLang, useT } from "@/lib/i18n";
 
@@ -118,7 +118,9 @@ export function VouPlantar({
 
   return (
     <>
-      <section className="wh-in flex flex-col gap-3 rounded-3xl bg-white p-3 shadow-[0_6px_20px_rgba(20,35,26,.07)]">
+      <Coluna>
+      <Grupo ordem={1}>
+      <section className="wh-in flex flex-col gap-3 rounded-3xl bg-white p-3 shadow-[0_6px_20px_rgba(20,35,26,.07)] lg:flex-row lg:items-center lg:gap-4 lg:[&>[role=tablist]]:w-[230px] lg:[&>[role=tablist]]:flex-none">
         <AbasModo modo="vou" onModo={onModo} />
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={onTrocarLocal} aria-label={t(`Município: ${nomeLocal}. Trocar`, `Municipality: ${nomeLocal}. Change`)} className={PILULA_ESCOLHA}>
@@ -147,7 +149,7 @@ export function VouPlantar({
       <section
         aria-label={t("Resposta", "Answer")}
         aria-live="polite"
-        className="wh-in relative flex flex-col items-center gap-3 overflow-hidden rounded-[28px] bg-[linear-gradient(180deg,#E4EEFA_0%,#F4F8FD_100%)] px-[18px] pb-[18px] pt-5"
+        className="wh-in relative flex flex-col items-center gap-3 overflow-hidden rounded-[28px] bg-[linear-gradient(180deg,#E4EEFA_0%,#F4F8FD_100%)] px-[18px] pb-[18px] pt-5 lg:grid lg:grid-cols-[210px_minmax(0,1fr)] lg:content-center lg:gap-x-10 lg:gap-y-4 lg:px-10 lg:py-9"
         style={{ animationDelay: ".1s" }}
       >
         <svg aria-hidden="true" width="390" height="120" viewBox="0 0 390 120" className="absolute -left-4 top-0 opacity-50">
@@ -157,12 +159,18 @@ export function VouPlantar({
             <path d="M300 14v8M296 18h8" />
           </g>
         </svg>
-        <div className="relative flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0 rounded-full px-3.5 py-1.5 text-center text-[13px] font-extrabold" style={{ background: pil.fundo, color: pil.cor }}>
+        <div className="relative flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0 rounded-full px-3.5 py-1.5 text-center text-[13px] font-extrabold lg:col-start-2 lg:row-start-1 lg:flex-nowrap lg:self-end lg:justify-self-start lg:whitespace-nowrap" style={{ background: pil.fundo, color: pil.cor }}>
           <span className="size-2 rounded-full" style={{ background: pil.ponto }} />
           {t(pil.pt, pil.en)}
           {causa && <span className="font-bold">· {t(`por causa da ${causa}`, `due to ${causa}`)}</span>}
         </div>
-        <div className="relative size-[210px]">
+        <p className="relative m-0 hidden text-[17px] leading-[1.45] text-texto lg:col-start-2 lg:row-start-2 lg:block">
+          {t(
+            `Com a soja em ${dia(d.dataSoja)}, o milho safrinha floresce perto de ${dia(d.floracao)}. O anel mostra em quantas safras a geada pegou essa flor${baixada ? " (lavoura em baixada)" : ""}.`,
+            `With soybeans on ${dia(d.dataSoja)}, the second-crop corn flowers around ${dia(d.floracao)}. The ring shows in how many seasons frost hit that flowering${baixada ? " (lowland field)" : ""}.`,
+          )}
+        </p>
+        <div className="relative size-[210px] lg:col-start-1 lg:row-span-3 lg:row-start-1">
           <svg aria-hidden="true" width="210" height="210" viewBox="0 0 200 200">
             <defs>
               <linearGradient id="wh-g1" x1="0" y1="0" x2="1" y2="1">
@@ -202,7 +210,7 @@ export function VouPlantar({
             </span>
           </div>
         </div>
-        <span className="relative flex items-center gap-2 rounded-full bg-white px-3.5 py-2 text-center text-sm font-bold text-texto">
+        <span className="relative flex items-center gap-2 rounded-full bg-white px-3.5 py-2 text-center text-sm font-bold text-texto lg:col-start-2 lg:row-start-3 lg:self-start lg:justify-self-start">
           <IcSatelite />
           {t(
             `Geada em ${geada.anosComEvento} das ${geada.totalAnos} safras${geada.periodo ? ` (${geada.periodo[0]}–${geada.periodo[1]})` : ""}${baixada ? ", baixada" : ""}`,
@@ -245,52 +253,9 @@ export function VouPlantar({
         </a>
       </div>
 
-      {semana}
+      </Grupo>
 
-      <section className="wh-in flex items-start gap-3 rounded-3xl bg-[#E6F4E4] p-4" style={{ animationDelay: ".25s" }}>
-        <Broto size={52} className="flex-none" />
-        <div className="flex flex-1 flex-col gap-2.5 rounded-[18px_18px_18px_4px] bg-white px-3.5 py-3">
-          <span className="text-xs font-extrabold text-lavoura">{t("Dica do Broto", "Broto’s tip")}</span>
-          {ok ? (
-            <span className="text-base font-bold leading-[1.35]">
-              {t("Boa data! Com soja em ", "Good date! With soybeans on ")}
-              <strong>{dia(d.dataSoja)}</strong>
-              {t(", o risco de geada no milho fica em ", ", the frost risk on the corn stays at ")}
-              <strong>{fraseDez(geada, lang)}</strong>
-              {t(", o menor entre as datas.", ", the lowest of all dates.")}
-            </span>
-          ) : (
-            <span className="text-base font-bold leading-[1.35]">
-              {t("Plante a soja em ", "Plant soybeans on ")}
-              <strong>{dia(alvo.dataSoja)}</strong>
-              {t(" e o risco de geada no milho cai para ", " and the frost risk on the corn drops to ")}
-              <strong>{fraseDez(g(alvo), lang)}</strong>.
-            </span>
-          )}
-          {!ok && secaSobe && (
-            <span className="flex items-start gap-1.5 rounded-xl bg-[#FFF4DC] px-2.5 py-2 text-sm leading-[1.35] text-[#7A520F]">
-              <IcSolPequeno />
-              {t(
-                `Mas nessa data o risco de seca sobe para ${fraseDez(alvo.seca, lang)}. Veja os dois antes de decidir.`,
-                `But on that date the drought risk rises to ${fraseDez(alvo.seca, lang)}. Weigh both before deciding.`,
-              )}
-            </span>
-          )}
-          {!ok && (
-            <button
-              type="button"
-              onClick={() => {
-                onIdx(ate);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              className="min-h-11 cursor-pointer self-start rounded-full border-none bg-lavoura px-[18px] text-sm font-extrabold text-white"
-            >
-              {t(`Ver ${dia(alvo.dataSoja)}`, `See ${dia(alvo.dataSoja)}`)}
-            </button>
-          )}
-        </div>
-      </section>
-
+      <Grupo ordem={3}>
       <section className="wh-in flex flex-col gap-3.5 rounded-3xl bg-white p-[18px] shadow-[0_6px_20px_rgba(20,35,26,.05)]" style={{ animationDelay: ".3s" }}>
         <div className="flex flex-col gap-0.5">
           <h2 className="m-0 text-lg font-black tracking-normal">{t("E se eu plantar em outra data?", "What if I plant on another date?")}</h2>
@@ -298,8 +263,7 @@ export function VouPlantar({
         </div>
         <div
           ref={refBarras}
-          className="wh-scroll grid grid-flow-col gap-2.5 overflow-x-auto"
-          style={{ gridAutoColumns: "calc((100% - 50px) / 6)" }}
+          className="wh-scroll grid grid-flow-col gap-2.5 overflow-x-auto [grid-auto-columns:calc((100%-50px)/6)] lg:[grid-auto-columns:calc((100%-110px)/12)]"
         >
           {datas.map((x, i) => {
             const sel = i === idx;
@@ -348,7 +312,59 @@ export function VouPlantar({
           {t("Quanto mais cedo a soja, mais cedo o milho floresce, longe do frio.", "The earlier the soybeans, the earlier the corn flowers, away from the cold.")}
         </p>
       </section>
+      </Grupo>
+      </Coluna>
 
+      <Coluna lado>
+      <Grupo ordem={2}>
+      {semana}
+
+      <section className="wh-in flex items-start gap-3 rounded-3xl bg-[#E6F4E4] p-4" style={{ animationDelay: ".25s" }}>
+        <Broto size={52} className="flex-none" />
+        <div className="flex flex-1 flex-col gap-2.5 rounded-[18px_18px_18px_4px] bg-white px-3.5 py-3">
+          <span className="text-xs font-extrabold text-lavoura">{t("Dica do Broto", "Broto’s tip")}</span>
+          {ok ? (
+            <span className="text-base font-bold leading-[1.35]">
+              {t("Boa data! Com soja em ", "Good date! With soybeans on ")}
+              <strong>{dia(d.dataSoja)}</strong>
+              {t(", o risco de geada no milho fica em ", ", the frost risk on the corn stays at ")}
+              <strong>{fraseDez(geada, lang)}</strong>
+              {t(", o menor entre as datas.", ", the lowest of all dates.")}
+            </span>
+          ) : (
+            <span className="text-base font-bold leading-[1.35]">
+              {t("Plante a soja em ", "Plant soybeans on ")}
+              <strong>{dia(alvo.dataSoja)}</strong>
+              {t(" e o risco de geada no milho cai para ", " and the frost risk on the corn drops to ")}
+              <strong>{fraseDez(g(alvo), lang)}</strong>.
+            </span>
+          )}
+          {!ok && secaSobe && (
+            <span className="flex items-start gap-1.5 rounded-xl bg-[#FFF4DC] px-2.5 py-2 text-sm leading-[1.35] text-[#7A520F]">
+              <IcSolPequeno />
+              {t(
+                `Mas nessa data o risco de seca sobe para ${fraseDez(alvo.seca, lang)}. Veja os dois antes de decidir.`,
+                `But on that date the drought risk rises to ${fraseDez(alvo.seca, lang)}. Weigh both before deciding.`,
+              )}
+            </span>
+          )}
+          {!ok && (
+            <button
+              type="button"
+              onClick={() => {
+                onIdx(ate);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="min-h-11 cursor-pointer self-start rounded-full border-none bg-lavoura px-[18px] text-sm font-extrabold text-white"
+            >
+              {t(`Ver ${dia(alvo.dataSoja)}`, `See ${dia(alvo.dataSoja)}`)}
+            </button>
+          )}
+        </div>
+      </section>
+      </Grupo>
+
+      <Grupo ordem={4}>
       <section className="wh-in flex flex-col gap-3.5 rounded-3xl bg-white p-[18px] shadow-[0_6px_20px_rgba(20,35,26,.05)]" style={{ animationDelay: ".35s" }}>
         <div className="flex items-center justify-between">
           <h2 className="m-0 text-lg font-black tracking-normal">{t("Sua safra", "Your season")}</h2>
@@ -392,6 +408,8 @@ export function VouPlantar({
       </section>
 
       {rodape}
+      </Grupo>
+      </Coluna>
     </>
   );
 }
