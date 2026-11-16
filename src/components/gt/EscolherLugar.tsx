@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Fonte } from "@/components/ui/Fonte";
 import { useT } from "@/lib/i18n";
+import { mensagemFalha, obterLocalizacao } from "@/lib/localizacao";
 
 function Spinner() {
   return <span className="inline-block size-4 rounded-full border-2 border-brand border-t-transparent motion-safe:animate-spin" aria-hidden="true" />;
@@ -103,29 +104,19 @@ export function EscolherLugar({
     }
   };
 
-  const usarGps = () => {
-    if (!navigator.geolocation) {
-      setAviso({ tipo: "erro", pt: "Este aparelho não informa a localização.", en: "This device does not provide a location." });
-      return;
-    }
+  const usarGps = async () => {
     setOcupado("buscando");
     setAviso(null);
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        const lat = Math.round(p.coords.latitude * 10000) / 10000;
-        const lon = Math.round(p.coords.longitude * 10000) / 10000;
-        void calcular(t("Minha localização", "My location"), lat, lon);
-      },
-      () => {
-        setOcupado(null);
-        setAviso({
-          tipo: "erro",
-          pt: "Não foi possível obter a localização (permissão negada ou sinal fraco). Busque pelo nome do município.",
-          en: "Could not get the location (permission denied or weak signal). Search by municipality name.",
-        });
-      },
-      { timeout: 15_000, maximumAge: 600_000 },
-    );
+    setAchados(null);
+    try {
+      const c = await obterLocalizacao({ timeout: 15_000, maximumAge: 600_000 });
+      setOcupado(null);
+      await calcular(t("Minha localização", "My location"), Math.round(c.latitude * 10000) / 10000, Math.round(c.longitude * 10000) / 10000);
+    } catch (e) {
+      setOcupado(null);
+      const m = mensagemFalha(e);
+      setAviso({ tipo: "erro", pt: `${m.pt} Ou busque pelo nome do município.`, en: `${m.en} Or search by municipality name.` });
+    }
   };
 
   return (

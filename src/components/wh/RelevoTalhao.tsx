@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { IcBaixada } from "@/components/wh/Arte";
 import { fmtNum, useLang, useT } from "@/lib/i18n";
+import { mensagemFalha, obterLocalizacao } from "@/lib/localizacao";
 
 type Estado =
   | { tipo: "parado" }
@@ -43,37 +44,29 @@ export function RelevoTalhao({
   const lang = useLang();
   const [estado, setEstado] = useState<Estado>({ tipo: "parado" });
 
-  const medir = () => {
-    if (!navigator.geolocation) {
-      setEstado({ tipo: "erro", pt: "Este aparelho não informa a localização.", en: "This device does not provide a location." });
+  const medir = async () => {
+    setEstado({ tipo: "medindo" });
+    let c: GeolocationCoordinates;
+    try {
+      c = await obterLocalizacao({ enableHighAccuracy: true, timeout: 20_000, maximumAge: 60_000 });
+    } catch (e) {
+      setEstado({ tipo: "erro", ...mensagemFalha(e) });
       return;
     }
-    setEstado({ tipo: "medindo" });
-    navigator.geolocation.getCurrentPosition(
-      async (p) => {
-        try {
-          const { lats, lons } = grade(p.coords.latitude, p.coords.longitude);
-          const r = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lats.join(",")}&longitude=${lons.join(",")}`);
-          if (!r.ok) throw new Error(String(r.status));
-          const alt = (await r.json()).elevation as number[];
-          if (!Array.isArray(alt) || alt.length !== 49) throw new Error("resposta inesperada");
-          const media = alt.reduce((a, b) => a + b, 0) / alt.length;
-          const ponto = alt[24];
-          const tpi = Math.round((ponto - media) * 10) / 10;
-          setEstado({ tipo: "ok", tpi, ponto, min: Math.min(...alt), max: Math.max(...alt) });
-          if (tpi <= limiteM && !baixada) onBaixada(true);
-        } catch {
-          setEstado({ tipo: "erro", pt: "Não foi possível medir o relevo agora. Tente de novo com internet.", en: "Could not measure the terrain right now. Try again online." });
-        }
-      },
-      () =>
-        setEstado({
-          tipo: "erro",
-          pt: "Não foi possível obter a localização (permissão negada ou sinal fraco). Tente de dentro da lavoura.",
-          en: "Could not get the location (permission denied or weak signal). Try from inside the field.",
-        }),
-      { enableHighAccuracy: true, timeout: 20_000, maximumAge: 60_000 },
-    );
+    try {
+      const { lats, lons } = grade(c.latitude, c.longitude);
+      const r = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lats.join(",")}&longitude=${lons.join(",")}`);
+      if (!r.ok) throw new Error(String(r.status));
+      const alt = (await r.json()).elevation as number[];
+      if (!Array.isArray(alt) || alt.length !== 49) throw new Error("resposta inesperada");
+      const media = alt.reduce((x, y) => x + y, 0) / alt.length;
+      const ponto = alt[24];
+      const tpi = Math.round((ponto - media) * 10) / 10;
+      setEstado({ tipo: "ok", tpi, ponto, min: Math.min(...alt), max: Math.max(...alt) });
+      if (tpi <= limiteM && !baixada) onBaixada(true);
+    } catch {
+      setEstado({ tipo: "erro", pt: "Não foi possível medir o relevo agora. Tente de novo com internet.", en: "Could not measure the terrain right now. Try again online." });
+    }
   };
 
   return (
