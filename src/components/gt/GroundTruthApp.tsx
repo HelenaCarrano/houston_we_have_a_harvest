@@ -14,13 +14,14 @@ import { JaPlantei } from "@/components/wh/JaPlantei";
 import { PlantarSemana } from "@/components/wh/PlantarSemana";
 import { SeletorDia } from "@/components/wh/SeletorDia";
 import { TelaSafra } from "@/components/wh/TelaSafra";
-import { TelaCalendario, type LembreteId } from "@/components/wh/TelaCalendario";
+import { TelaCalendario } from "@/components/wh/TelaCalendario";
+import { useCaderno } from "@/components/wh/caderno";
 import { TelaRotacoes } from "@/components/wh/TelaRotacoes";
 import { Detalhes } from "@/components/wh/Detalhes";
 import { RelevoTalhao } from "@/components/wh/RelevoTalhao";
 import { TestesReais } from "@/components/wh/TestesReais";
 import validacaoEstacoes from "@/data/validacao_estacoes.json";
-import { anoDaSafra, avaliarRotacoes, baixarIcs, dataNaSafra, diaLongo, diasEntre, montarResumo, type EventoAgenda } from "@/components/wh/modelo";
+import { anoDaSafra, avaliarRotacoes, diaLongo, montarResumo } from "@/components/wh/modelo";
 import { LangContext } from "@/lib/i18n";
 import { useIdioma } from "@/lib/useIdioma";
 
@@ -150,6 +151,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
   const [restricoes, setRestricoes] = useState<Restricao[]>([]);
   const [aba, setAbaEstado] = useState<Aba>("risco");
   const [folha, setFolha] = useState<FolhaAberta>(null);
+  // Caderno de campo (feito + anotações), por município e safra; guardado só no aparelho.
+  const { caderno, ...acoesCaderno } = useCaderno(hoje ? `weharvest-caderno-${local.id}-${anoDaSafra(hoje)}` : null);
 
   const p = data.params;
   const d = local.datas[idx]; // todos os anos
@@ -206,30 +209,6 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
   };
 
   const adicionarLocal = (l: LocalView) => setExtras((xs) => (xs.some((x) => x.id === l.id) ? xs : [...xs, l]));
-
-  const salvarAgenda = () => {
-    if (!hoje) return;
-    const ano = anoDaSafra(hoje);
-    const dt = (mmdd: string) => dataNaSafra(mmdd, ano);
-    const nota = t(
-      "Planejado com o weharvest (dados NASA POWER). Confirme com seu agrônomo.",
-      "Planned with weharvest (NASA POWER data). Confirm with your agronomist.",
-    );
-    const todos: (EventoAgenda & { id: LembreteId })[] = [
-      { id: "soja", titulo: t("Plantar a soja", "Plant soybeans"), inicio: dt(d.dataSoja), descricao: nota },
-      { id: "colheita", titulo: t("Colher a soja (aprox.)", "Harvest soybeans (approx.)"), inicio: dt(d.colheitaSoja), descricao: nota },
-      { id: "milho", titulo: t("Plantar o milho safrinha", "Plant second-crop corn"), inicio: dt(d.plantioMilho), descricao: nota },
-      {
-        id: "flor",
-        titulo: t("Flor do milho: fase sensível a geada e seca", "Corn flowering: stage sensitive to frost and drought"),
-        inicio: dt(d.faseInicio),
-        fim: dt(d.faseFim),
-        descricao: nota,
-      },
-    ];
-    const eventos = todos.filter((e) => diasEntre(hoje, e.fim ?? e.inicio) >= 0);
-    baixarIcs(eventos.length ? eventos : todos, `weharvest-safra-${ano}-${String(ano + 1).slice(2)}.ics`);
-  };
 
   const cartao = "flex flex-col gap-3 rounded-3xl bg-white p-4 shadow-[0_6px_20px_rgba(20,35,26,.07)]";
   const difBaixada = RELEVO.diferencaBaixadaC;
@@ -363,7 +342,9 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               baixada={baixada}
               cicloMilho={p.cicloMilho}
               hoje={hoje}
-              onAgenda={salvarAgenda}
+              modo={modo}
+              caderno={caderno}
+              acoes={acoesCaderno}
               onMenu={() => setAba("mais")}
             />
           </div>
@@ -396,6 +377,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               cicloMilho={p.cicloMilho}
               hoje={hoje}
               modelo={modelo}
+              modo={modo}
+              caderno={caderno}
               onMenu={() => setAba("mais")}
             />
           </div>

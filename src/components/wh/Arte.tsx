@@ -330,10 +330,10 @@ export function Carinha({ a, size = 30 }: { a: Avaliacao; size?: number }) {
 }
 
 /** Ícones de tempo para "Esta semana na lavoura". */
-export function IcTempo({ tipo }: { tipo: "sol" | "nuvem" | "chuva" }) {
+export function IcTempo({ tipo, size = 24 }: { tipo: "sol" | "nuvem" | "chuva"; size?: number }) {
   if (tipo === "sol")
     return (
-      <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24">
+      <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="5" fill="#F2B53A" />
         <g stroke="#F2B53A" strokeWidth="2" strokeLinecap="round">
           <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" />
@@ -342,13 +342,13 @@ export function IcTempo({ tipo }: { tipo: "sol" | "nuvem" | "chuva" }) {
     );
   if (tipo === "nuvem")
     return (
-      <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24">
+      <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24">
         <circle cx="9" cy="9" r="4" fill="#F2B53A" />
         <path d="M7 19h10a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.6 1.2A3 3 0 0 0 7 19z" fill="#DCE3EC" />
       </svg>
     );
   return (
-    <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24">
+    <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24">
       <path d="M6 14h11a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.6 1.2A3 3 0 0 0 6 14z" fill="#B8C6D8" />
       <path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3" stroke="#6FA8E6" strokeWidth="2" strokeLinecap="round" />
     </svg>
