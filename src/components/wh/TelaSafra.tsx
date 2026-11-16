@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { DataView, LocalView } from "@/lib/view-data";
-import { CabecalhoInterno } from "@/components/wh/Moldura";
+import { CabecalhoInterno, MAIN_LARGO } from "@/components/wh/Moldura";
 import { IcWhatsApp } from "@/components/wh/Arte";
 import { anoDaSafra, baixarIcs, fraseDez, type ModeloRotacoes } from "@/components/wh/modelo";
 import { baixarTexto, COR_EVENTO, eventosDaSafra, montarCsv, paraAgenda } from "@/components/wh/safra";
@@ -107,7 +107,7 @@ export function TelaSafra({
         subtitulo={t("Escolha o que quer ver, baixe ou mande para o técnico", "Pick what you want, download it or send it to your advisor")}
         onMenu={onMenu}
       />
-      <main className="-mt-6 flex flex-col gap-3.5 px-4 pb-10">
+      <main className={`-mt-6 flex flex-col gap-3.5 px-4 pb-10 ${MAIN_LARGO}`}>
         <section className="wh-in flex flex-col gap-3 rounded-3xl bg-white p-[18px] shadow-[0_6px_20px_rgba(20,35,26,.07)]">
           <div className="flex items-center justify-between gap-2">
             <h2 className="m-0 text-lg font-black tracking-normal">{t("O que entra no relatório", "What goes in the report")}</h2>

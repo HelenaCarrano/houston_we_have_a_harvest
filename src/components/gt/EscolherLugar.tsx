@@ -201,7 +201,10 @@ export function EscolherLugar({
         </ul>
       )}
 
-      <Fonte className="mt-2">
+      <p className="m-0 mt-2 text-[13px] text-ink-muted lg:hidden">
+        {t("Dados da NASA. Sua cidade fica só neste aparelho.", "NASA data. Your town stays on this device.")}
+      </p>
+      <Fonte className="mt-2 hidden lg:block">
         {t(
           "A busca usa o Open-Meteo (CC BY 4.0) e os dados vêm direto da NASA POWER, no seu navegador. Só o nome digitado (ou as coordenadas, se usar a localização) é enviado a esses serviços. A cidade escolhida fica guardada só neste aparelho.",
           "The search uses Open-Meteo (CC BY 4.0) and the data come straight from NASA POWER, in your browser. Only the typed name (or the coordinates, if you use your location) is sent to those services. The chosen town is stored only on this device.",

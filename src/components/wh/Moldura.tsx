@@ -21,9 +21,9 @@ export function CabecalhoInicio({
 }) {
   const t = useT();
   return (
-    <header className={`relative overflow-hidden bg-ceu px-5 pt-5 ${ceu ? "pb-[34px]" : "pb-10"}`}>
+    <header className={`relative overflow-hidden bg-ceu px-5 pt-5 lg:px-10 lg:pt-8 ${ceu ? "pb-[34px]" : "pb-10"}`}>
       {ceu && <CeuAnimado />}
-      <div className="relative flex items-center justify-between">
+      <div className="relative flex items-center justify-between lg:hidden">
         <div className="flex items-center gap-2.5">
           <Logo size={38} />
           <span className="text-[21px] font-black tracking-[-0.03em] text-claro">weharvest</span>
@@ -63,21 +63,21 @@ export function CabecalhoInterno({
 }) {
   const t = useT();
   return (
-    <header className="flex flex-col gap-3.5 bg-ceu px-5 pb-10 pt-5">
+    <header className="flex flex-col gap-3.5 bg-ceu px-5 pb-10 pt-5 lg:px-10 lg:pt-8">
       <div className="flex min-h-11 items-center justify-between">
         {onVoltar ? (
           <button type="button" aria-label={t("Voltar", "Back")} onClick={onVoltar} className={BTN_REDONDO}>
             <IcVoltar />
           </button>
         ) : (
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-2 lg:invisible">
             <Logo size={30} />
             <span className="text-[17px] font-black tracking-[-0.03em] text-claro">weharvest</span>
           </span>
         )}
         {etiqueta && <span className="font-mono text-xs tracking-[0.14em] text-broto">{etiqueta}</span>}
         {onMenu ? (
-          <button type="button" aria-label={t("Mais: sua lavoura, idioma e detalhes", "More: your field, language and details")} onClick={onMenu} className={BTN_REDONDO}>
+          <button type="button" aria-label={t("Mais: sua lavoura, idioma e detalhes", "More: your field, language and details")} onClick={onMenu} className={`${BTN_REDONDO} lg:invisible`}>
             <IcMenu />
           </button>
         ) : (
@@ -210,7 +210,10 @@ function IconeAba({ aba }: { aba: Aba }) {
   );
 }
 
-/** Navegação do app: abas fixas no rodapé. */
+/** No computador, o conteúdo das telas do app ocupa a largura em duas colunas. */
+export const MAIN_LARGO = "lg:block lg:columns-2 lg:gap-6 lg:px-10 lg:pb-12 lg:[&>*]:mb-6 lg:[&>*]:break-inside-avoid";
+
+/** Navegação do app: abas fixas no rodapé (celular) ou barra lateral (computador). */
 export function BarraAbas({ aba, onAba }: { aba: Aba; onAba: (a: Aba) => void }) {
   const t = useT();
   const itens: [Aba, string][] = [
@@ -218,12 +221,17 @@ export function BarraAbas({ aba, onAba }: { aba: Aba; onAba: (a: Aba) => void })
     ["calendario", t("Calendário", "Calendar")],
     ["depois", t("Rotação", "Rotation")],
     ["safra", t("Safra", "Season")],
+    ["mais", t("Mais", "More")],
   ];
   return (
     <nav
       aria-label={t("Seções do app", "App sections")}
-      className="fixed bottom-0 left-1/2 z-20 grid w-full max-w-[440px] -translate-x-1/2 grid-cols-4 gap-1 border-t border-borda bg-white/95 px-2 pb-[max(14px,env(safe-area-inset-bottom))] pt-2 backdrop-blur"
+      className="fixed bottom-0 left-1/2 z-20 grid w-full max-w-[440px] -translate-x-1/2 grid-cols-4 gap-1 border-t border-borda bg-white/95 px-2 pb-[max(14px,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:inset-y-0 lg:left-0 lg:w-[232px] lg:max-w-none lg:translate-x-0 lg:grid-cols-1 lg:content-start lg:gap-1.5 lg:border-r lg:border-t-0 lg:bg-ceu lg:px-4 lg:pt-6"
     >
+      <span className="mb-6 hidden items-center gap-2.5 px-2 lg:flex">
+        <Logo size={36} />
+        <span className="text-xl font-black tracking-[-0.03em] text-claro">weharvest</span>
+      </span>
       {itens.map(([id, rotulo]) => {
         const ativa = aba === id;
         return (
@@ -232,8 +240,8 @@ export function BarraAbas({ aba, onAba }: { aba: Aba; onAba: (a: Aba) => void })
             type="button"
             aria-current={ativa ? "page" : undefined}
             onClick={() => onAba(id)}
-            className={`flex min-h-14 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-2xl border-none text-[13px] font-extrabold ${
-              ativa ? "bg-[#E3F2E1] text-lavoura-escura" : "bg-transparent text-texto-2"
+            className={`${id === "mais" ? "hidden lg:flex" : "flex"} min-h-14 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-2xl border-none text-[13px] font-extrabold lg:min-h-12 lg:flex-row lg:justify-start lg:gap-3 lg:px-4 lg:text-base ${
+              ativa ? "bg-[#E3F2E1] text-lavoura-escura" : "bg-transparent text-texto-2 lg:text-claro-2 lg:hover:bg-ceu-2"
             }`}
           >
             <IconeAba aba={id} />

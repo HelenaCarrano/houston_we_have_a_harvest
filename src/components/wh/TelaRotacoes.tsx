@@ -13,7 +13,7 @@ import {
   SetaRotacao,
   type Avaliacao,
 } from "@/components/wh/Arte";
-import { CabecalhoInterno } from "@/components/wh/Moldura";
+import { CabecalhoInterno, MAIN_LARGO } from "@/components/wh/Moldura";
 import { avaliacaoDoNivel, fraseDez, type ModeloRotacoes, type RotacaoAvaliada } from "@/components/wh/modelo";
 import { fmtDia, useLang, useT } from "@/lib/i18n";
 import { nivelPorFreq } from "@/components/ui/NivelBadge";
@@ -228,7 +228,7 @@ export function TelaRotacoes({
         onVoltar={onVoltar}
         onMenu={onMenu}
       />
-      <main className="-mt-6 flex flex-col gap-3.5 px-4 pb-10">
+      <main className={`-mt-6 flex flex-col gap-3.5 px-4 pb-10 ${MAIN_LARGO}`}>
         <section className="flex flex-col gap-2.5 rounded-3xl bg-white p-4 shadow-[0_6px_20px_rgba(20,35,26,.07)]">
           <span id="wh-foco" className="text-base font-extrabold">
             {t("O que pesa mais pra você?", "What matters most to you?")}

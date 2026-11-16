@@ -7,7 +7,7 @@ import type { FaseEnso, FiltroEnso } from "@/lib/engine/enso.ts";
 import { EscolherLugar, carregarLocal } from "@/components/gt/EscolherLugar";
 import { FILTROS_ENSO } from "@/components/gt/format";
 import { Chave, IcBaixada, IcPin, IcSoja, Logo } from "@/components/wh/Arte";
-import { BarraAbas, BotoesCompartilhar, CabecalhoInicio, CabecalhoInterno, Folha, InstalarApp, LinhaEscolha, type Aba } from "@/components/wh/Moldura";
+import { BarraAbas, BotoesCompartilhar, CabecalhoInicio, CabecalhoInterno, Folha, InstalarApp, LinhaEscolha, MAIN_LARGO, type Aba } from "@/components/wh/Moldura";
 import { Boasvindas, type EtapaIntro } from "@/components/wh/Boasvindas";
 import { VouPlantar } from "@/components/wh/VouPlantar";
 import { JaPlantei } from "@/components/wh/JaPlantei";
@@ -289,7 +289,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
                 onMenu={() => setAba("mais")}
               />
             )}
-            <main className={`relative flex flex-col gap-3.5 px-4 pb-28 ${modo === "vou" ? "-mt-[18px]" : "-mt-[22px]"}`}>
+            <main className={`relative flex flex-col gap-3.5 px-4 pb-28 ${MAIN_LARGO} ${modo === "vou" ? "-mt-[18px]" : "-mt-[22px]"}`}>
               {modo === "vou" ? (
                 <VouPlantar
                   local={local}
@@ -392,7 +392,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               subtitulo={t("Sua lavoura e idioma", "Your field and language")}
               onVoltar={() => setAba("risco")}
             />
-            <main className="-mt-6 flex flex-col gap-3.5 px-4 pb-28">
+            <main className={`-mt-6 flex flex-col gap-3.5 px-4 pb-28 ${MAIN_LARGO}`}>
               <section className={cartao}>
                 <h2 className="m-0 text-lg font-black tracking-normal">{t("Sua lavoura", "Your field")}</h2>
                 <LinhaEscolha
@@ -477,7 +477,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
               <button
                 type="button"
                 onClick={() => irEtapa("intro")}
-                className="min-h-12 cursor-pointer rounded-full border-[1.5px] border-[#D6CFBE] bg-white text-base font-extrabold text-texto"
+                className="min-h-12 w-full cursor-pointer rounded-full border-[1.5px] border-[#D6CFBE] bg-white text-base font-extrabold text-texto"
               >
                 {t("Ver a introdução de novo", "See the introduction again")}
               </button>
@@ -493,8 +493,14 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
 
   return (
     <LangContext.Provider value={lang}>
-      <PainelComputador link={URL_APP} />
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[440px] flex-col bg-palha lg:shadow-[0_0_48px_rgba(10,20,36,.18)]">{conteudo}</div>
+      {etapa !== "app" && <PainelComputador link={URL_APP} />}
+      <div
+        className={`relative z-10 mx-auto flex min-h-screen w-full max-w-[440px] flex-col bg-palha ${
+          etapa === "app" ? "lg:ml-[232px] lg:mr-0 lg:w-auto lg:max-w-none" : "lg:shadow-[0_0_48px_rgba(10,20,36,.18)]"
+        }`}
+      >
+        {conteudo}
+      </div>
 
       {folha === "municipio" && (
         <Folha titulo={t("Onde fica sua lavoura?", "Where is your field?")} onFechar={fecharFolha}>
