@@ -1,7 +1,7 @@
 // Eventos da safra do produtor: a mesma lista alimenta o calendário, o relatório e a agenda (.ics).
 // Só lê datas já calculadas pelo motor (DataView/LocalView); não calcula risco.
 import type { DataView, LocalView } from "@/lib/view-data";
-import { anoDaSafra, dataNaSafra, diaEixo, somarDias, type EventoAgenda } from "@/components/wh/modelo";
+import { anoDaSafra, dataNaSafra, type EventoAgenda } from "@/components/wh/modelo";
 import { fmtDia, type Lang } from "@/lib/i18n";
 
 export type TipoEvento = "soja" | "colheita" | "milho" | "flor" | "geada";
@@ -25,12 +25,11 @@ export const COR_EVENTO: Record<TipoEvento, string> = {
   geada: "#3E6EA8",
 };
 
-export function eventosDaSafra(args: { d: DataView; local: LocalView; cicloMilho: number; hoje: Date; t: Tr; lang: Lang }): EventoSafra[] {
-  const { d, local, cicloMilho, hoje, t, lang } = args;
+export function eventosDaSafra(args: { d: DataView; local: LocalView; cicloMilho?: number; hoje: Date; t: Tr; lang: Lang }): EventoSafra[] {
+  const { d, local, hoje, t, lang } = args;
   const ano = anoDaSafra(hoje);
   const dt = (m: string) => dataNaSafra(m, ano);
   const dia = (m: string) => fmtDia(m, lang);
-  const fimMilho = diaEixo(d.plantioMilho) + cicloMilho > 364 ? "08-31" : somarDias(d.plantioMilho, cicloMilho);
   const ep = local.epocaGeada;
   const lista: EventoSafra[] = [
     { tipo: "soja", titulo: t("Plantar a soja", "Plant soybeans"), detalhe: dia(d.dataSoja), inicio: dt(d.dataSoja), cor: COR_EVENTO.soja },
@@ -46,7 +45,6 @@ export function eventosDaSafra(args: { d: DataView; local: LocalView; cicloMilho
       titulo: t("Plantar o milho safrinha", "Plant second-crop corn"),
       detalhe: t(`até ${dia(d.plantioMilho)}, logo após a colheita`, `by ${dia(d.plantioMilho)}, right after harvest`),
       inicio: dt(d.plantioMilho),
-      fim: dt(fimMilho),
       cor: COR_EVENTO.milho,
     },
     {

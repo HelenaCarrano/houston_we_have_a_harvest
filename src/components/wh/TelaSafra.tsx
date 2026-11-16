@@ -5,10 +5,10 @@ import type { DataView, LocalView } from "@/lib/view-data";
 import { CabecalhoInterno } from "@/components/wh/Moldura";
 import { IcWhatsApp } from "@/components/wh/Arte";
 import { anoDaSafra, baixarIcs, fraseDez, type ModeloRotacoes } from "@/components/wh/modelo";
-import { baixarTexto, COR_EVENTO, eventosDaSafra, montarCsv, paraAgenda, type TipoEvento } from "@/components/wh/safra";
+import { baixarTexto, COR_EVENTO, eventosDaSafra, montarCsv, paraAgenda } from "@/components/wh/safra";
 import { fmtDia, useLang, useT } from "@/lib/i18n";
 
-type Bloco = TipoEvento | "risco" | "rotacao";
+type Bloco = "datas" | "risco" | "rotacao";
 
 /** Aba Safra: o produtor escolhe o que entra e gera relatório, agenda ou planilha da safra dele. */
 export function TelaSafra({
@@ -33,11 +33,11 @@ export function TelaSafra({
   const ano = anoDaSafra(hoje);
   const safra = `${ano}/${String(ano + 1).slice(2)}`;
   const todos = eventosDaSafra({ d, local, cicloMilho, hoje, t, lang });
-  const [escolhidos, setEscolhidos] = useState<Bloco[]>(["soja", "colheita", "milho", "flor", "geada", "risco", "rotacao"]);
+  const [escolhidos, setEscolhidos] = useState<Bloco[]>(["datas", "risco", "rotacao"]);
   const tem = (b: Bloco) => escolhidos.includes(b);
   const alternar = (b: Bloco) => setEscolhidos((xs) => (xs.includes(b) ? xs.filter((x) => x !== b) : [...xs, b]));
 
-  const eventos = todos.filter((e) => tem(e.tipo));
+  const eventos = tem("datas") ? todos : [];
   const geada = baixada ? d.geadaBaixada : d.geada;
   const seca = d.seca;
   const melhor = lang === "en" ? modelo.melhor.r.en.nome : modelo.melhor.r.pt.nome;
@@ -74,14 +74,10 @@ export function TelaSafra({
   const botao =
     "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full border-[1.5px] border-[#D6CFBE] bg-white px-4 text-[15px] font-extrabold text-texto disabled:cursor-not-allowed disabled:opacity-40";
 
-  const OPCOES: [Bloco, string, string][] = [
-    ["soja", t("Plantar a soja", "Plant soybeans"), COR_EVENTO.soja],
-    ["colheita", t("Colher a soja", "Harvest soybeans"), COR_EVENTO.colheita],
-    ["milho", t("Plantar o milho", "Plant the corn"), COR_EVENTO.milho],
-    ["flor", t("Flor do milho", "Corn flowering"), COR_EVENTO.flor],
-    ["geada", t("Época de geada", "Frost season"), COR_EVENTO.geada],
-    ["risco", t("Risco de geada e seca", "Frost and drought risk"), "#B4480E"],
-    ["rotacao", t("O que plantar depois", "What to plant next"), "#2E7D4A"],
+  const OPCOES: [Bloco, string, string, string][] = [
+    ["datas", t("Datas da safra", "Season dates"), t("plantio, colheita, flor do milho e geada", "planting, harvest, corn flowering and frost"), COR_EVENTO.soja],
+    ["risco", t("Risco de geada e seca", "Frost and drought risk"), t("quantas safras tiveram o problema", "how many seasons had the problem"), "#B4480E"],
+    ["rotacao", t("O que plantar depois", "What to plant next"), t("a rotação indicada pra você", "the rotation suggested for you"), "#2E7D4A"],
   ];
 
   return (
@@ -105,7 +101,7 @@ export function TelaSafra({
             </button>
           </div>
           <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
-            {OPCOES.map(([b, rotulo, cor]) => (
+            {OPCOES.map(([b, rotulo, sub, cor]) => (
               <li key={b}>
                 <button
                   type="button"
@@ -117,7 +113,10 @@ export function TelaSafra({
                   }`}
                 >
                   <span className="size-3 flex-none rounded-full" style={{ background: cor }} />
-                  <span className="flex-1">{rotulo}</span>
+                  <span className="flex flex-1 flex-col py-2">
+                    {rotulo}
+                    <span className="text-[13px] font-semibold text-texto-2">{sub}</span>
+                  </span>
                   <span
                     aria-hidden="true"
                     className={`flex size-6 flex-none items-center justify-center rounded-md text-sm text-white ${tem(b) ? "bg-lavoura" : "bg-white ring-2 ring-[#D6CFBE]"}`}

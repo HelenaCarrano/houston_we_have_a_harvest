@@ -22,6 +22,12 @@ export function CalendarioMes({ eventos, hoje, ano }: { eventos: EventoSafra[]; 
   const nomeMes = maiuscula(new Intl.DateTimeFormat(intl, { month: "long", year: "numeric" }).format(primeiro));
   const semana = Array.from({ length: 7 }, (_, i) => new Intl.DateTimeFormat(intl, { weekday: "narrow" }).format(new Date(2025, 8, 7 + i)));
   const doDia = eventosDoDia(eventos, sel);
+  const proximo = [...eventos].sort((a, b) => a.inicio.getTime() - b.inicio.getTime()).find((e) => (e.fim ?? e.inicio).getTime() >= sel.getTime() && !mesmoDia(e.inicio, sel));
+  const curto = (x: Date) => new Intl.DateTimeFormat(intl, { day: "2-digit", month: "2-digit" }).format(x);
+  const irPara = (x: Date) => {
+    setSel(x);
+    setMes((x.getMonth() + 4) % 12);
+  };
   const longo = maiuscula(new Intl.DateTimeFormat(intl, { weekday: "long", day: "numeric", month: "long" }).format(sel));
 
   const seta = "flex size-11 cursor-pointer items-center justify-center rounded-full border-none bg-campo text-lg font-black text-texto disabled:opacity-30";
@@ -109,7 +115,18 @@ export function CalendarioMes({ eventos, hoje, ano }: { eventos: EventoSafra[]; 
           {longo}
         </span>
         {doDia.length === 0 ? (
-          <span className="text-sm text-texto-2">{t("Nada marcado neste dia.", "Nothing scheduled on this day.")}</span>
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-texto-2">
+            {t("Nada marcado neste dia.", "Nothing scheduled on this day.")}
+            {proximo && (
+              <button
+                type="button"
+                onClick={() => irPara(proximo.inicio)}
+                className="min-h-11 cursor-pointer border-none bg-transparent p-0 text-left text-sm font-extrabold text-lavoura-escura underline"
+              >
+                {t(`Próximo: ${proximo.titulo} (${curto(proximo.inicio)})`, `Next: ${proximo.titulo} (${curto(proximo.inicio)})`)}
+              </button>
+            )}
+          </span>
         ) : (
           doDia.map((e) => (
             <span key={e.tipo} className="flex items-start gap-2 text-sm">

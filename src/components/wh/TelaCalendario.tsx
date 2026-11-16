@@ -1,16 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import type { DataView, LocalView } from "@/lib/view-data";
 import {
   IcCheck,
   IcColheita,
   IcExclamacao,
   IcFlor,
-  IcGeada,
   IcMilho,
   IcSoja,
-  IcTempo,
 } from "@/components/wh/Arte";
 import { CabecalhoInterno } from "@/components/wh/Moldura";
 import { CalendarioMes } from "@/components/wh/CalendarioMes";
@@ -19,115 +16,6 @@ import { anoDaSafra, dataNaSafra, diaEixo, diasEntre, fraseDez, linkGoogleAgenda
 import { fmtDia, useLang, useT } from "@/lib/i18n";
 
 export type LembreteId = "soja" | "colheita" | "milho" | "flor";
-
-type Dia = { data: string; codigo: number; tmax: number | null; chuva: number | null; vento: number | null };
-
-function EstaSemana({ lat, lon }: { lat: number; lon: number }) {
-  const t = useT();
-  const lang = useLang();
-  const [estado, setEstado] = useState<{ tipo: "carregando" } | { tipo: "erro" } | { tipo: "ok"; dias: Dia[] }>({ tipo: "carregando" });
-  useEffect(() => {
-    const ctrl = new AbortController();
-    fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-        `&daily=weather_code,temperature_2m_max,precipitation_sum,wind_speed_10m_max&forecast_days=7&timezone=America%2FSao_Paulo`,
-      { signal: ctrl.signal },
-    )
-      .then((r) => {
-        if (!r.ok) throw new Error(String(r.status));
-        return r.json();
-      })
-      .then((j) => {
-        const dd = j?.daily;
-        if (!dd?.time) throw new Error("resposta inesperada");
-        setEstado({
-          tipo: "ok",
-          dias: (dd.time as string[]).map((data, i) => ({
-            data,
-            codigo: dd.weather_code?.[i] ?? 0,
-            tmax: dd.temperature_2m_max?.[i] ?? null,
-            chuva: dd.precipitation_sum?.[i] ?? null,
-            vento: dd.wind_speed_10m_max?.[i] ?? null,
-          })),
-        });
-      })
-      .catch((e: unknown) => {
-        if ((e as Error)?.name !== "AbortError") setEstado({ tipo: "erro" });
-      });
-    return () => ctrl.abort();
-  }, [lat, lon]);
-
-  const SEMANA = lang === "en" ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] : ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
-  const nota = (x: Dia): { cor: string; pt: string; en: string } => {
-    const chuva = x.chuva ?? 0;
-    const vento = x.vento ?? 0;
-    if (chuva >= 5 || vento >= 25) return { cor: "#E07A3E", pt: "evite", en: "avoid" };
-    if (chuva >= 1 || vento >= 15) return { cor: "#F2C46A", pt: "atenção", en: "caution" };
-    return { cor: "#7CC46A", pt: "bom", en: "good" };
-  };
-  const icone = (x: Dia): "sol" | "nuvem" | "chuva" =>
-    x.codigo >= 51 || (x.chuva ?? 0) >= 1 ? "chuva" : x.codigo >= 2 ? "nuvem" : "sol";
-
-  return (
-    <section
-      className="wh-in flex flex-col gap-3 rounded-3xl bg-[linear-gradient(180deg,#E4EEFA,#F4F8FD)] p-[18px]"
-      style={{ animationDelay: ".2s" }}
-    >
-      <div className="flex flex-col gap-0.5">
-        <h2 className="m-0 text-lg font-black tracking-normal">{t("Esta semana na lavoura", "This week in the field")}</h2>
-        <span className="text-sm text-[#33507A]">
-          {t("Bom dia para pulverizar = sem chuva e pouco vento", "Good spraying day = no rain and little wind")}
-        </span>
-      </div>
-      {estado.tipo === "erro" && (
-        <p className="m-0 rounded-2xl bg-white p-3 text-sm text-texto-2">
-          {t("Não foi possível carregar a previsão agora. Tente de novo mais tarde.", "The forecast could not be loaded right now. Please try again later.")}
-        </p>
-      )}
-      {estado.tipo !== "erro" && (
-        <ul className="m-0 grid list-none grid-cols-7 gap-[5px] p-0" aria-busy={estado.tipo === "carregando"}>
-          {(estado.tipo === "ok" ? estado.dias : Array.from({ length: 7 }, () => null)).map((x, i) => {
-            if (!x) return <li key={i} className="h-[104px] animate-pulse rounded-[18px] bg-white/70" />;
-            const n = nota(x);
-            const hoje = i === 0;
-            const wd = new Date(`${x.data}T12:00:00`).getDay();
-            return (
-              <li
-                key={x.data}
-                className={`flex flex-col items-center gap-1.5 rounded-[18px] py-2.5 ${hoje ? "bg-texto text-white" : "bg-white"}`}
-                aria-label={`${SEMANA[wd]}: ${x.tmax === null ? "–" : Math.round(x.tmax)}°, ${t(n.pt, n.en)}`}
-              >
-                <span className={`text-[13px] font-bold ${hoje ? "text-broto" : "text-texto-2"}`}>{SEMANA[wd]}</span>
-                <IcTempo tipo={icone(x)} />
-                <span className="text-[13px] font-extrabold">{x.tmax === null ? "–" : `${Math.round(x.tmax)}°`}</span>
-                <span className="size-2 rounded-full" style={{ background: n.cor }} />
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      <div className="flex gap-3.5 text-sm font-bold text-[#33507A]">
-        {[
-          ["#7CC46A", t("bom", "good")],
-          ["#F2C46A", t("atenção", "caution")],
-          ["#E07A3E", t("evite", "avoid")],
-        ].map(([c, r]) => (
-          <span key={r} className="flex items-center gap-[5px]">
-            <span className="size-2 rounded-full" style={{ background: c }} />
-            {r}
-          </span>
-        ))}
-      </div>
-      <span className="text-xs text-[#33507A]">
-        {t("Previsão:", "Forecast:")}{" "}
-        <a className="underline" href="https://open-meteo.com/" target="_blank" rel="noreferrer">
-          Open-Meteo
-        </a>{" "}
-        (CC BY 4.0)
-      </span>
-    </section>
-  );
-}
 
 export function TelaCalendario({
   local,
@@ -238,10 +126,10 @@ export function TelaCalendario({
         <section className="wh-in flex flex-col gap-1.5 rounded-3xl bg-white p-[18px] shadow-[0_6px_20px_rgba(20,35,26,.05)]" style={{ animationDelay: ".1s" }}>
           <div className="mb-1.5 flex items-center justify-between">
             <h2 className="m-0 text-lg font-black tracking-normal">{t("Lembretes", "Reminders")}</h2>
-            <span className="text-sm text-texto-2">{t(`${feitos} de 5 feito${feitos === 1 ? "" : "s"}`, `${feitos} of 5 done`)}</span>
+            <span className="text-sm text-texto-2">{t(`${feitos} de ${itens.length} feito${feitos === 1 ? "" : "s"}`, `${feitos} of ${itens.length} done`)}</span>
           </div>
           <div className="mb-2 h-2.5 overflow-hidden rounded-full bg-[#EEE8DB]">
-            <div className="h-full rounded-full bg-[linear-gradient(90deg,#7CC46A,#2E7D4A)]" style={{ width: `${(feitos / 5) * 100}%` }} />
+            <div className="h-full rounded-full bg-[linear-gradient(90deg,#7CC46A,#2E7D4A)]" style={{ width: `${(feitos / itens.length) * 100}%` }} />
           </div>
           <ul className="m-0 flex list-none flex-col p-0">
             {itens.map((x) => {
@@ -287,33 +175,16 @@ export function TelaCalendario({
                 </li>
               );
             })}
-            <li className="flex min-h-16 items-center gap-3">
-              <span className="flex size-11 flex-none items-center justify-center rounded-full bg-[#DCE8F6]">
-                <IcGeada size={22} />
-              </span>
-              <span className="flex flex-1 flex-col">
-                <span className="text-[15px] font-extrabold">{t("Aviso de geada", "Frost warning")}</span>
-                <span className="text-sm text-[#2F5A92]">{t("mensagem no WhatsApp 3 dias antes", "WhatsApp message 3 days ahead")}</span>
-              </span>
-              <span className="flex-none rounded-full bg-[#DCE8F6] px-3 py-1.5 text-[13px] font-bold text-[#2F5A92]">{t("Em breve", "Coming soon")}</span>
-            </li>
           </ul>
-          <p className="m-0 mt-2 text-[13px] leading-[1.45] text-texto-2">
-            {t(
-              "“+ Agenda” abre o Google Agenda com o lembrete pronto para salvar.",
-              "“+ Calendar” opens Google Calendar with the reminder ready to save.",
-            )}
-          </p>
           <button
             type="button"
             onClick={onAgenda}
             className="min-h-12 cursor-pointer rounded-full border-[1.5px] border-[#D6CFBE] bg-white text-[15px] font-extrabold text-texto"
           >
-            {t("Baixar todos (iPhone e outras agendas)", "Download all (iPhone and other calendars)")}
+            {t("Salvar todos na agenda do celular", "Save all to your phone calendar")}
           </button>
         </section>
 
-        <EstaSemana key={local.id} lat={local.lat} lon={local.lon} />
       </main>
     </>
   );

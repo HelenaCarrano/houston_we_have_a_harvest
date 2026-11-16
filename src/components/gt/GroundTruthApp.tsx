@@ -405,7 +405,7 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
           <>
             <CabecalhoInterno
               titulo={t("Mais", "More")}
-              subtitulo={t("Sua lavoura, idioma e detalhes técnicos", "Your field, language and technical details")}
+              subtitulo={t("Sua lavoura e idioma", "Your field and language")}
               onVoltar={() => setAba("risco")}
             />
             <main className="-mt-6 flex flex-col gap-3.5 px-4 pb-28">
@@ -467,8 +467,12 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
 
               <InstalarApp />
 
-              <BotoesCompartilhar hrefWhatsApp={hrefWhatsApp} onAgenda={() => setAba("calendario")} />
-
+              <details className="group rounded-3xl bg-white px-[18px] shadow-[0_6px_20px_rgba(20,35,26,.05)]">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between text-lg font-black">
+                  {t("Para técnicos: testes e método", "For agronomists: tests and method")}
+                  <span aria-hidden="true" className="text-xl text-texto-2 transition-transform group-open:rotate-90">›</span>
+                </summary>
+                <div className="flex flex-col gap-3.5 pb-[18px]">
               <TestesReais />
 
               <Detalhes
@@ -483,6 +487,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
                 backtest={data.backtest}
                 enso={data.enso}
               />
+                </div>
+              </details>
 
               <button
                 type="button"

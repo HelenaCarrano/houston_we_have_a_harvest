@@ -98,11 +98,10 @@ export function VouPlantar({
   const g = (x: DataView) => (baixada ? x.geadaBaixada : x.geada);
   const d = datas[idx];
   const geada = g(d);
-  const ng = emDez(geada);
   const ns = emDez(d.seca);
   const nivel = pior(nivelPorFreq(geada.frequencia), nivelPorFreq(d.seca.frequencia));
   const pil = PILULA[nivel];
-  const anel = Math.max(geada.anosComEvento > 0 ? 0.25 : 0, ng.n) * 49;
+  const anel = Math.max(geada.anosComEvento > 0 ? 12 : 0, geada.frequencia * 490);
   const ate = melhorDataGeada(datas, baixada);
   const alvo = datas[ate];
   const ok = idx <= ate;
@@ -187,31 +186,22 @@ export function VouPlantar({
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
             <IcGeada size={30} />
             <span className="text-[52px] font-black leading-none tracking-[-0.03em] text-texto">
-              {ng.texto}
-              <span className="text-2xl text-texto-2">/10</span>
+              {fraseDez(geada, lang).replace("%", "")}
+              <span className="text-2xl text-texto-2">%</span>
             </span>
             <span className="text-center text-sm font-extrabold leading-[1.15] text-[#33507A]">
-              {t("anos com geada", "years with frost")}
+              {t("risco de geada", "frost risk")}
               <br />
               {t("na flor do milho", "at corn flowering")}
             </span>
           </div>
         </div>
-        <p className="relative m-0 max-w-[300px] text-center text-[17px] font-extrabold leading-[1.3]">
-          {t(`Com soja em ${dia(d.dataSoja)}, o risco de geada na flor do milho é de `, `With soybeans on ${dia(d.dataSoja)}, the frost risk at corn flowering is `)}
-          <span className="text-[#2F5A92]">{fraseDez(geada, lang)}</span>
-          {baixada ? t(" (baixada)", " (lowland)") : ""}
-        </p>
-        <span className="relative flex items-center gap-2 rounded-full bg-white px-3.5 py-2 text-sm font-bold text-texto">
+        <span className="relative flex items-center gap-2 rounded-full bg-white px-3.5 py-2 text-center text-sm font-bold text-texto">
           <IcSatelite />
-          {t(`${geada.totalAnos} safras vistas por satélite da NASA`, `${geada.totalAnos} seasons seen by NASA satellites`)}
-        </span>
-        <span className="relative text-[13px] text-texto-2">
           {t(
-            `Aconteceu em ${geada.anosComEvento} das ${geada.totalAnos} safras`,
-            `It happened in ${geada.anosComEvento} of ${geada.totalAnos} seasons`,
+            `Geada em ${geada.anosComEvento} das ${geada.totalAnos} safras${geada.periodo ? ` (${geada.periodo[0]}–${geada.periodo[1]})` : ""}${baixada ? ", baixada" : ""}`,
+            `Frost in ${geada.anosComEvento} of ${geada.totalAnos} seasons${geada.periodo ? ` (${geada.periodo[0]}–${geada.periodo[1]})` : ""}${baixada ? ", lowland" : ""}`,
           )}
-          {geada.periodo ? ` (${geada.periodo[0]}–${geada.periodo[1]})` : ""}
         </span>
       </section>
 
@@ -220,8 +210,8 @@ export function VouPlantar({
           <div className="flex items-center justify-between">
             <IcSol />
             <span className="text-[26px] font-black">
-              {ns.texto}
-              <span className="text-sm text-[#7A520F]">/10</span>
+              {fraseDez(d.seca, lang).replace("%", "")}
+              <span className="text-sm text-[#7A520F]">%</span>
             </span>
           </div>
           <span className="text-[15px] font-extrabold leading-[1.2]">{t("Seca na flor do milho", "Drought at corn flowering")}</span>
@@ -295,7 +285,7 @@ export function VouPlantar({
       <section className="wh-in flex flex-col gap-3.5 rounded-3xl bg-white p-[18px] shadow-[0_6px_20px_rgba(20,35,26,.05)]" style={{ animationDelay: ".3s" }}>
         <div className="flex flex-col gap-0.5">
           <h2 className="m-0 text-lg font-black tracking-normal">{t("E se eu plantar em outra data?", "What if I plant on another date?")}</h2>
-          <span className="text-sm text-texto-2">{t("Anos com geada na flor do milho, a cada 10", "Years with frost at corn flowering, out of 10")}</span>
+          <span className="text-sm text-texto-2">{t("Risco de geada na flor do milho em cada data", "Frost risk at corn flowering for each date")}</span>
         </div>
         <div
           ref={refBarras}
@@ -322,11 +312,11 @@ export function VouPlantar({
                 <span className="flex h-[150px] w-full flex-col items-center justify-end gap-1.5">
                   {sel ? (
                     <span className="rounded-full px-2 py-px text-sm font-black text-white" style={{ background: c.pilula }}>
-                      {n.texto}
+                      {fraseDez(g(x), lang)}
                     </span>
                   ) : (
                     <span className="text-sm font-extrabold" style={{ color: c.rotulo }}>
-                      {n.texto}
+                      {fraseDez(g(x), lang)}
                     </span>
                   )}
                   <span

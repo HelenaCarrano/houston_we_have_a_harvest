@@ -4,7 +4,6 @@ import { useState } from "react";
 import type { DataView, TrigoView } from "@/lib/view-data";
 import { FOCOS, MOTIVO_BLOQUEIO, NOTA_NITROGENIO, REGRA_ORDEM, RESTRICOES, type Foco, type Restricao } from "@/lib/rotacoes";
 import {
-  Broto,
   COR_AVALIACAO,
   Carinha,
   IcMilho,
@@ -15,7 +14,7 @@ import {
   type Avaliacao,
 } from "@/components/wh/Arte";
 import { CabecalhoInterno } from "@/components/wh/Moldura";
-import { fraseDez, melhorDataGeada, type ModeloRotacoes, type RotacaoAvaliada } from "@/components/wh/modelo";
+import { fraseDez, type ModeloRotacoes, type RotacaoAvaliada } from "@/components/wh/modelo";
 import { fmtDia, useLang, useT } from "@/lib/i18n";
 
 const ROTULO_AVAL: Record<Avaliacao, { pt: string; en: string }> = {
@@ -24,10 +23,10 @@ const ROTULO_AVAL: Record<Avaliacao, { pt: string; en: string }> = {
   ruim: { pt: "ruim", en: "poor" },
 };
 
-const NOME_CURTO: Record<string, { pt: string; en: string }> = {
-  trigo: { pt: "Trigo", en: "Wheat" },
-  "milho-braquiaria": { pt: "Milho + capim", en: "Corn + grass" },
-  milho: { pt: "Milho", en: "Corn" },
+const RESTRICAO_CURTA: Record<Restricao, { pt: string; en: string }> = {
+  semTrigo: { pt: "Não planto trigo", en: "I don’t grow wheat" },
+  semBraquiaria: { pt: "Não manejo braquiária", en: "No brachiaria" },
+  poucaAgua: { pt: "Tenho pouca água", en: "Little water" },
 };
 
 const FOCO_CURTO: Record<Foco, { pt: string; en: string }> = {
@@ -170,7 +169,6 @@ function CartaoRotacao({
 export function TelaRotacoes({
   nomeLocal,
   d,
-  datas,
   trigo,
   baixada,
   modelo,
@@ -199,11 +197,6 @@ export function TelaRotacoes({
   const dia = (x: string) => fmtDia(x, lang);
   const geada = baixada ? d.geadaBaixada : d.geada;
   const fGeada = fraseDez(geada, lang);
-  const ate = melhorDataGeada(datas, baixada);
-  const alvo = datas[ate];
-  const gAlvo = baixada ? alvo.geadaBaixada : alvo.geada;
-  const idx = datas.findIndex((x) => x.dataSoja === d.dataSoja);
-  const nomeMelhor = lang === "en" ? modelo.melhor.r.en.nome : modelo.melhor.r.pt.nome;
 
   const texto = (a: RotacaoAvaliada) =>
     a.r.id === "milho"
@@ -250,65 +243,27 @@ export function TelaRotacoes({
               </button>
             ))}
           </div>
-        </section>
-
-        <section className="wh-in rounded-3xl bg-white px-4 pb-1.5 pt-4 shadow-[0_6px_20px_rgba(20,35,26,.07)]">
-          <table className="w-full border-collapse">
-            <caption className="sr-only">{t("Resumo das opções", "Summary of the options")}</caption>
-            <thead>
-              <tr>
-                <th scope="col" className="pb-2 text-left align-bottom text-[17px] font-black">
-                  {t("Resumo", "Summary")}
-                </th>
-                {[t("Geada", "Frost"), t("Solo", "Soil"), t("Renda", "Income")].map((c) => (
-                  <th key={c} scope="col" className="w-[52px] pb-2 text-center align-bottom text-[13px] font-bold text-texto-2">
-                    {c}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {modelo.avaliadas.map((a) => (
-                <tr key={a.r.id} className="h-[52px] border-t border-divisor">
-                  <th scope="row" className="text-left text-[15px] font-extrabold">
-                    {t(NOME_CURTO[a.r.id].pt, NOME_CURTO[a.r.id].en)}
-                  </th>
-                  {[a.geada, a.solo, a.renda].map((v, k) => (
-                    <td key={k} className="text-center">
-                      <span className="inline-flex" title={t(ROTULO_AVAL[v].pt, ROTULO_AVAL[v].en)}>
-                        <Carinha a={v} />
-                        <span className="sr-only">{t(ROTULO_AVAL[v].pt, ROTULO_AVAL[v].en)}</span>
-                      </span>
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-
-        <div className="flex justify-center gap-3.5">
-          {(["bom", "atencao", "ruim"] as Avaliacao[]).map((a) => (
-            <span key={a} className="flex items-center gap-1 text-sm font-bold" style={{ color: COR_AVALIACAO[a].cor }}>
-              <Carinha a={a} size={22} />
-              {t(ROTULO_AVAL[a].pt, ROTULO_AVAL[a].en)}
-            </span>
-          ))}
-        </div>
-
-        <section className="flex items-start gap-3 rounded-3xl bg-[#E6F4E4] p-4">
-          <Broto size={52} bob={false} className="flex-none" />
-          <div className="flex flex-1 flex-col gap-1 rounded-[18px_18px_18px_4px] bg-white px-3.5 py-3">
-            <span className="text-[13px] font-extrabold text-lavoura">{t("Dica do Broto", "Broto’s tip")}</span>
-            <span className="text-base font-bold leading-[1.35]">
-              {t(`Com soja em ${dia(d.dataSoja)}, a opção mais indicada pra você é `, `With soybeans on ${dia(d.dataSoja)}, the best option for you is `)}
-              <strong>{nomeMelhor}</strong>.
-              {ate < idx &&
-                t(
-                  ` Plantando a soja em ${dia(alvo.dataSoja)}, o risco de geada no milho cai para ${fraseDez(gAlvo, lang)}.`,
-                  ` Planting soybeans on ${dia(alvo.dataSoja)}, the frost risk on the corn drops to ${fraseDez(gAlvo, lang)}.`,
-                )}
-            </span>
+          <span id="wh-restr" className="mt-1.5 text-[15px] font-extrabold">
+            {t("Algo não serve pra você?", "Anything that doesn’t work for you?")}
+          </span>
+          <div role="group" aria-labelledby="wh-restr" className="flex flex-wrap gap-1.5">
+            {RESTRICOES.map((k) => {
+              const on = restricoes.includes(k.id);
+              return (
+                <button
+                  key={k.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => onRestricao(k.id)}
+                  className={`min-h-11 cursor-pointer rounded-full border-[1.5px] px-3.5 text-sm font-extrabold ${
+                    on ? "border-texto bg-texto text-white" : "border-[#D6CFBE] bg-white text-texto"
+                  }`}
+                >
+                  {on ? "✓ " : ""}
+                  {t(RESTRICAO_CURTA[k.id].pt, RESTRICAO_CURTA[k.id].en)}
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -317,28 +272,8 @@ export function TelaRotacoes({
         ))}
 
         <details className="rounded-[18px] bg-white px-4">
-          <summary className="flex min-h-[52px] cursor-pointer items-center text-base font-bold">{t("Detalhes técnicos", "Technical details")}</summary>
+          <summary className="flex min-h-[52px] cursor-pointer items-center text-base font-bold">{t("Como escolhemos a ordem", "How we pick the order")}</summary>
           <div className="flex flex-col gap-3 pb-4">
-            <fieldset className="m-0 flex flex-col gap-1 border-none p-0">
-              <legend className="mb-1 text-[15px] font-extrabold">{t("O que você não consegue fazer?", "What can’t you do?")}</legend>
-              {RESTRICOES.map((k) => (
-                <label key={k.id} className="flex min-h-11 cursor-pointer items-center gap-3 text-[15px]">
-                  <input
-                    type="checkbox"
-                    checked={restricoes.includes(k.id)}
-                    onChange={() => onRestricao(k.id)}
-                    className="size-5 accent-[#2E7D4A]"
-                  />
-                  {t(k.pt, k.en)}
-                </label>
-              ))}
-            </fieldset>
-            <ul className="m-0 pl-[18px] text-[15px] leading-[1.7] text-texto-2">
-              <li>{t("Anos de El Niño / La Niña parecidos com este", "El Niño / La Niña years similar to this one")}</li>
-              <li>{t("Relevo da lavoura (satélite)", "Field relief (satellite)")}</li>
-              <li>{t("Produtividade histórica do município (IBGE)", "Historical municipal yield (IBGE)")}</li>
-              <li>{t("Glossário e fontes: NASA POWER, NOAA, MAPA, Deral", "Glossary and sources: NASA POWER, NOAA, MAPA, Deral")}</li>
-            </ul>
             <p className="m-0 text-sm leading-[1.5] text-texto-2">{t(REGRA_ORDEM.pt, REGRA_ORDEM.en)}</p>
             <p className="m-0 text-sm leading-[1.5] text-texto-2">{t(NOTA_NITROGENIO.pt, NOTA_NITROGENIO.en)}</p>
           </div>
