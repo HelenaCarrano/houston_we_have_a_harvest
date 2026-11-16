@@ -34,7 +34,7 @@ type FolhaAberta = null | "municipio" | "data";
 /** Escolhas guardadas no aparelho, para pular a introdução na próxima visita. */
 const CHAVE = "weharvest-lavoura";
 /** Endereço público, usado no link que vai na mensagem do WhatsApp. */
-const URL_APP = "https://houston-we-have-a-harvest.vercel.app/";
+const URL_APP = "https://weharvest.vercel.app/";
 type Cidade = { nome: string; lat: number; lon: number };
 /** `cidade`: município buscado pelo usuário (os dados são baixados de novo ao abrir). */
 type Salvo = { localId: string; dataSoja: string; baixada: boolean; modo: "vou" | "ja"; cidade?: Cidade };

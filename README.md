@@ -2,7 +2,7 @@
 
 **NASA Space Apps Challenge 2026 · Challenge _Field Shift: Adapting Farms with NASA Data_**
 
-🔗 **App:** https://houston-we-have-a-harvest.vercel.app
+🔗 **App:** https://weharvest.vercel.app
 
 [English](#english) · [Português](#português)
 

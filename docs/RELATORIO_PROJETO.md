@@ -1,6 +1,6 @@
 # weharvest — Relatório de funcionamento do projeto
 
-**Para:** time · **Projeto:** Houston, We Have a Harvest (NASA Space Apps 2026) · **Site:** https://houston-we-have-a-harvest.vercel.app
+**Para:** time · **Projeto:** Houston, We Have a Harvest (NASA Space Apps 2026) · **Site:** https://weharvest.vercel.app
 
 ## Resumo para o time
 
