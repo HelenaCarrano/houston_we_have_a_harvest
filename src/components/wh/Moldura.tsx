@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Broto, CeuAnimado, IcAgenda, IcMenu, IcVoltar, IcWhatsApp, Logo } from "@/components/wh/Arte";
 import { useT } from "@/lib/i18n";
 
@@ -282,14 +283,24 @@ export function BarraAbas({ aba, onAba }: { aba: Aba; onAba: (a: Aba) => void })
   );
 }
 
-/** Folha que sobe do rodapé (menu, município, data). Fecha com Esc ou tocando fora. */
+/** Folha que sobe do rodapé (menu, município, data). Fecha com Esc ou tocando fora.
+ *  Vai para o <body> por portal: uma folha aberta de dentro de outra (o calendário dentro da escolha da data)
+ *  não fica presa nem cortada pela folha de baixo. Esc fecha só a folha de cima. */
 export function Folha({ titulo, onFechar, children }: { titulo: string; onFechar: () => void; children: React.ReactNode }) {
   const t = useT();
   const ref = useRef<HTMLDivElement>(null);
+  const fechar = useRef(onFechar);
+  useEffect(() => {
+    fechar.current = onFechar;
+  }, [onFechar]);
   useEffect(() => {
     const anterior = document.activeElement as HTMLElement | null;
     ref.current?.querySelector<HTMLElement>("button, a, input")?.focus();
-    const tecla = (e: KeyboardEvent) => e.key === "Escape" && onFechar();
+    const tecla = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const folhas = document.querySelectorAll('[data-wh-folha="1"]');
+      if (folhas[folhas.length - 1] === ref.current) fechar.current();
+    };
     document.addEventListener("keydown", tecla);
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -298,30 +309,33 @@ export function Folha({ titulo, onFechar, children }: { titulo: string; onFechar
       document.body.style.overflow = overflow;
       anterior?.focus();
     };
-  }, [onFechar]);
-  return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-ceu/50 lg:items-center lg:p-8" onClick={onFechar}>
+  }, []);
+  if (typeof document === "undefined") return null;
+  return createPortal(
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-ceu/50 lg:items-center lg:p-8" onClick={() => fechar.current()}>
       <div
         ref={ref}
+        data-wh-folha="1"
         role="dialog"
         aria-modal="true"
         aria-label={titulo}
         onClick={(e) => e.stopPropagation()}
-        className="wh-sheet flex max-h-[85vh] w-full max-w-[440px] flex-col gap-3 overflow-y-auto rounded-t-[28px] bg-palha px-4 pb-8 pt-4 lg:max-w-[520px] lg:rounded-[28px] lg:px-6 lg:pb-6 lg:pt-5 lg:shadow-[0_24px_60px_rgba(10,20,36,.35)]"
+        className="wh-sheet flex max-h-[85vh] w-full max-w-[440px] flex-col gap-3 overflow-y-auto rounded-t-[28px] bg-palha px-4 pb-8 lg:max-w-[520px] lg:rounded-[28px] lg:px-6 lg:pb-6 lg:shadow-[0_24px_60px_rgba(10,20,36,.35)]"
       >
-        <div className="flex items-center justify-between">
+        <div className="sticky top-0 z-10 -mx-4 flex items-center justify-between gap-3 bg-palha px-4 pb-1 pt-4 lg:-mx-6 lg:px-6 lg:pt-5">
           <h2 className="m-0 text-xl font-black">{titulo}</h2>
           <button
             type="button"
-            onClick={onFechar}
-            className="min-h-11 cursor-pointer rounded-full bg-campo px-4 text-[15px] font-bold text-texto"
+            onClick={() => fechar.current()}
+            className="min-h-11 flex-none cursor-pointer rounded-full bg-campo px-4 text-[15px] font-bold text-texto"
           >
             {t("Fechar", "Close")}
           </button>
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
