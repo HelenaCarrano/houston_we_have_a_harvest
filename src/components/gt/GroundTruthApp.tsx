@@ -14,6 +14,7 @@ import { JaPlantei } from "@/components/wh/JaPlantei";
 import { PlantarSemana } from "@/components/wh/PlantarSemana";
 import { SeletorDia } from "@/components/wh/SeletorDia";
 import { TelaSafra } from "@/components/wh/TelaSafra";
+import { PainelComputador } from "@/components/wh/PainelComputador";
 import { TelaCalendario } from "@/components/wh/TelaCalendario";
 import { useCaderno } from "@/components/wh/caderno";
 import { TelaRotacoes } from "@/components/wh/TelaRotacoes";
@@ -492,7 +493,8 @@ export function GroundTruthApp({ data }: { data: ViewData }) {
 
   return (
     <LangContext.Provider value={lang}>
-      <div className="mx-auto flex min-h-screen w-full max-w-[440px] flex-col bg-palha">{conteudo}</div>
+      <PainelComputador link={URL_APP} />
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[440px] flex-col bg-palha lg:shadow-[0_0_48px_rgba(10,20,36,.18)]">{conteudo}</div>
 
       {folha === "municipio" && (
         <Folha titulo={t("Onde fica sua lavoura?", "Where is your field?")} onFechar={fecharFolha}>
